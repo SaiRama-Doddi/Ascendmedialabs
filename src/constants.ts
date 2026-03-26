@@ -64,8 +64,16 @@ import inizioImage from './assets/inizio.png';
 import desiImage from './assets/desi.png';
 import gomunchzImage from './assets/gomunchz.png';
 import khushiImage from './assets/khushi.png';
+import royalStandardImage from './assets/images/royal-standard-pub.png';
 
 export const PROJECTS: Project[] = [
+  {
+    id: 'royal-standard-pub',
+    title: 'The Royal Standard Pub',
+    category: 'QR Scanner & Website',
+    image: royalStandardImage,
+    url: 'https://www.royalstandardpub.co.uk/'
+  },
   {
     id: 'inizio',
     title: 'Inizio Interiors',

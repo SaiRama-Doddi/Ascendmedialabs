@@ -122,7 +122,7 @@ const Home = () => {
               </div>
               <h3 className="text-2xl font-serif mb-4 text-maroon">{item.title}</h3>
               <p className="text-sm text-ink/60 leading-relaxed mb-8">{item.desc}</p>
-              <div className="aspect-video overflow-hidden rounded-sm mb-4 bg-white">
+              <div className="aspect-4/3 overflow-hidden rounded-sm mb-4 bg-white">
                 <img src={item.image} alt={item.title} className="w-full h-full object-contain object-center transition-all duration-500" referrerPolicy="no-referrer" />
               </div>
             </motion.div>
@@ -143,7 +143,7 @@ const Home = () => {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {PROJECTS.slice(0, 4).map((project, i) => (
               <motion.div
                 key={i}
@@ -152,8 +152,8 @@ const Home = () => {
                 viewport={{ once: true }}
                 className="group cursor-pointer bg-maroon rounded-sm overflow-hidden"
               >
-                <a href={project.url} target="_blank" rel="noopener noreferrer" className="block p-3">
-                  <div className="aspect-[4/3] overflow-hidden rounded-sm mb-0">
+                <a href={project.url} target="_blank" rel="noopener noreferrer" className="block">
+                  <div className="aspect-4/3 overflow-hidden rounded-sm">
                     <img
                       src={project.image}
                       alt={project.title}
@@ -161,8 +161,10 @@ const Home = () => {
                       referrerPolicy="no-referrer"
                     />
                   </div>
-                  <h3 className="text-xl font-serif mt-3 mb-1 group-hover:text-[#FDFBD4] transition-colors">{project.title}</h3>
-                  <p className="text-[10px] uppercase tracking-widest font-bold text-white">{project.category}</p>
+                  <div className="p-2">
+                    <h3 className="text-xl font-serif mb-1 group-hover:text-[#FDFBD4] transition-colors">{project.title}</h3>
+                    <p className="text-[10px] uppercase tracking-widest font-bold text-white">{project.category}</p>
+                  </div>
                 </a>
               </motion.div>
             ))}
@@ -177,7 +179,7 @@ const Home = () => {
           <h2 className="text-4xl md:text-5xl font-serif">What They Say</h2>
         </div>
 
-        <div className="relative min-h-[400px]">
+          <div className="relative min-h-100">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentTestimonialPage}
@@ -188,13 +190,13 @@ const Home = () => {
               className="grid grid-cols-1 md:grid-cols-3 gap-8"
             >
               {currentTestimonials.map((t) => (
-                <div key={t.id} className="bg-white p-10 rounded-sm border border-ink/5 shadow-sm flex flex-col h-full min-h-[350px]">
+                <div key={t.id} className="bg-white p-10 rounded-sm border border-ink/5 shadow-sm flex flex-col h-full min-h-87.5">
                   <div className="flex gap-1 mb-6">
                     {[...Array(5)].map((_, i) => (
                       <span key={i} className="text-maroon text-xs">★</span>
                     ))}
                   </div>
-                  <div className="flex-grow">
+                  <div className="grow">
                     <p className="text-lg font-serif italic mb-8 text-ink/80 leading-relaxed">"{t.content}"</p>
                   </div>
                   <div className="flex items-center gap-4 mt-auto pt-6 border-t border-ink/5">

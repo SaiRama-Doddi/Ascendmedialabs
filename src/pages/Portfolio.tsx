@@ -29,7 +29,7 @@ const Portfolio = () => {
               transition={{ delay: i * 0.1 }}
               className="group"
             >
-              <a href={project.url} target="_blank" rel="noopener noreferrer" className="block aspect-[16/10] overflow-hidden rounded-sm mb-8 bg-transparent">
+              <a href={project.url} target="_blank" rel="noopener noreferrer" className="block aspect-16/10 overflow-hidden rounded-sm mb-8 bg-transparent">
                 <img
                   src={project.image}
                   alt={project.title}

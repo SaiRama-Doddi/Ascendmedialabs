@@ -1,10 +1,25 @@
-import React from 'react';
-import { motion } from 'motion/react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { ArrowRight, Users, Target, Zap, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { TESTIMONIALS, ABOUT_IMAGE } from '../constants';
 
 const About = () => {
+  const [currentTestimonialPage, setCurrentTestimonialPage] = useState(0);
+  const totalPages = Math.ceil(TESTIMONIALS.length / 3);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTestimonialPage((prev) => (prev + 1) % totalPages);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [totalPages]);
+
+  const currentTestimonials = TESTIMONIALS.slice(
+    currentTestimonialPage * 3,
+    (currentTestimonialPage + 1) * 3
+  );
+
   return (
     <div className="pt-20">
       {/* Hero */}
@@ -67,24 +82,58 @@ const About = () => {
         </div>
       </section>
 
-      {/* Client Testimonials */}
+      {/* Client Love / Testimonials */}
       <section className="section-padding bg-cream">
         <div className="text-center mb-12">
-          <h4 className="text-[10px] uppercase tracking-widest font-medium text-maroon mb-4">Client Testimonials</h4>
-          <h2 className="text-4xl md:text-5xl font-serif">Trusted by brands that scale</h2>
+          <h4 className="text-[10px] uppercase tracking-widest font-medium text-maroon mb-4">Client Love</h4>
+          <h2 className="text-4xl md:text-5xl font-serif">What They Say</h2>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {TESTIMONIALS.slice(0, 4).map((t) => (
-            <div key={t.id} className="bg-white p-6 rounded-sm border border-ink/10 shadow-sm">
-              <div className="flex items-center gap-4 mb-4">
-                <img src={t.photo} alt={t.name} className="w-14 h-14 rounded-full object-cover border-2 border-maroon" />
-                <div>
-                  <h4 className="text-sm font-semibold">{t.name}</h4>
-                  <p className="text-[10px] uppercase tracking-widest text-ink/50">{t.role}, {t.company}</p>
+
+        <div className="relative min-h-[400px]">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentTestimonialPage}
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -50 }}
+              transition={{ duration: 0.6, ease: 'easeInOut' }}
+              className="grid grid-cols-1 md:grid-cols-3 gap-8"
+            >
+              {currentTestimonials.map((t) => (
+                <div key={t.id} className="bg-white p-10 rounded-sm border border-ink/5 shadow-sm flex flex-col h-full min-h-[350px]">
+                  <div className="flex gap-1 mb-6">
+                    {[...Array(5)].map((_, i) => (
+                      <span key={i} className="text-maroon text-xs">★</span>
+                    ))}
+                  </div>
+                  <div className="grow">
+                    <p className="text-lg font-serif italic mb-8 text-ink/80 leading-relaxed">"{t.content}"</p>
+                  </div>
+                  <div className="flex items-center gap-4 mt-auto pt-6 border-t border-ink/5">
+                    <img 
+                      src={t.photo} 
+                      alt={t.name} 
+                      className="w-12 h-12 rounded-full object-cover border-2 border-maroon shrink-0"
+                    />
+                    <div>
+                      <h4 className="text-sm font-medium text-ink">{t.name}</h4>
+                      <p className="text-[10px] uppercase tracking-widest font-bold text-ink/40">{t.role}, {t.company}</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <p className="text-sm text-ink/70 leading-relaxed">“{t.content}”</p>
-            </div>
+              ))}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        <div className="flex justify-center gap-2 mt-12">
+          {[...Array(totalPages)].map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentTestimonialPage(i)}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${currentTestimonialPage === i ? 'bg-maroon w-6' : 'bg-ink/10'}`}
+              aria-label={`Go to testimonial page ${i + 1}`}
+            />
           ))}
         </div>
       </section>
