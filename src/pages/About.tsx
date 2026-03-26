@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { ArrowRight, Users, Target, Zap, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { TESTIMONIALS } from '../constants';
+import { TESTIMONIALS, ABOUT_IMAGE } from '../constants';
 
 const About = () => {
   return (
@@ -39,7 +39,7 @@ const About = () => {
           </div>
           <div className="relative">
              <div className="aspect-[4/5] bg-transparent rounded-sm overflow-hidden relative">
-                <img src="/src/assets/images/about1.png" alt="Team" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                <img src={ABOUT_IMAGE} alt="Team" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
              </div>
              <div className="absolute -bottom-8 -left-8 w-48 h-48 bg-maroon/10 rounded-sm -z-10"></div>
           </div>
@@ -50,7 +50,7 @@ const About = () => {
       <section className="section-padding bg-white">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
           <div className="order-2 lg:order-1">
-            <img src="/src/assets/images/about1.png" alt="Collaboration" className="rounded-sm shadow-2xl" referrerPolicy="no-referrer" />
+            <img src={ABOUT_IMAGE} alt="Collaboration" className="rounded-sm shadow-2xl" referrerPolicy="no-referrer" />
           </div>
           <div className="order-1 lg:order-2">
             <h2 className="text-4xl md:text-5xl font-serif mb-8">A Partnership of Purpose</h2>

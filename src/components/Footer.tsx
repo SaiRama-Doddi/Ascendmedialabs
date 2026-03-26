@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Instagram, Linkedin, Globe, ArrowRight } from 'lucide-react';
+import { LOGO } from '../constants';
 
 const Footer = () => {
   return (
@@ -9,7 +10,7 @@ const Footer = () => {
         <div className="col-span-1 md:col-span-1">
           <Link to="/" className="flex items-center gap-3 mb-6 group">
             <img 
-              src="/src/assets/images/logo-main.png" 
+              src={LOGO} 
               alt="Ascend Media Labs" 
               className="h-16 w-auto object-contain"
             />

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { LOGO } from '../constants';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -29,7 +30,7 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-6 md:px-12 flex justify-between items-center">
         <Link to="/" className="flex items-center gap-3 group">
           <img 
-            src="/src/assets/images/logo-main.png" 
+            src={LOGO} 
             alt="Ascend Media Labs" 
             className="h-16 w-auto object-contain"
           />

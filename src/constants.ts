@@ -20,7 +20,15 @@ export interface Testimonial {
   role: string;
   company: string;
   content: string;
-  rating: number;  photo: string;}
+  rating: number;
+  photo: string;
+}
+
+import logoMain from './assets/images/logo-main.png';
+import about1 from './assets/images/about1.png';
+
+export const LOGO = logoMain;
+export const ABOUT_IMAGE = about1;
 
 export const SERVICES: Service[] = [
   {
@@ -90,7 +98,7 @@ export const TESTIMONIALS: Testimonial[] = [
     company: 'Inizio Interiors',
     content: 'Ascend transformed our outdated website into a powerhouse. The design is stunning and the growth was immediate.',
     rating: 5,
-    photo: '/src/assets/images/about1.png'
+    photo: about1
   },
   {
     id: '2',
@@ -99,7 +107,7 @@ export const TESTIMONIALS: Testimonial[] = [
     company: 'Desi Originals',
     content: 'Their eye for branding is unmatched. They understood our vision and translated it into a visual identity that feels world-class.',
     rating: 5,
-    photo: '/src/assets/images/about1.png'
+    photo: about1
   },
   {
     id: '3',
@@ -108,7 +116,7 @@ export const TESTIMONIALS: Testimonial[] = [
     company: 'Go Munchz',
     content: 'Efficiency and quality. Ascend delivered our app ahead of schedule without cutting any corners on design or performance.',
     rating: 5,
-    photo: '/src/assets/images/about1.png'
+    photo: about1
   },
   {
     id: '4',
@@ -117,7 +125,7 @@ export const TESTIMONIALS: Testimonial[] = [
     company: 'Khushi Box',
     content: 'The attention to detail in their UI/UX work is incredible. Our conversion rates have doubled since the redesign.',
     rating: 5,
-    photo: '/src/assets/images/about1.png'
+    photo: about1
   },
   {
     id: '5',
@@ -126,7 +134,7 @@ export const TESTIMONIALS: Testimonial[] = [
     company: 'Eco Eats',
     content: 'Professional, creative, and highly responsive. They captured our brand essence perfectly in the new digital identity.',
     rating: 5,
-    photo: '/src/assets/images/about1.png'
+    photo: about1
   },
   {
     id: '6',
@@ -135,6 +143,6 @@ export const TESTIMONIALS: Testimonial[] = [
     company: 'Tech Pulse',
     content: 'A truly world-class digital agency. Their technical expertise combined with their design sense is a rare find.',
     rating: 5,
-    photo: '/src/assets/images/about1.png'
+    photo: about1
   }
 ];
