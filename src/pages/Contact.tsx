@@ -6,19 +6,21 @@ const Contact = () => {
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const name = formData.get('name')?.toString() || '';
-    const email = formData.get('email')?.toString() || '';
-    const phone = formData.get('phone')?.toString() || '';
-    const message = formData.get('message')?.toString() || '';
+    const name = formData.get('name')?.toString().trim() || '';
+    const email = formData.get('email')?.toString().trim() || '';
+    const phone = formData.get('phone')?.toString().trim() || '';
+    const message = formData.get('message')?.toString().trim() || '';
+
+    if (!name || !email || !phone || !message) {
+      alert('Please fill all fields before sending.');
+      return;
+    }
 
     const text = encodeURIComponent(`New lead from website:\nName: ${name}\nEmail: ${email}\nPhone: ${phone}\nMessage: ${message}`);
     const whatsappNumber = '917675852618';
     const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${text}`;
 
     window.open(whatsappUrl, '_blank');
-    setTimeout(() => {
-      window.location.reload();
-    }, 600);
   };
 
   return (
@@ -68,7 +70,14 @@ const Contact = () => {
               </div>
               <h4 className="text-[10px] uppercase tracking-widest font-medium text-ink/40 mb-2">30 Minute Strategy Call</h4>
               <p className="text-md text-ink/60 mb-4">Pick a time that works best for your project kickoff.</p>
-              <button className="bg-maroon text-white px-6 py-2 rounded-sm text-xs uppercase tracking-widest font-bold hover:bg-maroon/90 transition-all">Book Now</button>
+              <a
+                href="https://calendly.com/prasannaofficial1712/30min"
+                target="_blank"
+                rel="noreferrer"
+                className="bg-maroon text-white px-6 py-2 rounded-sm text-xs uppercase tracking-widest font-bold hover:bg-maroon/90 transition-all"
+              >
+                Book Now
+              </a>
             </div>
           </div>
 

@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { ArrowRight, Users, Target, Zap, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { TESTIMONIALS } from '../constants';
 
 const About = () => {
   return (
@@ -17,7 +18,7 @@ const About = () => {
             >
               Our Story
             </motion.div>
-            <h1 className="text-3xl md:text-5xl font-serif mb-6">About Ascend</h1>
+            <h1 className="text-3xl md:text-5xl font-serif mb-6">About <span className="text-maroon italic">Ascend</span></h1>
             <p className="text-lg text-ink/60 leading-relaxed mb-8">
               We are a digital atelier dedicated to the craft of high-performance experiences. Founded on friendship, sustained by excellence.
               Our team combines strategy, design, and engineering to create websites and campaigns that look beautiful and work hard.
@@ -38,7 +39,7 @@ const About = () => {
           </div>
           <div className="relative">
              <div className="aspect-[4/5] bg-transparent rounded-sm overflow-hidden relative">
-                <img src="https://picsum.photos/seed/studio-team/800/1000" alt="Team" className="w-full h-full object-cover grayscale mix-blend-multiply opacity-80" referrerPolicy="no-referrer" />
+                <img src="/src/assets/images/about1.png" alt="Team" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
              </div>
              <div className="absolute -bottom-8 -left-8 w-48 h-48 bg-maroon/10 rounded-sm -z-10"></div>
           </div>
@@ -49,7 +50,7 @@ const About = () => {
       <section className="section-padding bg-white">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
           <div className="order-2 lg:order-1">
-            <img src="https://picsum.photos/seed/professional-workspace/800/800" alt="Collaboration" className="rounded-sm shadow-2xl" referrerPolicy="no-referrer" />
+            <img src="/src/assets/images/about1.png" alt="Collaboration" className="rounded-sm shadow-2xl" referrerPolicy="no-referrer" />
           </div>
           <div className="order-1 lg:order-2">
             <h2 className="text-4xl md:text-5xl font-serif mb-8">A Partnership of Purpose</h2>
@@ -63,6 +64,28 @@ const About = () => {
               Start a Conversation
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* Client Testimonials */}
+      <section className="section-padding bg-cream">
+        <div className="text-center mb-12">
+          <h4 className="text-[10px] uppercase tracking-widest font-medium text-maroon mb-4">Client Testimonials</h4>
+          <h2 className="text-4xl md:text-5xl font-serif">Trusted by brands that scale</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {TESTIMONIALS.slice(0, 4).map((t) => (
+            <div key={t.id} className="bg-white p-6 rounded-sm border border-ink/10 shadow-sm">
+              <div className="flex items-center gap-4 mb-4">
+                <img src={t.photo} alt={t.name} className="w-14 h-14 rounded-full object-cover border-2 border-maroon" />
+                <div>
+                  <h4 className="text-sm font-semibold">{t.name}</h4>
+                  <p className="text-[10px] uppercase tracking-widest text-ink/50">{t.role}, {t.company}</p>
+                </div>
+              </div>
+              <p className="text-sm text-ink/70 leading-relaxed">“{t.content}”</p>
+            </div>
+          ))}
         </div>
       </section>
 

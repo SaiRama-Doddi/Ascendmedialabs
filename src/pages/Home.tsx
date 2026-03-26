@@ -3,9 +3,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ArrowRight, Play, Users, Target, Zap, Headphones } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { PROJECTS, TESTIMONIALS } from '../constants';
-import webDevImg from '../assets/webdevelopment.png';
-import seoImg from '../assets/seo.png';
-import brandImg from '../assets/brandingdesign.png';
 
 const Home = () => {
   const [currentTestimonialPage, setCurrentTestimonialPage] = useState(0);
@@ -100,19 +97,19 @@ const Home = () => {
               title: 'Web Development',
               desc: 'High-performance, custom-coded websites that prioritize speed, security, and scalability for your brand.',
               icon: <Zap className="transition-colors duration-300" />,
-              image: webDevImg
+              image: '/src/assets/images/web.jpeg'
             },
             {
               title: 'SEO Optimization',
               desc: 'Dominating search results with data-driven strategies that increase organic traffic and customer conversion.',
               icon: <Target className="transition-colors duration-300" />,
-              image: seoImg
+              image: '/src/assets/images/seo.jpeg'
             },
             {
               title: 'Branding & Design',
               desc: 'Crafting iconic logos, premium UI/UX interfaces, and comprehensive brand kits that resonate with your audience.',
               icon: <Palette className="transition-colors duration-300" />,
-              image: brandImg
+              image: '/src/assets/images/branding.jpeg'
             }
           ].map((item, i) => (
             <motion.div
@@ -134,14 +131,14 @@ const Home = () => {
       </section>
 
       {/* Portfolio Section */}
-      <section className="bg-ink text-white py-24">
+      <section className="bg-maroon text-white py-24">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
             <div>
-              <h4 className="text-[10px] uppercase tracking-widest font-medium text-maroon mb-4">Selected Works</h4>
+              <h4 className="text-[10px] uppercase tracking-widest font-medium text-[#FDFBD4] mb-4">Selected Works</h4>
               <h2 className="text-4xl md:text-5xl font-serif leading-tight">Our Portfolio</h2>
             </div>
-            <Link to="/portfolio" className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-white/60 hover:text-maroon transition-colors group">
+            <Link to="/portfolio" className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-white/60 hover:text-[#FDFBD4] transition-colors group">
               View All Projects <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
@@ -164,7 +161,7 @@ const Home = () => {
                       referrerPolicy="no-referrer"
                     />
                   </div>
-                  <h3 className="text-2xl font-serif mb-0 group-hover:text-maroon transition-colors">{project.title}</h3>
+                  <h3 className="text-2xl font-serif mb-0 group-hover:text-[#FDFBD4] transition-colors">{project.title}</h3>
                   <p className="text-[10px] uppercase tracking-widest font-bold text-white/40">{project.category}</p>
                 </a>
               </motion.div>
@@ -201,9 +198,11 @@ const Home = () => {
                     <p className="text-lg font-serif italic mb-8 text-ink/80 leading-relaxed">"{t.content}"</p>
                   </div>
                   <div className="flex items-center gap-4 mt-auto pt-6 border-t border-ink/5">
-                    <div className="w-12 h-12 rounded-full bg-maroon/10 flex items-center justify-center text-maroon font-bold shrink-0">
-                      {t.name[0]}
-                    </div>
+                    <img 
+                      src={t.photo} 
+                      alt={t.name} 
+                      className="w-12 h-12 rounded-full object-cover border-2 border-maroon shrink-0"
+                    />
                     <div>
                       <h4 className="text-sm font-medium text-ink">{t.name}</h4>
                       <p className="text-[10px] uppercase tracking-widest font-bold text-ink/40">{t.role}, {t.company}</p>

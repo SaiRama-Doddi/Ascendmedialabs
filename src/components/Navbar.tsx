@@ -29,9 +29,9 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-6 md:px-12 flex justify-between items-center">
         <Link to="/" className="flex items-center gap-3 group">
           <img 
-            src="/src/assets/Ascend Media Logo Final.png" 
+            src="/src/assets/images/logo-main.png" 
             alt="Ascend Media Labs" 
-            className="h-10 w-auto object-contain"
+            className="h-14 w-auto object-contain"
           />
         </Link>
 

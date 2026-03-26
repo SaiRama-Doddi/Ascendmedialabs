@@ -17,8 +17,11 @@ const Services = () => {
           Expertise
         </motion.div>
         <h1 className="text-4xl md:text-5xl font-serif mb-8">Our Specialized Digital <span className="text-maroon italic">Expertise</span></h1>
-        <p className="text-lg text-ink/60 max-w-2xl mx-auto leading-relaxed mb-0">
+        <p className="text-lg text-ink/60 max-w-2xl mx-auto leading-relaxed mb-4">
           We bridge the gap between architectural precision and digital innovation, delivering bespoke solutions that define market leaders.
+        </p>
+        <p className="text-sm md:text-base text-maroon font-semibold">
+          Pricing example: Starts from ₹5000 + domain (domain optional) + ₹1000 yearly service fee. Final cost varies with website requirements.
         </p>
       </section>
 
