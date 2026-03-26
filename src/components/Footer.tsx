@@ -11,7 +11,7 @@ const Footer = () => {
             <img 
               src="/src/assets/images/logo-main.png" 
               alt="Ascend Media Labs" 
-              className="h-12 w-auto object-contain"
+              className="h-16 w-auto object-contain"
             />
           </Link>
           <p className="text-sm text-ink/60 leading-relaxed mb-6">

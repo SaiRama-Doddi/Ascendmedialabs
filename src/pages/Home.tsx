@@ -84,7 +84,7 @@ const Home = () => {
         <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
           <div className="max-w-xl">
             <h4 className="text-[10px] uppercase tracking-widest font-medium text-maroon mb-4">Our Expertise</h4>
-            <h2 className="text-4xl md:text-5xl font-serif leading-tight">Tailored Digital Solutions for Modern Brands</h2>
+          <h2 className="text-4xl md:text-5xl font-serif leading-tight text-maroon">Tailored Digital Solutions for Modern Brands</h2>
           </div>
           <Link to="/services" className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-ink/60 hover:text-maroon transition-colors group">
             Explore All Services <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
@@ -120,7 +120,7 @@ const Home = () => {
               <div className="w-12 h-12 bg-maroon/5 rounded-full flex items-center justify-center mb-6 group-hover:bg-maroon group-hover:text-white transition-colors">
                 {item.icon}
               </div>
-              <h3 className="text-2xl font-serif mb-4">{item.title}</h3>
+              <h3 className="text-2xl font-serif mb-4 text-maroon">{item.title}</h3>
               <p className="text-sm text-ink/60 leading-relaxed mb-8">{item.desc}</p>
               <div className="aspect-video overflow-hidden rounded-sm mb-4 bg-white">
                 <img src={item.image} alt={item.title} className="w-full h-full object-contain object-center transition-all duration-500" referrerPolicy="no-referrer" />
@@ -152,8 +152,8 @@ const Home = () => {
                 viewport={{ once: true }}
                 className="group cursor-pointer bg-maroon rounded-sm overflow-hidden"
               >
-                <a href={project.url} target="_blank" rel="noopener noreferrer" className="block p-5">
-                  <div className="aspect-[4/3] overflow-hidden rounded-sm mb-4">
+                <a href={project.url} target="_blank" rel="noopener noreferrer" className="block p-3">
+                  <div className="aspect-[4/3] overflow-hidden rounded-sm mb-2">
                     <img
                       src={project.image}
                       alt={project.title}
@@ -161,11 +161,8 @@ const Home = () => {
                       referrerPolicy="no-referrer"
                     />
                   </div>
-                  <h3 className="text-xl font-serif mb-2 text-white group-hover:text-[#FDFBD4] transition-colors">{project.title}</h3>
-                  <p className="text-[10px] uppercase tracking-widest font-bold text-maroon">{project.category}</p>
-                  <div className="mt-4">
-                    <button className="bg-white text-maroon px-4 py-2 rounded-sm font-semibold">View Project</button>
-                  </div>
+                  <h3 className="text-xl font-serif mb-1 group-hover:text-[#FDFBD4] transition-colors">{project.title}</h3>
+                  <p className="text-[10px] uppercase tracking-widest font-bold text-white">{project.category}</p>
                 </a>
               </motion.div>
             ))}
