@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowRight, Play, Users, Target, Zap, Headphones } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { PROJECTS, TESTIMONIALS } from '../constants';
+import { PROJECTS, TESTIMONIALS, WEB_IMAGE, SEO_IMAGE, BRANDING_IMAGE } from '../constants';
 
 const Home = () => {
   const [currentTestimonialPage, setCurrentTestimonialPage] = useState(0);
@@ -84,7 +84,7 @@ const Home = () => {
         <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
           <div className="max-w-xl">
             <h4 className="text-[10px] uppercase tracking-widest font-medium text-maroon mb-4">Our Expertise</h4>
-          <h2 className="text-4xl md:text-5xl font-serif leading-tight text-maroon">Tailored Digital Solutions for Modern Brands</h2>
+          <h2 className="text-4xl md:text-5xl font-serif leading-tight">Tailored Digital Solutions for Modern Brands</h2>
           </div>
           <Link to="/services" className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-ink/60 hover:text-maroon transition-colors group">
             Explore All Services <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
@@ -97,19 +97,19 @@ const Home = () => {
               title: 'Web Development',
               desc: 'High-performance, custom-coded websites that prioritize speed, security, and scalability for your brand.',
               icon: <Zap className="transition-colors duration-300" />,
-              image: '/src/assets/images/web.jpeg'
+              image: WEB_IMAGE
             },
             {
               title: 'SEO Optimization',
               desc: 'Dominating search results with data-driven strategies that increase organic traffic and customer conversion.',
               icon: <Target className="transition-colors duration-300" />,
-              image: '/src/assets/images/seo.jpeg'
+              image: SEO_IMAGE
             },
             {
               title: 'Branding & Design',
               desc: 'Crafting iconic logos, premium UI/UX interfaces, and comprehensive brand kits that resonate with your audience.',
               icon: <Palette className="transition-colors duration-300" />,
-              image: '/src/assets/images/branding.jpeg'
+              image: BRANDING_IMAGE
             }
           ].map((item, i) => (
             <motion.div
@@ -153,7 +153,7 @@ const Home = () => {
                 className="group cursor-pointer bg-maroon rounded-sm overflow-hidden"
               >
                 <a href={project.url} target="_blank" rel="noopener noreferrer" className="block p-3">
-                  <div className="aspect-[4/3] overflow-hidden rounded-sm mb-2">
+                  <div className="aspect-[4/3] overflow-hidden rounded-sm mb-0">
                     <img
                       src={project.image}
                       alt={project.title}
@@ -161,7 +161,7 @@ const Home = () => {
                       referrerPolicy="no-referrer"
                     />
                   </div>
-                  <h3 className="text-xl font-serif mb-1 group-hover:text-[#FDFBD4] transition-colors">{project.title}</h3>
+                  <h3 className="text-xl font-serif mt-3 mb-1 group-hover:text-[#FDFBD4] transition-colors">{project.title}</h3>
                   <p className="text-[10px] uppercase tracking-widest font-bold text-white">{project.category}</p>
                 </a>
               </motion.div>

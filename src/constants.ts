@@ -26,9 +26,15 @@ export interface Testimonial {
 
 import logoMain from './assets/images/logo-main.png';
 import about1 from './assets/images/about1.png';
+import webImage from './assets/images/web.jpeg';
+import seoImage from './assets/images/seo.jpeg';
+import brandingImage from './assets/images/branding.jpeg';
 
 export const LOGO = logoMain;
 export const ABOUT_IMAGE = about1;
+export const WEB_IMAGE = webImage;
+export const SEO_IMAGE = seoImage;
+export const BRANDING_IMAGE = brandingImage;
 
 export const SERVICES: Service[] = [
   {
