@@ -39,12 +39,12 @@ const Portfolio = () => {
               </a>
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="text-4xl md:text-5xl font-serif mb-3 group-hover:text-white transition-colors">
+                  <h3 className="text-2xl md:text-3xl font-serif mb-3 group-hover:text-maroon transition-colors">
                     <a href={project.url} target="_blank" rel="noopener noreferrer">{project.title}</a>
                   </h3>
-                  <p className="text-xs uppercase tracking-widest font-bold text-white/70">{project.category}</p>
+                  <p className="text-xs uppercase tracking-widest font-bold text-maroon">{project.category}</p>
                 </div>
-                <a href={project.url} target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-full border border-ink/10 flex items-center justify-center hover:bg-maroon hover:text-white hover:border-maroon transition-all">
+                <a href={project.url} target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-full bg-white text-maroon flex items-center justify-center border border-ink/10 hover:bg-white/90 hover:text-maroon transition-all">
                    <ArrowUpRight size={20} />
                 </a>
               </div>

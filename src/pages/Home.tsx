@@ -150,10 +150,10 @@ const Home = () => {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="group cursor-pointer"
+                className="group cursor-pointer bg-maroon rounded-sm overflow-hidden"
               >
-                <a href={project.url} target="_blank" rel="noopener noreferrer">
-                  <div className="aspect-[4/3] overflow-hidden rounded-sm mb-0">
+                <a href={project.url} target="_blank" rel="noopener noreferrer" className="block p-5">
+                  <div className="aspect-[4/3] overflow-hidden rounded-sm mb-4">
                     <img
                       src={project.image}
                       alt={project.title}
@@ -161,8 +161,11 @@ const Home = () => {
                       referrerPolicy="no-referrer"
                     />
                   </div>
-                  <h3 className="text-2xl font-serif mb-0 group-hover:text-[#FDFBD4] transition-colors">{project.title}</h3>
-                  <p className="text-[10px] uppercase tracking-widest font-bold text-white/40">{project.category}</p>
+                  <h3 className="text-xl font-serif mb-2 text-white group-hover:text-[#FDFBD4] transition-colors">{project.title}</h3>
+                  <p className="text-[10px] uppercase tracking-widest font-bold text-maroon">{project.category}</p>
+                  <div className="mt-4">
+                    <button className="bg-white text-maroon px-4 py-2 rounded-sm font-semibold">View Project</button>
+                  </div>
                 </a>
               </motion.div>
             ))}
