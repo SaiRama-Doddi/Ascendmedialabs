@@ -130,7 +130,7 @@ export const TESTIMONIALS: Testimonial[] = [
     company: 'Go Munchz',
     content: 'Efficiency and quality. Ascend delivered our app ahead of schedule without cutting any corners on design or performance.',
     rating: 5,
-    photo: 'https://randomuser.me/api/portraits/women/68.jpg'
+    photo: 'https://randomuser.me/api/portraits/men/32.jpg'
   },
   {
     id: '4',
