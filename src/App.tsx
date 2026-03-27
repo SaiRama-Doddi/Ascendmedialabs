@@ -52,11 +52,11 @@ const handleWhatsApp = () => {
   window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
 };
 
-export default function App() {
+function AppRoutes() {
   const location = useLocation();
 
   return (
-    <Router>
+    <>
       <ScrollToTop />
       <div className="min-h-screen flex flex-col">
         <Navbar />
@@ -91,6 +91,14 @@ export default function App() {
 
         <Footer />
       </div>
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <Router>
+      <AppRoutes />
     </Router>
   );
 }
