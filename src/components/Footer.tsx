@@ -12,14 +12,18 @@ const Footer = () => {
             <img 
               src={LOGO} 
               alt="Ascend Media Labs" 
-              className="h-16 w-auto object-contain"
+              className="h-14 md:h-18 lg:h-20 w-auto object-contain"
             />
+            <div className="leading-tight">
+              <p className="text-sm md:text-base font-bold text-maroon uppercase">ASCEND</p>
+              <p className="text-[10px] md:text-xs uppercase tracking-widest text-ink/60">MEDIA LABS</p>
+            </div>
           </Link>
           <p className="text-sm text-ink/60 leading-relaxed mb-6">
             Architecting the future of digital presence through refined design and strategic engineering.
           </p>
           <div className="flex gap-4">
-            <a href="#" className="w-8 h-8 rounded-full bg-ink/5 flex items-center justify-center hover:bg-maroon hover:text-white transition-all">
+            <a href="https://www.instagram.com/ascend_media_labs?igsh=aTk0cmU4NzV5N21l" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-ink/5 flex items-center justify-center hover:bg-maroon hover:text-white transition-all">
               <Instagram size={16} />
             </a>
             <a href="#" className="w-8 h-8 rounded-full bg-ink/5 flex items-center justify-center hover:bg-maroon hover:text-white transition-all">
@@ -47,7 +51,7 @@ const Footer = () => {
             <li><Link to="/" className="text-sm text-ink/70 hover:text-maroon transition-colors">Home</Link></li>
             <li><Link to="/services" className="text-sm text-ink/70 hover:text-maroon transition-colors">Services</Link></li>
             <li><Link to="/portfolio" className="text-sm text-ink/70 hover:text-maroon transition-colors">Portfolio</Link></li>
-            <li><Link to="/about" className="text-sm text-ink/70 hover:text-maroon transition-colors">About</Link></li>
+            <li><Link to="/about" className="text-sm text-ink/70 hover:text-maroon transition-colors">About Us</Link></li>
           </ul>
         </div>
 

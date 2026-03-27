@@ -112,7 +112,7 @@ export const TESTIMONIALS: Testimonial[] = [
     company: 'Inizio Interiors',
     content: 'Ascend transformed our outdated website into a powerhouse. The design is stunning and the growth was immediate.',
     rating: 5,
-    photo: about1
+    photo: 'https://randomuser.me/api/portraits/men/32.jpg'
   },
   {
     id: '2',
@@ -121,7 +121,7 @@ export const TESTIMONIALS: Testimonial[] = [
     company: 'Desi Originals',
     content: 'Their eye for branding is unmatched. They understood our vision and translated it into a visual identity that feels world-class.',
     rating: 5,
-    photo: about1
+    photo: 'https://randomuser.me/api/portraits/men/44.jpg'
   },
   {
     id: '3',
@@ -130,7 +130,7 @@ export const TESTIMONIALS: Testimonial[] = [
     company: 'Go Munchz',
     content: 'Efficiency and quality. Ascend delivered our app ahead of schedule without cutting any corners on design or performance.',
     rating: 5,
-    photo: about1
+    photo: 'https://randomuser.me/api/portraits/women/68.jpg'
   },
   {
     id: '4',
@@ -139,7 +139,7 @@ export const TESTIMONIALS: Testimonial[] = [
     company: 'Khushi Box',
     content: 'The attention to detail in their UI/UX work is incredible. Our conversion rates have doubled since the redesign.',
     rating: 5,
-    photo: about1
+    photo: 'https://randomuser.me/api/portraits/women/25.jpg'
   },
   {
     id: '5',
@@ -148,7 +148,7 @@ export const TESTIMONIALS: Testimonial[] = [
     company: 'Eco Eats',
     content: 'Professional, creative, and highly responsive. They captured our brand essence perfectly in the new digital identity.',
     rating: 5,
-    photo: about1
+    photo: 'https://randomuser.me/api/portraits/women/85.jpg'
   },
   {
     id: '6',
@@ -157,6 +157,6 @@ export const TESTIMONIALS: Testimonial[] = [
     company: 'Tech Pulse',
     content: 'A truly world-class digital agency. Their technical expertise combined with their design sense is a rare find.',
     rating: 5,
-    photo: about1
+    photo: 'https://randomuser.me/api/portraits/men/76.jpg'
   }
 ];

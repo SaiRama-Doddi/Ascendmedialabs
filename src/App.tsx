@@ -62,7 +62,7 @@ function AppRoutes() {
         <Navbar />
         <main className="grow">
           <AnimatePresence mode="wait">
-            <Routes location={location} key={location.pathname}>
+            <Routes location={location}>
               <Route path="/" element={<PageWrapper><Home /></PageWrapper>} />
               <Route path="/about" element={<PageWrapper><About /></PageWrapper>} />
               <Route path="/services" element={<PageWrapper><Services /></PageWrapper>} />
@@ -78,14 +78,14 @@ function AppRoutes() {
             className="fixed bottom-24 right-4 bg-green-500 text-white w-16 h-16 rounded-full flex items-center justify-center shadow-lg hover:bg-green-600 hover:scale-110 transition-transform duration-300 z-40 cursor-pointer"
             aria-label="Chat on WhatsApp"
           >
-            <FaWhatsapp className="w-9 h-9" />
+            <FaWhatsapp size={24} />
           </button>
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             aria-label="Scroll to top"
             className="h-12 w-12 rounded-full bg-maroon text-white shadow-xl hover:bg-maroon/90 transition-all flex items-center justify-center"
           >
-            <FaArrowUp className="w-5 h-5" />
+            <FaArrowUp size={16} />
           </button>
         </div>
 
