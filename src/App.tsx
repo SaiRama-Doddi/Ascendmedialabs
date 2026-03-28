@@ -85,13 +85,9 @@ function AppRoutes() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ 
               opacity: 1, 
-              y: 0,
-              boxShadow: ['0 0 0 0 rgba(37, 99, 235, 0.7)', '0 0 0 10px rgba(37, 99, 235, 0)'],
               y: [0, -8, 0]
             }}
             transition={{ 
-              duration: 1.5, 
-              repeat: Infinity,
               y: { duration: 3, repeat: Infinity, ease: 'easeInOut' }
             }}
             whileHover={{ scale: 1.2, rotate: 10 }}

@@ -133,7 +133,7 @@ const Home = () => {
       {/* Portfolio Section */}
       <section className="bg-maroon text-white py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
-          <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
+          <div className="flex flex-col md:flex-row items-start md:items-end md:justify-between mb-16 gap-6">
             <div>
               <h4 className="text-[10px] uppercase tracking-widest font-medium text-[#FDFBD4] mb-4">Selected Works</h4>
               <h2 className="text-4xl md:text-5xl font-serif leading-tight">Our Portfolio</h2>
