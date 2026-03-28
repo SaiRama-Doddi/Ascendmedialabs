@@ -131,7 +131,7 @@ const Home = () => {
       </section>
 
       {/* Portfolio Section */}
-      <section className="bg-maroon text-white py-24">
+      <section className="bg-maroon text-white py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
             <div>

@@ -8,7 +8,7 @@ import Services from './pages/Services';
 import Portfolio from './pages/Portfolio';
 import Contact from './pages/Contact';
 import { motion, AnimatePresence } from 'motion/react';
-import { FaWhatsapp, FaArrowUp } from 'react-icons/fa';
+import { FaWhatsapp, FaArrowUp, FaPhone } from 'react-icons/fa';
 
 const WhatsappIcon = ({ className }: { className?: string }) => (
   <svg
@@ -47,9 +47,13 @@ const PageWrapper = ({ children }: { children: React.ReactNode }) => {
 const handleWhatsApp = () => {
   const phoneNumber = '+917675852618';
   const message = encodeURIComponent(
-    'Hi! I’d like to book a free consultation about interior design services.'
+    "Hi, would you like to know more about the services for Ascend Media Labs?"
   );
   window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+};
+
+const handlePhoneCall = () => {
+  window.location.href = 'tel:+917675852618';
 };
 
 function AppRoutes() {
@@ -73,19 +77,59 @@ function AppRoutes() {
         </main>
 
         <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
-          <button
-            onClick={handleWhatsApp}
-            className="fixed bottom-24 right-4 bg-green-500 text-white w-16 h-16 rounded-full flex items-center justify-center shadow-lg hover:bg-green-600 hover:scale-110 transition-transform duration-300 z-40 cursor-pointer"
-            aria-label="Chat on WhatsApp"
+          <motion.button
+            onClick={handlePhoneCall}
+            className="bg-blue-600 text-white h-14 w-14 rounded-full flex items-center justify-center shadow-lg hover:bg-blue-700 transition-colors duration-300 z-40 cursor-pointer relative overflow-hidden"
+            aria-label="Call us"
+            title="Call: +91 7675852618"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ 
+              opacity: 1, 
+              y: 0,
+              boxShadow: ['0 0 0 0 rgba(37, 99, 235, 0.7)', '0 0 0 10px rgba(37, 99, 235, 0)'],
+              y: [0, -8, 0]
+            }}
+            transition={{ 
+              duration: 1.5, 
+              repeat: Infinity,
+              y: { duration: 3, repeat: Infinity, ease: 'easeInOut' }
+            }}
+            whileHover={{ scale: 1.2, rotate: 10 }}
+            whileTap={{ scale: 0.9 }}
           >
-            <FaWhatsapp size={24} />
-          </button>
+            <motion.div animate={{ rotate: 360 }} transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}>
+              <FaPhone size={20} />
+            </motion.div>
+          </motion.button>
+          <div className="relative">
+            <button
+              onClick={handleWhatsApp}
+              className="bg-green-500 text-white h-16 w-16 rounded-full flex items-center justify-center shadow-lg hover:bg-green-600 hover:scale-110 transition-all duration-300 z-40 cursor-pointer"
+              aria-label="Chat on WhatsApp"
+              title="Chat on WhatsApp"
+            >
+              <FaWhatsapp size={32} />
+            </button>
+            <motion.div 
+              className="absolute right-full mr-3 bottom-1/2 translate-y-1/2 whitespace-nowrap bg-white text-black px-4 py-2 rounded-lg text-sm font-medium shadow-lg"
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3 }}
+              style={{
+                pointerEvents: 'none',
+              }}
+            >
+              <span>Hi, how can we help you today?</span>
+              <div className="absolute left-full top-1/2 -translate-y-1/2 w-0 h-0 border-l-8 border-l-white border-t-4 border-t-transparent border-b-4 border-b-transparent"></div>
+            </motion.div>
+          </div>
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             aria-label="Scroll to top"
-            className="h-12 w-12 rounded-full bg-maroon text-white shadow-xl hover:bg-maroon/90 transition-all flex items-center justify-center"
+            className="h-14 w-14 rounded-full bg-maroon text-white shadow-xl hover:bg-maroon/90 hover:scale-110 transition-all duration-300 flex items-center justify-center"
+            title="Back to top"
           >
-            <FaArrowUp size={16} />
+            <FaArrowUp size={20} />
           </button>
         </div>
 
