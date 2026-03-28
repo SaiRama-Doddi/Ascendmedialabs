@@ -267,8 +267,8 @@ const Home = () => {
               { name: 'goMunchz', logo: 'https://res.cloudinary.com/dd4oiwnep/image/upload/v1774178657/gomunchz_logo_transparent_r8r0a8.png' },
               { name: 'Royal Standard Pub', logo: 'https://www.royalstandardpub.co.uk/images/logo.jpeg' },
               { name: 'Khushibox', logo: 'https://res.cloudinary.com/dq7hun84m/image/upload/v1773765618/logo-main_jwi3jb.png' },
-              { name: 'Inizio Interiors', logo: '/src/assets/brands/inizio.png' },
-              { name: 'Desioriginals', logo: '/src/assets/brands/desioriginals.png' }
+              { name: 'Inizio Interiors', logo: 'https://res.cloudinary.com/dvruokwau/image/upload/v1774709258/inizio_nkncbg.png' },
+              { name: 'Desioriginals', logo: 'https://res.cloudinary.com/dvruokwau/image/upload/v1774709247/desioriginals_be8vb1.png' }
             ].map((brand, index) => (
               <div key={index} className="flex-shrink-0 flex flex-col items-center justify-center gap-3 min-w-[180px] md:min-w-[220px]">
                 <div className="h-20 md:h-24 flex items-center justify-center">
@@ -285,8 +285,8 @@ const Home = () => {
               { name: 'goMunchz', logo: 'https://res.cloudinary.com/dd4oiwnep/image/upload/v1774178657/gomunchz_logo_transparent_r8r0a8.png' },
               { name: 'Royal Standard Pub', logo: 'https://www.royalstandardpub.co.uk/images/logo.jpeg' },
               { name: 'Khushibox', logo: 'https://res.cloudinary.com/dq7hun84m/image/upload/v1773765618/logo-main_jwi3jb.png' },
-              { name: 'Inizio Interiors', logo: '/src/assets/brands/inizio.png' },
-              { name: 'Desioriginals', logo: '/src/assets/brands/desioriginals.png' }
+              { name: 'Inizio Interiors', logo: 'https://res.cloudinary.com/dvruokwau/image/upload/v1774709258/inizio_nkncbg.png' },
+              { name: 'Desioriginals', logo: 'https://res.cloudinary.com/dvruokwau/image/upload/v1774709247/desioriginals_be8vb1.png' }
             ].map((brand, index) => (
               <div key={`duplicate-${index}`} className="flex-shrink-0 flex flex-col items-center justify-center gap-3 min-w-[180px] md:min-w-[220px]">
                 <div className="h-20 md:h-24 flex items-center justify-center">
