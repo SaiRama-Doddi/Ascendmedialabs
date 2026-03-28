@@ -249,6 +249,59 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Trusted Brands Section */}
+      <section className="section-padding bg-cream">
+        <div className="text-center mb-16">
+          <h4 className="text-[10px] uppercase tracking-widest font-medium text-maroon mb-4">Trusted By</h4>
+          <h2 className="text-4xl md:text-5xl font-serif">Our Trusted Brands</h2>
+        </div>
+        
+        <div className="relative w-full overflow-hidden">
+          <motion.div
+            className="flex gap-8 md:gap-12 py-6"
+            animate={{ x: ['0%', '-100%'] }}
+            transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+          >
+            {[
+              { name: 'goMunchz', logo: 'https://res.cloudinary.com/dd4oiwnep/image/upload/v1774178657/gomunchz_logo_transparent_r8r0a8.png' },
+              { name: 'Royal Standard Pub', logo: 'https://www.royalstandardpub.co.uk/images/logo.jpeg' },
+              { name: 'Khushibox', logo: 'https://res.cloudinary.com/dq7hun84m/image/upload/v1773765618/logo-main_jwi3jb.png' },
+              { name: 'Inizio Interiors', logo: '/src/assets/brands/inizio.png' },
+              { name: 'Desioriginals', logo: '/src/assets/brands/desioriginals.png' }
+            ].map((brand, index) => (
+              <div key={index} className="flex-shrink-0 flex flex-col items-center justify-center gap-3 min-w-[180px] md:min-w-[220px]">
+                <div className="h-20 md:h-24 flex items-center justify-center">
+                  <img 
+                    src={brand.logo} 
+                    alt={brand.name} 
+                    className="max-h-full max-w-full object-contain transition-all duration-300"
+                  />
+                </div>
+                <p className="text-sm md:text-base font-medium text-ink/70 text-center">{brand.name}</p>
+              </div>
+            ))}
+            {[
+              { name: 'goMunchz', logo: 'https://res.cloudinary.com/dd4oiwnep/image/upload/v1774178657/gomunchz_logo_transparent_r8r0a8.png' },
+              { name: 'Royal Standard Pub', logo: 'https://www.royalstandardpub.co.uk/images/logo.jpeg' },
+              { name: 'Khushibox', logo: 'https://res.cloudinary.com/dq7hun84m/image/upload/v1773765618/logo-main_jwi3jb.png' },
+              { name: 'Inizio Interiors', logo: '/src/assets/brands/inizio.png' },
+              { name: 'Desioriginals', logo: '/src/assets/brands/desioriginals.png' }
+            ].map((brand, index) => (
+              <div key={`duplicate-${index}`} className="flex-shrink-0 flex flex-col items-center justify-center gap-3 min-w-[180px] md:min-w-[220px]">
+                <div className="h-20 md:h-24 flex items-center justify-center">
+                  <img 
+                    src={brand.logo} 
+                    alt={brand.name} 
+                    className="max-h-full max-w-full object-contain transition-all duration-300"
+                  />
+                </div>
+                <p className="text-sm md:text-base font-medium text-ink/70 text-center">{brand.name}</p>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
     </div>
   );
 };
