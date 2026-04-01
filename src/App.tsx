@@ -79,7 +79,7 @@ function AppRoutes() {
         <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
           <motion.button
             onClick={handlePhoneCall}
-            className="bg-blue-600 text-white h-14 w-14 rounded-full flex items-center justify-center shadow-lg hover:bg-blue-700 transition-colors duration-300 z-40 cursor-pointer relative overflow-hidden"
+            className="bg-blue-600 text-white h-16 w-16 rounded-full flex items-center justify-center shadow-lg hover:bg-blue-700 transition-colors duration-300 z-40 cursor-pointer relative overflow-hidden"
             aria-label="Call us"
             title="Call: +91 7675852618"
             initial={{ opacity: 0, y: 20 }}
@@ -94,7 +94,7 @@ function AppRoutes() {
             whileTap={{ scale: 0.9 }}
           >
             <motion.div animate={{ rotate: 360 }} transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}>
-              <FaPhone size={20} />
+              <FaPhone size={28} />
             </motion.div>
           </motion.button>
           <div className="relative">
@@ -122,10 +122,10 @@ function AppRoutes() {
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             aria-label="Scroll to top"
-            className="h-14 w-14 rounded-full bg-maroon text-white shadow-xl hover:bg-maroon/90 hover:scale-110 transition-all duration-300 flex items-center justify-center"
+            className="h-16 w-16 rounded-full bg-maroon text-white shadow-xl hover:bg-maroon/90 hover:scale-110 transition-all duration-300 flex items-center justify-center"
             title="Back to top"
           >
-            <FaArrowUp size={20} />
+            <FaArrowUp size={28} />
           </button>
         </div>
 
