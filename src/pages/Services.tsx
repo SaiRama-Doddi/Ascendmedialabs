@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { ArrowRight, CheckCircle2, Search, Palette, Code2, Globe, ShieldCheck, Clock } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Search, Palette, Code2, Globe, ShieldCheck, Clock, Megaphone, BookOpen, Image as ImageIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { SERVICES } from '../constants';
 
@@ -28,32 +28,41 @@ const Services = () => {
       {/* Main Services */}
       <section className="pt-0 pb-12 px-6 md:px-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {SERVICES.map((service, i) => (
-            <motion.div
-              key={service.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="bg-white p-10 rounded-sm border border-ink/5 shadow-sm"
-            >
-              <div className="w-14 h-14 bg-maroon/5 rounded-sm flex items-center justify-center mb-8">
-                {service.id === 'web-dev' && <Code2 className="text-maroon" size={28} />}
-                {service.id === 'seo' && <Search className="text-maroon" size={28} />}
-                {service.id === 'branding' && <Palette className="text-maroon" size={28} />}
-              </div>
-              <h3 className="text-2xl font-serif mb-6">{service.title}</h3>
-              <p className="text-sm text-ink/60 leading-relaxed mb-8">{service.description}</p>
-              <ul className="flex flex-col gap-4">
-                {service.features?.map((feature, idx) => (
-                  <li key={idx} className="flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-ink/80">
-                    <CheckCircle2 size={16} className="text-maroon" />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-          ))}
+          {SERVICES.map((service, i) => {
+            const iconMap: Record<string, React.ReactNode> = {
+              'web-dev': <Code2 className="text-maroon" size={28} />,
+              'seo': <Search className="text-maroon" size={28} />,
+              'branding': <Palette className="text-maroon" size={28} />,
+              'digital-marketing': <Megaphone className="text-maroon" size={28} />,
+              'education-career': <BookOpen className="text-maroon" size={28} />,
+              'creative-design': <ImageIcon className="text-maroon" size={28} />
+            };
+
+            return (
+              <motion.div
+                key={service.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="bg-white p-10 rounded-sm border border-ink/5 shadow-sm"
+              >
+                <div className="w-14 h-14 bg-maroon/5 rounded-sm flex items-center justify-center mb-8">
+                  {iconMap[service.id] ?? <Globe className="text-maroon" size={28} />}
+                </div>
+                <h3 className="text-2xl font-serif mb-6">{service.title}</h3>
+                <p className="text-sm text-ink/60 leading-relaxed mb-8">{service.description}</p>
+                <ul className="flex flex-col gap-4">
+                  {service.features?.map((feature, idx) => (
+                    <li key={idx} className="flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-ink/80">
+                      <CheckCircle2 size={16} className="text-maroon" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+            );
+          })}
         </div>
       </section>
 

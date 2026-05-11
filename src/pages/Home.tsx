@@ -1,24 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { ArrowRight, Play, Users, Target, Zap, Headphones } from 'lucide-react';
+import React from 'react';
+import { motion } from 'motion/react';
+import { ArrowRight, Target, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { PROJECTS, TESTIMONIALS, WEB_IMAGE, SEO_IMAGE, BRANDING_IMAGE } from '../constants';
+import { PROJECTS, WEB_IMAGE, SEO_IMAGE, BRANDING_IMAGE } from '../constants';
+import GoogleReviews from '../components/GoogleReviews';
 
 const Home = () => {
-  const [currentTestimonialPage, setCurrentTestimonialPage] = useState(0);
-  const totalPages = Math.ceil(TESTIMONIALS.length / 3);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTestimonialPage((prev) => (prev + 1) % totalPages);
-    }, 6000);
-    return () => clearInterval(timer);
-  }, [totalPages]);
-
-  const currentTestimonials = TESTIMONIALS.slice(
-    currentTestimonialPage * 3,
-    (currentTestimonialPage + 1) * 3
-  );
   return (
     <div className="pt-10">
       {/* Hero Section */}
@@ -172,63 +159,8 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="section-padding bg-cream overflow-hidden">
-        <div className="text-center mb-16">
-          <h4 className="text-[10px] uppercase tracking-widest font-medium text-maroon mb-4">Client Love</h4>
-          <h2 className="text-4xl md:text-5xl font-serif">What They Say</h2>
-        </div>
-
-          <div className="relative min-h-100">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentTestimonialPage}
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -50 }}
-              transition={{ duration: 0.6, ease: "easeInOut" }}
-              className="grid grid-cols-1 md:grid-cols-3 gap-8"
-            >
-              {currentTestimonials.map((t) => (
-                <div key={t.id} className="bg-white p-10 rounded-sm border border-ink/5 shadow-sm flex flex-col h-full min-h-87.5">
-                  <div className="flex gap-1 mb-6">
-                    {[...Array(5)].map((_, i) => (
-                      <span key={i} className="text-maroon text-xs">★</span>
-                    ))}
-                  </div>
-                  <div className="grow">
-                    <p className="text-lg font-serif italic mb-8 text-ink/80 leading-relaxed">"{t.content}"</p>
-                  </div>
-                  <div className="flex items-center gap-4 mt-auto pt-6 border-t border-ink/5">
-                    <img 
-                      src={t.photo} 
-                      alt={t.name} 
-                      className="w-12 h-12 rounded-full object-cover border-2 border-maroon shrink-0"
-                    />
-                    <div>
-                      <h4 className="text-sm font-medium text-ink">{t.name}</h4>
-                      <p className="text-[10px] uppercase tracking-widest font-bold text-ink/40">{t.role}, {t.company}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-
-        {/* Pagination Dots */}
-        <div className="flex justify-center gap-2 mt-12">
-          {[...Array(totalPages)].map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrentTestimonialPage(i)}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                currentTestimonialPage === i ? 'bg-maroon w-6' : 'bg-ink/10'
-              }`}
-            />
-          ))}
-        </div>
-      </section>
+      {/* Google Reviews */}
+      <GoogleReviews />
 
       {/* CTA Section */}
       <section className="section-padding">

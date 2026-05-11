@@ -57,6 +57,27 @@ export const SERVICES: Service[] = [
     description: 'Crafting iconic logos, premium UI/UX interfaces, and comprehensive brand kits that resonate with your audience.',
     icon: 'Palette',
     features: ['Visual Identity Design', 'Typography Systems', 'UI/UX Interface Design']
+  },
+  {
+    id: 'digital-marketing',
+    title: 'Digital Marketing Services',
+    description: 'Growth-driven campaigns for social media, ads, and lead generation to expand your brand audience.',
+    icon: 'Megaphone',
+    features: ['Instagram Marketing', 'Facebook Ads', 'Branding', 'Lead Generation', 'SEO']
+  },
+  {
+    id: 'education-career',
+    title: 'Education / Career Services',
+    description: 'Structured career programs, internships, and training solutions for students and professionals.',
+    icon: 'BookOpen',
+    features: ['Career & Learning Programs', 'Internship Programs', 'Career Guidance Workshops', 'Training Programs']
+  },
+  {
+    id: 'creative-design',
+    title: 'Creative Design Services',
+    description: 'Eye-catching visual design for print, packaging, and brand communication materials.',
+    icon: 'Image',
+    features: ['Poster Design', 'Packaging & Pouch Design']
   }
 ];
 
