@@ -4,8 +4,20 @@ import { ArrowRight, Target, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { PROJECTS, WEB_IMAGE, SEO_IMAGE, BRANDING_IMAGE } from '../constants';
 import GoogleReviews from '../components/GoogleReviews';
+import littleLogo from '../assets/brands/little.png';
+import scynexLogo from '../assets/brands/scynex_.png';
 
 const Home = () => {
+  const trustedBrands = [
+    { name: 'goMunchz', logo: 'https://res.cloudinary.com/dd4oiwnep/image/upload/v1774178657/gomunchz_logo_transparent_r8r0a8.png' },
+    { name: 'Royal Standard Pub', logo: 'https://www.royalstandardpub.co.uk/images/logo.jpeg' },
+    { name: 'Khushibox', logo: 'https://res.cloudinary.com/dq7hun84m/image/upload/v1773765618/logo-main_jwi3jb.png' },
+    { name: 'Inizio Interiors', logo: 'https://res.cloudinary.com/dvruokwau/image/upload/v1774709258/inizio_nkncbg.png' },
+    { name: 'Desioriginals', logo: 'https://res.cloudinary.com/dvruokwau/image/upload/v1774709247/desioriginals_be8vb1.png' },
+    { name: 'Little Scholars International Preschool', logo: littleLogo },
+    { name: 'Scynex Conferences', logo: scynexLogo }
+  ];
+
   return (
     <div className="pt-10">
       {/* Hero Section */}
@@ -195,13 +207,7 @@ const Home = () => {
             animate={{ x: ['0%', '-100%'] }}
             transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
           >
-            {[
-              { name: 'goMunchz', logo: 'https://res.cloudinary.com/dd4oiwnep/image/upload/v1774178657/gomunchz_logo_transparent_r8r0a8.png' },
-              { name: 'Royal Standard Pub', logo: 'https://www.royalstandardpub.co.uk/images/logo.jpeg' },
-              { name: 'Khushibox', logo: 'https://res.cloudinary.com/dq7hun84m/image/upload/v1773765618/logo-main_jwi3jb.png' },
-              { name: 'Inizio Interiors', logo: 'https://res.cloudinary.com/dvruokwau/image/upload/v1774709258/inizio_nkncbg.png' },
-              { name: 'Desioriginals', logo: 'https://res.cloudinary.com/dvruokwau/image/upload/v1774709247/desioriginals_be8vb1.png' }
-            ].map((brand, index) => (
+            {trustedBrands.map((brand, index) => (
               <div key={index} className="flex-shrink-0 flex flex-col items-center justify-center gap-3 min-w-[180px] md:min-w-[220px]">
                 <div className="h-20 md:h-24 flex items-center justify-center">
                   <img 
@@ -213,13 +219,7 @@ const Home = () => {
                 <p className="text-sm md:text-base font-medium text-ink/70 text-center">{brand.name}</p>
               </div>
             ))}
-            {[
-              { name: 'goMunchz', logo: 'https://res.cloudinary.com/dd4oiwnep/image/upload/v1774178657/gomunchz_logo_transparent_r8r0a8.png' },
-              { name: 'Royal Standard Pub', logo: 'https://www.royalstandardpub.co.uk/images/logo.jpeg' },
-              { name: 'Khushibox', logo: 'https://res.cloudinary.com/dq7hun84m/image/upload/v1773765618/logo-main_jwi3jb.png' },
-              { name: 'Inizio Interiors', logo: 'https://res.cloudinary.com/dvruokwau/image/upload/v1774709258/inizio_nkncbg.png' },
-              { name: 'Desioriginals', logo: 'https://res.cloudinary.com/dvruokwau/image/upload/v1774709247/desioriginals_be8vb1.png' }
-            ].map((brand, index) => (
+            {trustedBrands.map((brand, index) => (
               <div key={`duplicate-${index}`} className="flex-shrink-0 flex flex-col items-center justify-center gap-3 min-w-[180px] md:min-w-[220px]">
                 <div className="h-20 md:h-24 flex items-center justify-center">
                   <img 
