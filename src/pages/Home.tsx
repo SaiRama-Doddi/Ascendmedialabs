@@ -1,22 +1,31 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { ArrowRight, Target, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { PROJECTS, WEB_IMAGE, SEO_IMAGE, BRANDING_IMAGE } from '../constants';
+import { PROJECTS, Project, WEB_IMAGE, SEO_IMAGE, BRANDING_IMAGE, TRUSTED_BRANDS, Brand } from '../constants';
 import GoogleReviews from '../components/GoogleReviews';
-import littleLogo from '../assets/brands/little.png';
-import scynexLogo from '../assets/brands/scynex_.png';
+import { portfolioService } from '../services/portfolioService';
 
 const Home = () => {
-  const trustedBrands = [
-    { name: 'goMunchz', logo: 'https://res.cloudinary.com/dd4oiwnep/image/upload/v1774178657/gomunchz_logo_transparent_r8r0a8.png' },
-    { name: 'Royal Standard Pub', logo: 'https://www.royalstandardpub.co.uk/images/logo.jpeg' },
-    { name: 'Khushibox', logo: 'https://res.cloudinary.com/dq7hun84m/image/upload/v1773765618/logo-main_jwi3jb.png' },
-    { name: 'Inizio Interiors', logo: 'https://res.cloudinary.com/dvruokwau/image/upload/v1774709258/inizio_nkncbg.png' },
-    { name: 'Desioriginals', logo: 'https://res.cloudinary.com/dvruokwau/image/upload/v1774709247/desioriginals_be8vb1.png' },
-    { name: 'Little Scholars International Preschool', logo: littleLogo },
-    { name: 'Scynex Conferences', logo: scynexLogo }
-  ];
+  const [projects, setProjects] = useState<Project[]>(PROJECTS);
+  const [brands, setBrands] = useState<Brand[]>(TRUSTED_BRANDS);
+
+  useEffect(() => {
+    let active = true;
+    portfolioService.getProjects().then((data) => {
+      if (active) {
+        setProjects(data);
+      }
+    });
+    portfolioService.getBrands().then((data) => {
+      if (active) {
+        setBrands(data);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <div className="pt-10">
@@ -130,12 +139,12 @@ const Home = () => {
       </section>
 
       {/* Portfolio Section */}
-      <section className="bg-maroon text-white py-16 md:py-20">
+      <section className="bg-maroon text-white py-4 md:py-6">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
-          <div className="flex flex-col md:flex-row items-start md:items-end md:justify-between mb-16 gap-6">
+          <div className="flex flex-col md:flex-row items-start md:items-end md:justify-between mb-4 gap-3">
             <div>
-              <h4 className="text-[10px] uppercase tracking-widest font-medium text-[#FDFBD4] mb-4">Selected Works</h4>
-              <h2 className="text-4xl md:text-5xl font-serif leading-tight">Our Portfolio</h2>
+              <h4 className="text-[10px] uppercase tracking-widest font-medium text-[#FDFBD4] mb-1">Selected Works</h4>
+              <h2 className="text-3xl md:text-4xl font-serif leading-tight">Our Portfolio</h2>
             </div>
             <Link to="/portfolio" className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-white/60 hover:text-[#FDFBD4] transition-colors group">
               View All Projects <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
@@ -143,26 +152,32 @@ const Home = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {PROJECTS.slice(0, 4).map((project, i) => (
+            {projects.slice(0, 4).map((project, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 25 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="group cursor-pointer bg-maroon rounded-sm overflow-hidden"
+                transition={{ duration: 0.6, delay: i * 0.1 }}
+                className="group cursor-pointer bg-white/[0.03] backdrop-blur-md p-3.5 rounded-xl border border-white/5 shadow-lg hover:shadow-2xl hover:bg-white/[0.06] hover:border-white/10 transition-all duration-500"
               >
                 <a href={project.url} target="_blank" rel="noopener noreferrer" className="block">
-                  <div className="aspect-4/3 overflow-hidden rounded-sm">
+                  <div className="aspect-[16/10] overflow-hidden rounded-lg bg-black/40 relative">
                     <img
                       src={project.image}
                       alt={project.title}
-                      className="w-full h-full object-contain object-center transition-transform duration-1000 group-hover:scale-105"
+                      className="w-full h-full object-cover object-top transition-all duration-700 group-hover:scale-[1.03] group-hover:opacity-90"
                       referrerPolicy="no-referrer"
                     />
+                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                      <span className="bg-white text-maroon text-[10px] uppercase tracking-widest font-bold px-4.5 py-2.5 rounded-full shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 flex items-center gap-1.5">
+                        Visit Website <ArrowRight size={12} />
+                      </span>
+                    </div>
                   </div>
-                  <div className="p-2">
-                    <h3 className="text-xl font-serif mb-1 group-hover:text-[#FDFBD4] transition-colors">{project.title}</h3>
-                    <p className="text-[10px] uppercase tracking-widest font-bold text-white">{project.category}</p>
+                  <div className="mt-3.5 px-1">
+                    <h3 className="text-lg font-serif group-hover:text-[#FDFBD4] transition-colors leading-tight">{project.title}</h3>
+                    <p className="text-[9px] uppercase tracking-widest font-bold text-[#FDFBD4]/75 mt-1 leading-none">{project.category}</p>
                   </div>
                 </a>
               </motion.div>
@@ -175,7 +190,7 @@ const Home = () => {
       <GoogleReviews />
 
       {/* CTA Section */}
-      <section className="section-padding">
+      <section className="py-8 md:py-10 px-6 md:px-12 max-w-7xl mx-auto">
         <div className="bg-maroon rounded-sm p-12 md:p-24 text-center text-white relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
             <div className="absolute -top-24 -left-24 w-96 h-96 bg-white rounded-full blur-3xl"></div>
@@ -207,7 +222,7 @@ const Home = () => {
             animate={{ x: ['0%', '-100%'] }}
             transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
           >
-            {trustedBrands.map((brand, index) => (
+            {brands.map((brand, index) => (
               <div key={index} className="flex-shrink-0 flex flex-col items-center justify-center gap-3 min-w-[180px] md:min-w-[220px]">
                 <div className="h-20 md:h-24 flex items-center justify-center">
                   <img 
@@ -219,7 +234,7 @@ const Home = () => {
                 <p className="text-sm md:text-base font-medium text-ink/70 text-center">{brand.name}</p>
               </div>
             ))}
-            {trustedBrands.map((brand, index) => (
+            {brands.map((brand, index) => (
               <div key={`duplicate-${index}`} className="flex-shrink-0 flex flex-col items-center justify-center gap-3 min-w-[180px] md:min-w-[220px]">
                 <div className="h-20 md:h-24 flex items-center justify-center">
                   <img 

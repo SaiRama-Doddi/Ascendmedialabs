@@ -78,13 +78,13 @@ const GoogleReviews = () => {
   );
 
   return (
-    <section className="section-padding bg-cream overflow-hidden">
-      <div className="text-center mb-16">
-        <h4 className="text-[10px] uppercase tracking-widest font-medium text-maroon mb-4">Google Reviews</h4>
-        <h2 className="text-4xl md:text-5xl font-serif">What Our Clients Say</h2>
+    <section className="py-8 md:py-10 bg-cream overflow-hidden max-w-7xl mx-auto px-6 md:px-12">
+      <div className="text-center mb-6">
+        <h4 className="text-[10px] uppercase tracking-widest font-medium text-maroon mb-2">Google Reviews</h4>
+        <h2 className="text-3xl md:text-4xl font-serif">What Our Clients Say</h2>
       </div>
 
-      <div className="relative min-h-100">
+      <div className="relative min-h-[260px]">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentPage}
@@ -92,23 +92,23 @@ const GoogleReviews = () => {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -50 }}
             transition={{ duration: 0.6, ease: "easeInOut" }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-8"
+            className="grid grid-cols-1 md:grid-cols-3 gap-6"
           >
             {currentReviews.map((review) => (
-              <div key={review.id} className="bg-white p-10 rounded-sm border border-ink/5 shadow-sm flex flex-col h-full min-h-87.5">
-                <div className="flex gap-1 mb-6">
+              <div key={review.id} className="bg-white p-6 md:p-8 rounded-sm border border-ink/5 shadow-sm flex flex-col h-full min-h-[220px]">
+                <div className="flex gap-1 mb-4">
                   {[...Array(review.rating)].map((_, i) => (
                     <span key={i} className="text-maroon text-xs">★</span>
                   ))}
                 </div>
                 <div className="grow">
-                  <p className="text-lg font-serif italic mb-8 text-ink/80 leading-relaxed">"{review.content}"</p>
+                  <p className="text-base font-serif italic mb-4 text-ink/80 leading-relaxed">"{review.content}"</p>
                 </div>
-                <div className="flex items-center gap-4 mt-auto pt-6 border-t border-ink/5">
+                <div className="flex items-center gap-4 mt-auto pt-4 border-t border-ink/5">
                   <img 
                     src={review.photo} 
                     alt={review.name} 
-                    className="w-12 h-12 rounded-full object-cover border-2 border-maroon shrink-0"
+                    className="w-10 h-10 rounded-full object-cover border-2 border-maroon shrink-0"
                   />
                   <div>
                     <h4 className="text-sm font-medium text-ink">{review.name}</h4>
@@ -122,7 +122,7 @@ const GoogleReviews = () => {
       </div>
 
       {/* Pagination Dots */}
-      <div className="flex justify-center gap-2 mt-12">
+      <div className="flex justify-center gap-2 mt-6">
         {[...Array(totalPages)].map((_, i) => (
           <button
             key={i}

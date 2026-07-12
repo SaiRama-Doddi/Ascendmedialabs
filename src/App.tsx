@@ -7,6 +7,8 @@ import About from './pages/About';
 import Services from './pages/Services';
 import Portfolio from './pages/Portfolio';
 import Contact from './pages/Contact';
+import AdminLogin from './pages/AdminLogin';
+import AdminDashboard from './pages/AdminDashboard';
 import { motion, AnimatePresence } from 'motion/react';
 import { FaWhatsapp, FaArrowUp, FaPhone } from 'react-icons/fa';
 
@@ -58,12 +60,13 @@ const handlePhoneCall = () => {
 
 function AppRoutes() {
   const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
 
   return (
     <>
       <ScrollToTop />
       <div className="min-h-screen flex flex-col">
-        <Navbar />
+        {!isAdminRoute && <Navbar />}
         <main className="grow">
           <AnimatePresence mode="wait">
             <Routes location={location}>
@@ -72,64 +75,68 @@ function AppRoutes() {
               <Route path="/services" element={<PageWrapper><Services /></PageWrapper>} />
               <Route path="/portfolio" element={<PageWrapper><Portfolio /></PageWrapper>} />
               <Route path="/contact" element={<PageWrapper><Contact /></PageWrapper>} />
+              <Route path="/admin/login" element={<PageWrapper><AdminLogin /></PageWrapper>} />
+              <Route path="/admin" element={<PageWrapper><AdminDashboard /></PageWrapper>} />
             </Routes>
           </AnimatePresence>
         </main>
 
-        <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
-          <motion.button
-            onClick={handlePhoneCall}
-            className="bg-blue-600 text-white h-16 w-16 rounded-full flex items-center justify-center shadow-lg hover:bg-blue-700 transition-colors duration-300 z-40 cursor-pointer relative overflow-hidden"
-            aria-label="Call us"
-            title="Call: +91 7675852618"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ 
-              opacity: 1, 
-              y: [0, -8, 0]
-            }}
-            transition={{ 
-              y: { duration: 3, repeat: Infinity, ease: 'easeInOut' }
-            }}
-            whileHover={{ scale: 1.2, rotate: 10 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <motion.div animate={{ rotate: 360 }} transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}>
-              <FaPhone size={28} />
-            </motion.div>
-          </motion.button>
-          <div className="relative">
-            <button
-              onClick={handleWhatsApp}
-              className="bg-green-500 text-white h-16 w-16 rounded-full flex items-center justify-center shadow-lg hover:bg-green-600 hover:scale-110 transition-all duration-300 z-40 cursor-pointer"
-              aria-label="Chat on WhatsApp"
-              title="Chat on WhatsApp"
-            >
-              <FaWhatsapp size={32} />
-            </button>
-            <motion.div 
-              className="absolute right-full mr-3 bottom-1/2 translate-y-1/2 whitespace-nowrap bg-white text-black px-4 py-2 rounded-lg text-sm font-medium shadow-lg"
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3 }}
-              style={{
-                pointerEvents: 'none',
+        {!isAdminRoute && (
+          <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
+            <motion.button
+              onClick={handlePhoneCall}
+              className="bg-blue-600 text-white h-16 w-16 rounded-full flex items-center justify-center shadow-lg hover:bg-blue-700 transition-colors duration-300 z-40 cursor-pointer relative overflow-hidden"
+              aria-label="Call us"
+              title="Call: +91 7675852618"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ 
+                opacity: 1, 
+                y: [0, -8, 0]
               }}
+              transition={{ 
+                y: { duration: 3, repeat: Infinity, ease: 'easeInOut' }
+              }}
+              whileHover={{ scale: 1.2, rotate: 10 }}
+              whileTap={{ scale: 0.9 }}
             >
-              <span>Hi, how can we help you today?</span>
-              <div className="absolute left-full top-1/2 -translate-y-1/2 w-0 h-0 border-l-8 border-l-white border-t-4 border-t-transparent border-b-4 border-b-transparent"></div>
-            </motion.div>
+              <motion.div animate={{ rotate: 360 }} transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}>
+                <FaPhone size={28} />
+              </motion.div>
+            </motion.button>
+            <div className="relative">
+              <button
+                onClick={handleWhatsApp}
+                className="bg-green-500 text-white h-16 w-16 rounded-full flex items-center justify-center shadow-lg hover:bg-green-600 hover:scale-110 transition-all duration-300 z-40 cursor-pointer"
+                aria-label="Chat on WhatsApp"
+                title="Chat on WhatsApp"
+              >
+                <FaWhatsapp size={32} />
+              </button>
+              <motion.div 
+                className="absolute right-full mr-3 bottom-1/2 translate-y-1/2 whitespace-nowrap bg-white text-black px-4 py-2 rounded-lg text-sm font-medium shadow-lg"
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3 }}
+                style={{
+                  pointerEvents: 'none',
+                }}
+              >
+                <span>Hi, how can we help you today?</span>
+                <div className="absolute left-full top-1/2 -translate-y-1/2 w-0 h-0 border-l-8 border-l-white border-t-4 border-t-transparent border-b-4 border-b-transparent"></div>
+              </motion.div>
+            </div>
+            <button
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              aria-label="Scroll to top"
+              className="h-16 w-16 rounded-full bg-maroon text-white shadow-xl hover:bg-maroon/90 hover:scale-110 transition-all duration-300 flex items-center justify-center"
+              title="Back to top"
+            >
+              <FaArrowUp size={28} />
+            </button>
           </div>
-          <button
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            aria-label="Scroll to top"
-            className="h-16 w-16 rounded-full bg-maroon text-white shadow-xl hover:bg-maroon/90 hover:scale-110 transition-all duration-300 flex items-center justify-center"
-            title="Back to top"
-          >
-            <FaArrowUp size={28} />
-          </button>
-        </div>
+        )}
 
-        <Footer />
+        {!isAdminRoute && <Footer />}
       </div>
     </>
   );

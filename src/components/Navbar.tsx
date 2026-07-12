@@ -26,27 +26,19 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-cream/80 backdrop-blur-md py-4 shadow-sm' : 'bg-transparent py-6'}`}>
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-cream/80 backdrop-blur-md py-2 shadow-sm' : 'bg-transparent py-4'}`}>
       <div className="max-w-7xl mx-auto px-6 md:px-12 flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          <Link to="/" className="flex items-center gap-3 group">
-            <img 
-              src={LOGO} 
-              alt="Ascend Media Labs" 
-              className="h-14 md:h-18 lg:h-20 w-auto object-contain"
-            />
-          </Link>
-
-          <div className="hidden md:flex flex-col leading-tight">
-            <span className="text-2xl font-bold leading-none text-maroon uppercase">Ascend</span>
-            <span className="text-xs uppercase tracking-widest text-ink/60">Media Labs</span>
+        <Link to="/" className="flex items-center gap-2.5 md:gap-3 group">
+          <img 
+            src={LOGO} 
+            alt="Ascend Media Labs" 
+            className={`w-auto object-contain transition-all duration-300 ${scrolled ? 'h-12 md:h-16' : 'h-14 md:h-20'}`}
+          />
+          <div className="flex flex-col gap-0.5 transition-all duration-300">
+            <span className="text-xl md:text-2xl font-bold text-maroon uppercase tracking-[0.06em] leading-none">Ascend</span>
+            <span className="text-[10px] md:text-xs uppercase tracking-[0.45em] text-ink/60 leading-none">Media Labs</span>
           </div>
-        </div>
-
-        <div className="md:hidden flex flex-col items-center text-center mr-auto">
-          <span className="text-lg font-bold text-maroon uppercase">Ascend</span>
-          <span className="text-[10px] uppercase tracking-widest text-ink/70">Media Labs</span>
-        </div>
+        </Link>
 
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-8">

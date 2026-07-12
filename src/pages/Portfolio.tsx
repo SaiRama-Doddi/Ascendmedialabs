@@ -1,9 +1,25 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { PROJECTS } from '../constants';
+import { PROJECTS, Project } from '../constants';
 import { Link } from 'react-router-dom';
+import { portfolioService } from '../services/portfolioService';
+import { ArrowRight } from 'lucide-react';
 
 const Portfolio = () => {
+  const [projects, setProjects] = useState<Project[]>(PROJECTS);
+
+  useEffect(() => {
+    let active = true;
+    portfolioService.getProjects().then((data) => {
+      if (active) {
+        setProjects(data);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   return (
     <div className="pt-10">
       <section className="section-padding">
@@ -19,35 +35,35 @@ const Portfolio = () => {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-          {PROJECTS.map((project, i) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {projects.map((project, i) => (
             <motion.div
               key={project.id}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="group"
+              transition={{ duration: 0.6, delay: i * 0.1 }}
+              className="group cursor-pointer bg-white p-4 rounded-xl border border-ink/5 shadow-sm hover:shadow-lg hover:border-maroon/10 transition-all duration-500"
             >
-              <a href={project.url} target="_blank" rel="noopener noreferrer" className="block aspect-16/10 overflow-hidden rounded-sm mb-8 bg-transparent">
-                <img
-                  src={project.image}
-                  alt={project.title}
-                  className="w-full h-full object-cover object-center transition-transform duration-1000 group-hover:scale-105"
-                  referrerPolicy="no-referrer"
-                />
-              </a>
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="text-2xl md:text-3xl font-serif mb-3 group-hover:text-maroon transition-colors">
-                    <a href={project.url} target="_blank" rel="noopener noreferrer">{project.title}</a>
-                  </h3>
-                  <p className="text-xs uppercase tracking-widest font-bold text-maroon">{project.category}</p>
+              <a href={project.url} target="_blank" rel="noopener noreferrer" className="block">
+                <div className="aspect-[16/10] overflow-hidden rounded-lg bg-cream-dark/20 relative mb-4">
+                  <img
+                    src={project.image}
+                    alt={project.title}
+                    className="w-full h-full object-cover object-top transition-all duration-700 group-hover:scale-[1.03] group-hover:opacity-90"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                    <span className="bg-maroon text-white text-[10px] uppercase tracking-widest font-bold px-4.5 py-2.5 rounded-full shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 flex items-center gap-1.5">
+                      Visit Website <ArrowRight size={12} />
+                    </span>
+                  </div>
                 </div>
-                <a href={project.url} target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-full bg-white text-maroon flex items-center justify-center border border-ink/10 hover:bg-white/90 hover:text-maroon transition-all">
-                   <ArrowUpRight size={20} />
-                </a>
-              </div>
+                <div className="px-1">
+                  <span className="text-[9px] uppercase tracking-widest font-bold text-maroon">{project.category}</span>
+                  <h3 className="text-xl font-serif mt-1 text-ink group-hover:text-maroon transition-colors leading-tight">{project.title}</h3>
+                </div>
+              </a>
             </motion.div>
           ))}
         </div>

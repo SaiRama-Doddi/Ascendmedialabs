@@ -181,3 +181,22 @@ export const TESTIMONIALS: Testimonial[] = [
     photo: 'https://randomuser.me/api/portraits/men/76.jpg'
   }
 ];
+
+import littleLogo from './assets/brands/little.png';
+import scynexLogo from './assets/brands/scynex_.png';
+
+export interface Brand {
+  id: string;
+  name: string;
+  logo: string;
+}
+
+export const TRUSTED_BRANDS: Brand[] = [
+  { id: 'brand-gomunchz', name: 'goMunchz', logo: 'https://res.cloudinary.com/dd4oiwnep/image/upload/v1774178657/gomunchz_logo_transparent_r8r0a8.png' },
+  { id: 'brand-royal-standard', name: 'Royal Standard Pub', logo: 'https://www.royalstandardpub.co.uk/images/logo.jpeg' },
+  { id: 'brand-khushibox', name: 'Khushibox', logo: 'https://res.cloudinary.com/dq7hun84m/image/upload/v1773765618/logo-main_jwi3jb.png' },
+  { id: 'brand-inizio', name: 'Inizio Interiors', logo: 'https://res.cloudinary.com/dvruokwau/image/upload/v1774709258/inizio_nkncbg.png' },
+  { id: 'brand-desioriginals', name: 'Desioriginals', logo: 'https://res.cloudinary.com/dvruokwau/image/upload/v1774709247/desioriginals_be8vb1.png' },
+  { id: 'brand-little', name: 'Little Scholars International Preschool', logo: littleLogo },
+  { id: 'brand-scynex', name: 'Scynex Conferences', logo: scynexLogo }
+];

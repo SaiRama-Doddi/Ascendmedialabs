@@ -1,9 +1,11 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Phone, Mail, MapPin, Calendar, Send } from 'lucide-react';
+import { db } from '../firebase';
+import { collection, addDoc } from 'firebase/firestore';
 
 const Contact = () => {
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const name = formData.get('name')?.toString().trim() || '';
@@ -16,11 +18,28 @@ const Contact = () => {
       return;
     }
 
+    // Save lead to Firebase Firestore
+    try {
+      await addDoc(collection(db, 'inquiries'), {
+        name,
+        email,
+        phone,
+        message,
+        status: 'new',
+        createdAt: new Date().toISOString()
+      });
+    } catch (e) {
+      console.error('Failed to log inquiry in Firestore:', e);
+    }
+
     const text = encodeURIComponent(`New lead from website:\nName: ${name}\nEmail: ${email}\nPhone: ${phone}\nMessage: ${message}`);
     const whatsappNumber = '917675852618';
     const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${text}`;
 
     window.open(whatsappUrl, '_blank');
+    
+    // Clear form inputs
+    event.currentTarget.reset();
   };
 
   return (
