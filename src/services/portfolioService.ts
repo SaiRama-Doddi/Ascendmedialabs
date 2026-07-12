@@ -37,6 +37,34 @@ const getStorageRefFromUrl = (url: string) => {
   throw new Error('Invalid Firebase Storage URL');
 };
 
+// Helper to resolve migrated dev paths to their actual imported production assets
+const resolveProjectImage = (imagePath: string, projectId: string): string => {
+  if (!imagePath) return '';
+  // If it's a firebase storage URL or full http URL, use it directly
+  if (imagePath.startsWith('http') || imagePath.startsWith('blob:') || imagePath.startsWith('data:')) {
+    return imagePath;
+  }
+  // Otherwise, find the original project import in PROJECTS
+  const original = PROJECTS.find(p => p.id === projectId);
+  if (original) {
+    return original.image;
+  }
+  return imagePath;
+};
+
+// Helper to resolve migrated dev paths to their actual imported brand logo assets
+const resolveBrandLogo = (logoPath: string, brandId: string): string => {
+  if (!logoPath) return '';
+  if (logoPath.startsWith('http') || logoPath.startsWith('blob:') || logoPath.startsWith('data:')) {
+    return logoPath;
+  }
+  const original = TRUSTED_BRANDS.find(b => b.id === brandId);
+  if (original) {
+    return original.logo;
+  }
+  return logoPath;
+};
+
 export const portfolioService = {
   // Fetch all projects from Firestore, falling back to constants.ts if empty/error
   async getProjects(): Promise<Project[]> {
@@ -49,7 +77,7 @@ export const portfolioService = {
           id: doc.id,
           title: data.title || '',
           category: data.category || '',
-          image: data.image || '',
+          image: resolveProjectImage(data.image || '', doc.id),
           url: data.url || ''
         });
       });
@@ -76,7 +104,7 @@ export const portfolioService = {
         id: doc.id,
         title: data.title || '',
         category: data.category || '',
-        image: data.image || '',
+        image: resolveProjectImage(data.image || '', doc.id),
         url: data.url || ''
       });
     });
@@ -107,7 +135,7 @@ export const portfolioService = {
         firestoreBrands.push({
           id: doc.id,
           name: data.name || '',
-          logo: data.logo || ''
+          logo: resolveBrandLogo(data.logo || '', doc.id)
         });
       });
 
@@ -130,7 +158,7 @@ export const portfolioService = {
       firestoreBrands.push({
         id: doc.id,
         name: data.name || '',
-        logo: data.logo || ''
+        logo: resolveBrandLogo(data.logo || '', doc.id)
       });
     });
     return firestoreBrands;
