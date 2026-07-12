@@ -41,14 +41,14 @@ export interface Inquiry {
 }
 
 // Helper to run database operations with a timeout to avoid hangs
-const withTimeout = <T>(promise: Promise<T>, ms: number = 8000): Promise<T> => {
+function withTimeout<T>(promise: Promise<T>, ms: number = 8000): Promise<T> {
   return Promise.race([
     promise,
     new Promise<T>((_, reject) => 
       setTimeout(() => reject(new Error('Request timed out. Please verify your Firebase connection and Security Rules.')), ms)
     )
   ]);
-};
+}
 
 const AdminDashboard = () => {
   const [user, setUser] = useState<any>(null);
