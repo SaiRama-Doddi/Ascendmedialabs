@@ -156,9 +156,16 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Bypassing auth check for automated testing
-    setUser({ email: 'ascendmedialabsinfo@gmail.com', uid: 'test-admin' } as any);
-    loadAllData();
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (!currentUser) {
+        navigate('/admin/login');
+      } else {
+        setUser(currentUser);
+        loadAllData();
+      }
+    });
+
+    return () => unsubscribe();
   }, [navigate]);
 
   useEffect(() => {
@@ -2549,11 +2556,6 @@ const AdminDashboard = () => {
                     required
                     autoFocus
                   />
-                </div>
-
-                <div className="w-full bg-maroon/5 border border-maroon/10 p-3 rounded-sm text-[10px] text-maroon text-left font-semibold leading-normal mb-2">
-                  🔐 Developer DevTip:<br />
-                  For testing verification, your secure OTP is: <span className="font-mono text-xs underline select-all">{generatedOtp}</span>
                 </div>
 
                 <div className="flex gap-3 justify-end mt-2 w-full">
