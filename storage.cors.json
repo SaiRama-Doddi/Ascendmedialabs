@@ -1,0 +1,13 @@
+[
+  {
+    "origin": [
+      "https://www.ascendmedialabs.com",
+      "https://ascendmedialabs.com",
+      "http://localhost:3000",
+      "http://localhost:5173"
+    ],
+    "method": ["GET", "POST", "PUT", "DELETE", "HEAD"],
+    "responseHeader": ["Content-Type", "x-goog-meta-*", "Authorization", "Content-Length", "User-Agent"],
+    "maxAgeSeconds": 3600
+  }
+]

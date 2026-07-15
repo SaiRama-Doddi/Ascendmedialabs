@@ -111,48 +111,45 @@ const AdminDashboard = () => {
       setLoading(true);
       setError('');
 
-      // 1. Fetch raw projects with timeout. If empty, perform migration.
+      // Fetch all three datasets in parallel with a generous timeout (15 seconds)
       let projList: Project[] = [];
-      try {
-        projList = await withTimeout(portfolioService.getFirestoreProjectsOnly(), 3500);
-      } catch (e) {
-        console.warn('Initial project check timed out, skipping migration check');
-        throw e;
-      }
+      let brandList: Brand[] = [];
 
+      const [projResult, brandResult] = await withTimeout(
+        Promise.all([
+          portfolioService.getFirestoreProjectsOnly(),
+          portfolioService.getFirestoreBrandsOnly(),
+          fetchInquiries()
+        ]),
+        15000
+      );
+
+      projList = projResult;
+      brandList = brandResult;
+
+      // Handle migrations if either list is empty (database is brand new)
       if (projList.length === 0) {
         console.log('No Firestore projects found. Triggering automated migration...');
         try {
-          await withTimeout(portfolioService.migrateProjects(), 5000);
-          projList = await withTimeout(portfolioService.getFirestoreProjectsOnly(), 3500);
+          await withTimeout(portfolioService.migrateProjects(), 8000);
+          projList = await withTimeout(portfolioService.getFirestoreProjectsOnly(), 8000);
         } catch (migErr) {
-          console.warn('Migration failed or timed out:', migErr);
+          console.warn('Projects migration failed or timed out:', migErr);
         }
-      }
-      setProjects(projList);
-
-      // 2. Fetch raw brands with timeout. If empty, perform migration.
-      let brandList: Brand[] = [];
-      try {
-        brandList = await withTimeout(portfolioService.getFirestoreBrandsOnly(), 3500);
-      } catch (e) {
-        console.warn('Initial brands check timed out, skipping migration check');
-        throw e;
       }
 
       if (brandList.length === 0) {
         console.log('No Firestore brands found. Triggering automated migration...');
         try {
-          await withTimeout(portfolioService.migrateBrands(), 5000);
-          brandList = await withTimeout(portfolioService.getFirestoreBrandsOnly(), 3500);
+          await withTimeout(portfolioService.migrateBrands(), 8000);
+          brandList = await withTimeout(portfolioService.getFirestoreBrandsOnly(), 8000);
         } catch (migErr) {
           console.warn('Brands migration failed or timed out:', migErr);
         }
       }
-      setBrands(brandList);
 
-      // 3. Fetch inquiries with timeout
-      await withTimeout(fetchInquiries(), 3500);
+      setProjects(projList);
+      setBrands(brandList);
     } catch (err: any) {
       console.warn('Sync failed:', err);
       

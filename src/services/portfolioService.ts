@@ -1,4 +1,4 @@
-import { db, storage } from '../firebase';
+import { db } from '../firebase';
 import { 
   collection, 
   getDocs, 
@@ -6,41 +6,49 @@ import {
   doc, 
   updateDoc, 
   deleteDoc, 
-  query, 
-  orderBy,
   setDoc
 } from 'firebase/firestore';
-import { 
-  ref, 
-  uploadBytes, 
-  getDownloadURL, 
-  deleteObject 
-} from 'firebase/storage';
 import { PROJECTS, Project, TRUSTED_BRANDS, Brand } from '../constants';
 
 const PROJECTS_COLLECTION = 'projects';
 const BRANDS_COLLECTION = 'brands';
 
-// Helper to check if a URL is from Firebase Storage
-const isFirebaseStorageUrl = (url: string) => {
-  return url.includes('firebasestorage.googleapis.com');
+// Helper to upload files directly to Cloudinary using Unsigned Uploads
+const uploadToCloudinary = async (file: File): Promise<string> => {
+  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+  const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+
+  if (!cloudName || !uploadPreset || cloudName.includes('YOUR_CLOUDINARY') || uploadPreset.includes('YOUR_CLOUDINARY')) {
+    throw new Error('Cloudinary credentials are not configured. Please add VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET to your environment variables (local .env or Vercel settings).');
+  }
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', uploadPreset);
+
+  const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errData = await response.json().catch(() => ({}));
+    throw new Error(errData.error?.message || 'Failed to upload image to Cloudinary. Please verify that your Cloudinary Upload Preset is configured as "Unsigned".');
+  }
+
+  const data = await response.json();
+  return data.secure_url;
 };
 
-// Helper to get reference from Firebase Storage URL
-const getStorageRefFromUrl = (url: string) => {
-  const decodedUrl = decodeURIComponent(url);
-  const parts = decodedUrl.split('/o/');
-  if (parts.length > 1) {
-    const path = parts[1].split('?')[0];
-    return ref(storage, path);
-  }
-  throw new Error('Invalid Firebase Storage URL');
+// Helper to check if a URL is from Firebase Storage (for legacy checks if needed)
+const isFirebaseStorageUrl = (url: string) => {
+  return url.includes('firebasestorage.googleapis.com');
 };
 
 // Helper to resolve migrated dev paths to their actual imported production assets
 const resolveProjectImage = (imagePath: string, projectId: string): string => {
   if (!imagePath) return '';
-  // If it's a firebase storage URL or full http URL, use it directly
+  // If it's a firebase storage URL or Cloudinary URL or full http URL, use it directly
   if (imagePath.startsWith('http') || imagePath.startsWith('blob:') || imagePath.startsWith('data:')) {
     return imagePath;
   }
@@ -176,12 +184,10 @@ export const portfolioService = {
     }
   },
 
-  // Add a new brand logo
+  // Add a new brand logo using Cloudinary
   async addBrand(name: string, logoFile: File): Promise<Brand> {
-    // 1. Upload logo to Firebase Storage
-    const storageRef = ref(storage, `brands/${Date.now()}_${logoFile.name}`);
-    const uploadResult = await uploadBytes(storageRef, logoFile);
-    const logoUrl = await getDownloadURL(uploadResult.ref);
+    // 1. Upload logo to Cloudinary
+    const logoUrl = await uploadToCloudinary(logoFile);
 
     // 2. Save metadata to Firestore
     const docRef = await addDoc(collection(db, BRANDS_COLLECTION), {
@@ -199,30 +205,18 @@ export const portfolioService = {
 
   // Delete a brand logo
   async deleteBrand(id: string, logoUrl?: string): Promise<void> {
-    // 1. Delete metadata from Firestore
+    // Delete metadata from Firestore
     const docRef = doc(db, BRANDS_COLLECTION, id);
     await deleteDoc(docRef);
-
-    // 2. Delete file from Storage if hosted on Firebase
-    if (logoUrl && isFirebaseStorageUrl(logoUrl)) {
-      try {
-        const fileRef = getStorageRefFromUrl(logoUrl);
-        await deleteObject(fileRef);
-      } catch (e) {
-        console.error('Failed to delete brand logo from storage during deletion:', e);
-      }
-    }
   },
 
-  // Add a new project
+  // Add a new project using Cloudinary
   async addProject(
     projectData: Omit<Project, 'id' | 'image'>, 
     imageFile: File
   ): Promise<Project> {
-    // 1. Upload image to Firebase Storage
-    const storageRef = ref(storage, `portfolio/${Date.now()}_${imageFile.name}`);
-    const uploadResult = await uploadBytes(storageRef, imageFile);
-    const imageUrl = await getDownloadURL(uploadResult.ref);
+    // 1. Upload image to Cloudinary
+    const imageUrl = await uploadToCloudinary(imageFile);
 
     // 2. Save metadata to Firestore
     const docRef = await addDoc(collection(db, PROJECTS_COLLECTION), {
@@ -251,20 +245,8 @@ export const portfolioService = {
 
     // 1. Handle image upload if a new file is provided
     if (imageFile) {
-      const storageRef = ref(storage, `portfolio/${Date.now()}_${imageFile.name}`);
-      const uploadResult = await uploadBytes(storageRef, imageFile);
-      const imageUrl = await getDownloadURL(uploadResult.ref);
+      const imageUrl = await uploadToCloudinary(imageFile);
       updateData.image = imageUrl;
-
-      // Clean up old image if it was hosted on Firebase Storage
-      if (oldImageUrl && isFirebaseStorageUrl(oldImageUrl)) {
-        try {
-          const oldRef = getStorageRefFromUrl(oldImageUrl);
-          await deleteObject(oldRef);
-        } catch (e) {
-          console.error('Failed to delete old image from storage:', e);
-        }
-      }
     }
 
     // 2. Update metadata in Firestore
@@ -274,18 +256,8 @@ export const portfolioService = {
 
   // Delete a project
   async deleteProject(id: string, imageUrl?: string): Promise<void> {
-    // 1. Delete metadata from Firestore
+    // Delete metadata from Firestore
     const docRef = doc(db, PROJECTS_COLLECTION, id);
     await deleteDoc(docRef);
-
-    // 2. Delete file from Storage if hosted on Firebase
-    if (imageUrl && isFirebaseStorageUrl(imageUrl)) {
-      try {
-        const fileRef = getStorageRefFromUrl(imageUrl);
-        await deleteObject(fileRef);
-      } catch (e) {
-        console.error('Failed to delete image from storage during project deletion:', e);
-      }
-    }
   }
 };
