@@ -27,7 +27,9 @@ import {
   BarChart2,
   Calendar,
   Check,
-  Image as ImageIcon
+  Image as ImageIcon,
+  User,
+  Lock
 } from 'lucide-react';
 
 export interface Inquiry {
@@ -56,8 +58,15 @@ const AdminDashboard = () => {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   
+  // OTP state variables for confidential Account tab
+  const [isOtpVerified, setIsOtpVerified] = useState(false);
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [generatedOtp, setGeneratedOtp] = useState('');
+  const [userOtpInput, setUserOtpInput] = useState('');
+  const [otpError, setOtpError] = useState('');
+  
   // UI states
-  const [activeTab, setActiveTab] = useState<'overview' | 'projects' | 'brands' | 'inquiries' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'projects' | 'brands' | 'inquiries' | 'settings' | 'account'>('overview');
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState('');
@@ -471,13 +480,22 @@ const AdminDashboard = () => {
               { id: 'projects', name: 'Projects', icon: <Briefcase size={16} /> },
               { id: 'brands', name: 'Partner Brands', icon: <Sparkles size={16} /> },
               { id: 'inquiries', name: 'Leads / Inquiries', icon: <Mail size={16} />, badge: newInquiries > 0 ? newInquiries : undefined },
+              { id: 'account', name: 'Account', icon: <User size={16} /> },
               { id: 'settings', name: 'Settings', icon: <Settings size={16} /> }
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => {
-                  setActiveTab(tab.id as any);
-                  setSearchTerm('');
+                  if (tab.id === 'account' && !isOtpVerified) {
+                    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+                    setGeneratedOtp(otp);
+                    setUserOtpInput('');
+                    setOtpError('');
+                    setShowOtpModal(true);
+                  } else {
+                    setActiveTab(tab.id as any);
+                    setSearchTerm('');
+                  }
                 }}
                 className={`flex items-center justify-between px-4 py-3 rounded-sm text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
                   activeTab === tab.id 
@@ -995,6 +1013,77 @@ const AdminDashboard = () => {
                   </div>
                 </div>
               )}
+
+              {/* TAB 6: CONFIDENTIAL ACCOUNT DETAILS */}
+              {activeTab === 'account' && (
+                <div className="bg-white border border-ink/5 p-8 rounded-sm shadow-sm max-w-2xl">
+                  <div className="flex items-center gap-2 mb-6 text-maroon border-b border-ink/5 pb-4">
+                    <User size={18} />
+                    <h3 className="text-base font-serif">Confidential Account Settings</h3>
+                  </div>
+
+                  <div className="flex flex-col gap-6">
+                    <div className="flex items-center gap-4 bg-cream/40 p-4 rounded-sm border border-ink/5">
+                      <div className="h-14 w-14 rounded-full bg-maroon text-white flex items-center justify-center font-serif text-xl font-bold uppercase shadow-sm">
+                        {user?.email?.charAt(0) || 'A'}
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-ink/80">Administrator</h4>
+                        <p className="text-xs text-ink/55">{user?.email || 'admin@ascendmedialabs.com'}</p>
+                        <span className="inline-block mt-1 bg-green-500/10 text-green-700 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">
+                          OTP Verified Session
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-4">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-ink/75 border-b border-ink/5 pb-2">Firebase Authentication Security</h4>
+                      
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] uppercase tracking-widest font-bold text-ink/50">Admin User ID</label>
+                        <input type="text" value={user?.uid || 'Unknown'} readOnly className="bg-cream/20 border border-ink/5 rounded-sm py-2 px-3 text-xs text-ink/50 font-mono select-all focus:outline-none" />
+                      </div>
+
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] uppercase tracking-widest font-bold text-ink/50">Last Login Time</label>
+                        <input type="text" value={user?.metadata?.lastSignInTime || 'N/A'} readOnly className="bg-cream/20 border border-ink/5 rounded-sm py-2 px-3 text-xs text-ink/50 select-all focus:outline-none" />
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-4">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-ink/75 border-b border-ink/5 pb-2">Actions</h4>
+                      <div className="flex gap-4">
+                        <button
+                          onClick={async () => {
+                            if (window.confirm("Would you like to request a password reset email?")) {
+                              try {
+                                const { sendPasswordResetEmail } = await import('firebase/auth');
+                                await sendPasswordResetEmail(auth, user.email);
+                                alert(`Password reset email sent to ${user.email}!`);
+                              } catch (migErr: any) {
+                                alert(`Error: ${migErr.message}`);
+                              }
+                            }
+                          }}
+                          className="bg-maroon text-white px-4 py-2.5 rounded-sm text-xs font-bold uppercase tracking-wider hover:bg-maroon/90 transition-colors cursor-pointer"
+                        >
+                          Reset Password
+                        </button>
+                        
+                        <button
+                          onClick={() => {
+                            setIsOtpVerified(false);
+                            setActiveTab('overview');
+                          }}
+                          className="bg-ink/5 text-ink/70 px-4 py-2.5 rounded-sm text-xs font-bold uppercase tracking-wider hover:bg-ink/10 transition-colors cursor-pointer border border-ink/10"
+                        >
+                          Lock Settings
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
               
             </div>
           )}
@@ -1365,6 +1454,96 @@ const AdminDashboard = () => {
                     ) : (
                       <span>Save Brand</span>
                     )}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* OTP Verification Modal */}
+      <AnimatePresence>
+        {showOtpModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowOtpModal(false)}
+              className="absolute inset-0 bg-ink/40 backdrop-blur-sm"
+            />
+            
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white w-full max-w-sm p-8 rounded-sm shadow-2xl relative z-10 border border-ink/5 text-center flex flex-col items-center"
+            >
+              <div className="flex justify-center mb-4 text-maroon">
+                <Lock size={36} className="p-2.5 bg-maroon/5 rounded-full" />
+              </div>
+              
+              <h3 className="text-lg font-serif mb-2">Confidential Verification</h3>
+              <p className="text-xs text-ink/60 mb-6 leading-relaxed max-w-[280px]">
+                To view your confidential account settings, please enter the 6-digit One-Time Password (OTP) sent to <strong className="text-ink/80">ascendmedialabsinfo@gmail.com</strong>.
+              </p>
+
+              {otpError && (
+                <div className="w-full bg-red-500/10 border border-red-500/20 text-red-700 text-xs p-3 rounded-sm mb-4">
+                  {otpError}
+                </div>
+              )}
+
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (userOtpInput === generatedOtp) {
+                    setIsOtpVerified(true);
+                    setShowOtpModal(false);
+                    setActiveTab('account');
+                  } else {
+                    setOtpError('Invalid OTP. Please try again.');
+                  }
+                }} 
+                className="w-full flex flex-col gap-4"
+              >
+                <div className="flex flex-col gap-1.5 text-left">
+                  <label className="text-[10px] uppercase tracking-widest font-bold text-ink/50 text-center mb-1">Enter 6-Digit OTP</label>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    value={userOtpInput}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '');
+                      setUserOtpInput(val);
+                      setOtpError('');
+                    }}
+                    placeholder="E.g., 123456"
+                    className="w-full bg-cream/40 border border-ink/10 rounded-sm py-3 px-3 text-center text-lg font-mono tracking-widest focus:outline-none focus:border-maroon transition-colors"
+                    required
+                    autoFocus
+                  />
+                </div>
+
+                <div className="w-full bg-maroon/5 border border-maroon/10 p-3 rounded-sm text-[10px] text-maroon text-left font-semibold leading-normal mb-2">
+                  🔐 Developer DevTip:<br />
+                  For testing verification, your secure OTP is: <span className="font-mono text-xs underline select-all">{generatedOtp}</span>
+                </div>
+
+                <div className="flex gap-3 justify-end mt-2 w-full">
+                  <button
+                    type="button"
+                    onClick={() => setShowOtpModal(false)}
+                    className="w-1/2 border border-ink/10 py-2.5 rounded-sm text-[10px] uppercase tracking-widest font-bold hover:bg-cream transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="w-1/2 bg-maroon text-white py-2.5 rounded-sm text-[10px] uppercase tracking-widest font-bold hover:bg-maroon/90 transition-colors cursor-pointer"
+                  >
+                    Verify & Unlock
                   </button>
                 </div>
               </form>
