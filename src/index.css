@@ -25,3 +25,29 @@
 .section-padding {
   @apply py-12 md:py-16 px-6 md:px-12 max-w-7xl mx-auto;
 }
+
+@media print {
+  /* Hide all dashboard/portal sections */
+  body * {
+    visibility: hidden;
+  }
+  /* Show only the invoice paper sheet */
+  #printable-invoice-paper, #printable-invoice-paper * {
+    visibility: visible;
+  }
+  #printable-invoice-paper {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  /* Explicitly hide non-printable indicators inside printable section */
+  .no-print {
+    display: none !important;
+  }
+}

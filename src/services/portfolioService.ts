@@ -10,8 +10,37 @@ import {
 } from 'firebase/firestore';
 import { PROJECTS, Project, TRUSTED_BRANDS, Brand } from '../constants';
 
+export interface PaymentInstallment {
+  id: string;
+  amount: number;
+  date: string;
+  description: string;
+}
+
+export interface ClientProjectFinancial {
+  id?: string;
+  projectName: string;
+  clientName: string;
+  startDate: string;
+  endDate: string;
+  totalAmount: number;
+  payments: PaymentInstallment[];
+  createdAt: string;
+}
+
+export interface Expense {
+  id?: string;
+  description: string;
+  amount: number;
+  date: string;
+  category: string;
+  createdAt: string;
+}
+
 const PROJECTS_COLLECTION = 'projects';
 const BRANDS_COLLECTION = 'brands';
+const CLIENT_FINANCIALS_COLLECTION = 'client_financials';
+const EXPENSES_COLLECTION = 'expenses';
 
 // Helper to upload files directly to Cloudinary using Unsigned Uploads
 const uploadToCloudinary = async (file: File): Promise<string> => {
@@ -258,6 +287,93 @@ export const portfolioService = {
   async deleteProject(id: string, imageUrl?: string): Promise<void> {
     // Delete metadata from Firestore
     const docRef = doc(db, PROJECTS_COLLECTION, id);
+    await deleteDoc(docRef);
+  },
+
+  // Client Financials Ledgers
+  async getClientProjects(): Promise<ClientProjectFinancial[]> {
+    try {
+      const querySnapshot = await getDocs(collection(db, CLIENT_FINANCIALS_COLLECTION));
+      const list: ClientProjectFinancial[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        list.push({
+          id: doc.id,
+          projectName: data.projectName || '',
+          clientName: data.clientName || '',
+          startDate: data.startDate || '',
+          endDate: data.endDate || '',
+          totalAmount: Number(data.totalAmount) || 0,
+          payments: data.payments || [],
+          createdAt: data.createdAt || ''
+        });
+      });
+      return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    } catch (e) {
+      console.error('Error fetching client financials:', e);
+      return [];
+    }
+  },
+
+  async addClientProject(project: Omit<ClientProjectFinancial, 'id' | 'createdAt'>): Promise<ClientProjectFinancial> {
+    const newProject = {
+      ...project,
+      createdAt: new Date().toISOString()
+    };
+    const docRef = await addDoc(collection(db, CLIENT_FINANCIALS_COLLECTION), newProject);
+    return {
+      id: docRef.id,
+      ...newProject
+    };
+  },
+
+  async updateClientProject(id: string, data: Partial<Omit<ClientProjectFinancial, 'id'>>): Promise<void> {
+    const docRef = doc(db, CLIENT_FINANCIALS_COLLECTION, id);
+    await updateDoc(docRef, data);
+  },
+
+  async deleteClientProject(id: string): Promise<void> {
+    const docRef = doc(db, CLIENT_FINANCIALS_COLLECTION, id);
+    await deleteDoc(docRef);
+  },
+
+  // Expenses Tracker
+  async getExpenses(): Promise<Expense[]> {
+    try {
+      const querySnapshot = await getDocs(collection(db, EXPENSES_COLLECTION));
+      const list: Expense[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        list.push({
+          id: doc.id,
+          description: data.description || '',
+          amount: Number(data.amount) || 0,
+          date: data.date || '',
+          category: data.category || '',
+          createdAt: data.createdAt || ''
+        });
+      });
+      return list.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    } catch (e) {
+      console.error('Error fetching expenses:', e);
+      return [];
+    }
+  },
+
+  async addExpense(expense: Omit<Expense, 'id' | 'createdAt'>): Promise<Expense> {
+    const newExpense = {
+      ...expense,
+      createdAt: new Date().toISOString()
+    };
+    const docRef = await addDoc(collection(db, EXPENSES_COLLECTION), newExpense);
+    return {
+      id: docRef.id,
+      ...newExpense
+    };
+  },
+
+  async deleteExpense(id: string): Promise<void> {
+    const docRef = doc(db, EXPENSES_COLLECTION, id);
     await deleteDoc(docRef);
   }
 };

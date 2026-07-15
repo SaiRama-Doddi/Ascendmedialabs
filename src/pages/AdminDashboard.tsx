@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { portfolioService } from '../services/portfolioService';
+import { portfolioService, ClientProjectFinancial, PaymentInstallment, Expense } from '../services/portfolioService';
 import { Project, Brand } from '../constants';
 import { motion, AnimatePresence } from 'motion/react';
 import { collection, getDocs, doc, deleteDoc, updateDoc } from 'firebase/firestore';
@@ -66,6 +66,53 @@ const AdminDashboard = () => {
   const [otpError, setOtpError] = useState('');
   const [sendingOtp, setSendingOtp] = useState(false);
   const [otpSentMessage, setOtpSentMessage] = useState('');
+
+  // Bookkeeping and Ledger states
+  const [clientProjects, setClientProjects] = useState<ClientProjectFinancial[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [accountSubTab, setAccountSubTab] = useState<'ledger' | 'expenses' | 'invoice' | 'security'>('ledger');
+  
+  // Ledger operations
+  const [selectedProject, setSelectedProject] = useState<ClientProjectFinancial | null>(null);
+  const [showAddProjectModal, setShowAddProjectModal] = useState(false);
+  const [ledgerProjectName, setLedgerProjectName] = useState('');
+  const [ledgerClientName, setLedgerClientName] = useState('');
+  const [ledgerStartDate, setLedgerStartDate] = useState('');
+  const [ledgerEndDate, setLedgerEndDate] = useState('');
+  const [ledgerTotalAmount, setLedgerTotalAmount] = useState('');
+  const [ledgerAdvanceAmount, setLedgerAdvanceAmount] = useState('');
+
+  // Payment installment record
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
+  const [paymentDescription, setPaymentDescription] = useState('Payment installment');
+
+  // Expenses operations
+  const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
+  const [expenseDescription, setExpenseDescription] = useState('');
+  const [expenseAmount, setExpenseAmount] = useState('');
+  const [expenseDate, setExpenseDate] = useState(new Date().toISOString().split('T')[0]);
+  const [expenseCategory, setExpenseCategory] = useState('Hosting/Domain');
+
+  // Invoice generator state
+  const [invoiceClientName, setInvoiceClientName] = useState('');
+  const [invoiceClientAddress, setInvoiceClientAddress] = useState('');
+  const [invoiceClientEmail, setInvoiceClientEmail] = useState('');
+  const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
+  const [invoiceDueDate, setInvoiceDueDate] = useState('');
+  const [invoiceNumber, setInvoiceNumber] = useState(`AML-${Math.floor(1000 + Math.random() * 9000)}`);
+  const [invoiceItems, setInvoiceItems] = useState<{ id: string; description: string; quantity: number; rate: number }[]>([]);
+  
+  // New line item form
+  const [itemDescription, setItemDescription] = useState('');
+  const [itemQuantity, setItemQuantity] = useState('1');
+  const [itemRate, setItemRate] = useState('');
+
+  // Bookkeeping Filters
+  const [ledgerStartDateFilter, setLedgerStartDateFilter] = useState('');
+  const [ledgerEndDateFilter, setLedgerEndDateFilter] = useState('');
+  const [expenseStartDateFilter, setExpenseStartDateFilter] = useState('');
+  const [expenseEndDateFilter, setExpenseEndDateFilter] = useState('');
   
   // UI states
   const [activeTab, setActiveTab] = useState<'overview' | 'projects' | 'brands' | 'inquiries' | 'settings' | 'account'>('overview');
@@ -161,6 +208,16 @@ const AdminDashboard = () => {
 
       setProjects(projList);
       setBrands(brandList);
+
+      // Fetch bookkeeping datasets
+      try {
+        const clientProjList = await portfolioService.getClientProjects();
+        const expList = await portfolioService.getExpenses();
+        setClientProjects(clientProjList);
+        setExpenses(expList);
+      } catch (bkErr) {
+        console.warn('Error fetching bookkeeping data:', bkErr);
+      }
     } catch (err: any) {
       console.warn('Sync failed:', err);
       
@@ -217,6 +274,153 @@ const AdminDashboard = () => {
       setOtpSentMessage('Network error. Using screen fallback.');
     } finally {
       setSendingOtp(false);
+    }
+  };
+
+  // Client Project Ledger and Bookkeeping Operations
+  const handleAddClientProject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!ledgerProjectName || !ledgerClientName || !ledgerTotalAmount) {
+      alert('Please fill out all required fields.');
+      return;
+    }
+    setActionLoading(true);
+    try {
+      const budget = Number(ledgerTotalAmount);
+      const adv = Number(ledgerAdvanceAmount) || 0;
+      const initialPayments: PaymentInstallment[] = [];
+      
+      if (adv > 0) {
+        initialPayments.push({
+          id: Math.random().toString(36).substr(2, 9),
+          amount: adv,
+          date: ledgerStartDate || new Date().toISOString().split('T')[0],
+          description: 'Advance Payment'
+        });
+      }
+
+      const newProj = await portfolioService.addClientProject({
+        projectName: ledgerProjectName,
+        clientName: ledgerClientName,
+        startDate: ledgerStartDate,
+        endDate: ledgerEndDate,
+        totalAmount: budget,
+        payments: initialPayments
+      });
+
+      setClientProjects([newProj, ...clientProjects]);
+      setShowAddProjectModal(false);
+      setLedgerProjectName('');
+      setLedgerClientName('');
+      setLedgerStartDate('');
+      setLedgerEndDate('');
+      setLedgerTotalAmount('');
+      setLedgerAdvanceAmount('');
+      setSuccess('Client project added successfully!');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      alert('Error adding project: ' + err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleAddPayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedProject || !paymentAmount) return;
+    setActionLoading(true);
+    try {
+      const amount = Number(paymentAmount);
+      const newPayment: PaymentInstallment = {
+        id: Math.random().toString(36).substr(2, 9),
+        amount,
+        date: paymentDate || new Date().toISOString().split('T')[0],
+        description: paymentDescription || 'Installment Payment'
+      };
+
+      const updatedPayments = [...selectedProject.payments, newPayment];
+      await portfolioService.updateClientProject(selectedProject.id!, {
+        payments: updatedPayments
+      });
+
+      const updatedList = clientProjects.map(p => {
+        if (p.id === selectedProject.id) {
+          const updatedProj = { ...p, payments: updatedPayments };
+          setSelectedProject(updatedProj);
+          return updatedProj;
+        }
+        return p;
+      });
+      setClientProjects(updatedList);
+      setPaymentAmount('');
+      setPaymentDescription('Payment installment');
+      setSuccess('Payment recorded successfully!');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      alert('Error recording payment: ' + err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteClientProject = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this project ledger? This will delete all registered payment history for this project.')) return;
+    setActionLoading(true);
+    try {
+      await portfolioService.deleteClientProject(id);
+      setClientProjects(clientProjects.filter(p => p.id !== id));
+      if (selectedProject?.id === id) {
+        setSelectedProject(null);
+      }
+      setSuccess('Project ledger deleted successfully!');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      alert('Error deleting ledger: ' + err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleAddExpense = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!expenseDescription || !expenseAmount) return;
+    setActionLoading(true);
+    try {
+      const amount = Number(expenseAmount);
+      const newExp = await portfolioService.addExpense({
+        description: expenseDescription,
+        amount,
+        date: expenseDate || new Date().toISOString().split('T')[0],
+        category: expenseCategory
+      });
+
+      setExpenses([newExp, ...expenses]);
+      setShowAddExpenseModal(false);
+      setExpenseDescription('');
+      setExpenseAmount('');
+      setExpenseDate(new Date().toISOString().split('T')[0]);
+      setExpenseCategory('Hosting/Domain');
+      setSuccess('Expense added successfully!');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      alert('Error adding expense: ' + err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteExpense = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this expense?')) return;
+    setActionLoading(true);
+    try {
+      await portfolioService.deleteExpense(id);
+      setExpenses(expenses.filter(e => e.id !== id));
+      setSuccess('Expense deleted successfully!');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      alert('Error deleting expense: ' + err.message);
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -1058,75 +1262,859 @@ const AdminDashboard = () => {
               )}
 
               {/* TAB 6: CONFIDENTIAL ACCOUNT DETAILS */}
-              {activeTab === 'account' && (
-                <div className="bg-white border border-ink/5 p-8 rounded-sm shadow-sm max-w-2xl">
-                  <div className="flex items-center gap-2 mb-6 text-maroon border-b border-ink/5 pb-4">
-                    <User size={18} />
-                    <h3 className="text-base font-serif">Confidential Account Settings</h3>
-                  </div>
+              {activeTab === 'account' && (() => {
+                // Calculations for ledger
+                const totalReceivables = clientProjects.reduce((sum, p) => sum + p.totalAmount, 0);
+                const totalCollected = clientProjects.reduce((sum, p) => {
+                  const pSum = p.payments.reduce((acc, pay) => acc + pay.amount, 0);
+                  return sum + pSum;
+                }, 0);
+                const totalBalanceDue = totalReceivables - totalCollected;
 
-                  <div className="flex flex-col gap-6">
-                    <div className="flex items-center gap-4 bg-cream/40 p-4 rounded-sm border border-ink/5">
-                      <div className="h-14 w-14 rounded-full bg-maroon text-white flex items-center justify-center font-serif text-xl font-bold uppercase shadow-sm">
-                        {user?.email?.charAt(0) || 'A'}
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-bold text-ink/80">Administrator</h4>
-                        <p className="text-xs text-ink/55">{user?.email || 'admin@ascendmedialabs.com'}</p>
-                        <span className="inline-block mt-1 bg-green-500/10 text-green-700 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">
-                          OTP Verified Session
-                        </span>
-                      </div>
-                    </div>
+                const todayStr = new Date().toISOString().split('T')[0];
+                const filteredLedgerIncome = clientProjects.reduce((sum, p) => {
+                  const matches = p.payments.filter(pay => {
+                    if (ledgerStartDateFilter && pay.date < ledgerStartDateFilter) return false;
+                    if (ledgerEndDateFilter && pay.date > ledgerEndDateFilter) return false;
+                    if (!ledgerStartDateFilter && !ledgerEndDateFilter && pay.date !== todayStr) return false;
+                    return true;
+                  });
+                  return sum + matches.reduce((acc, pay) => acc + pay.amount, 0);
+                }, 0);
 
-                    <div className="flex flex-col gap-4">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-ink/75 border-b border-ink/5 pb-2">Firebase Authentication Security</h4>
-                      
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-[10px] uppercase tracking-widest font-bold text-ink/50">Admin User ID</label>
-                        <input type="text" value={user?.uid || 'Unknown'} readOnly className="bg-cream/20 border border-ink/5 rounded-sm py-2 px-3 text-xs text-ink/50 font-mono select-all focus:outline-none" />
-                      </div>
+                const filteredLedgerProjects = clientProjects.filter(p => {
+                  const matchSearch = p.projectName.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                                      p.clientName.toLowerCase().includes(searchTerm.toLowerCase());
+                  return matchSearch;
+                });
 
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-[10px] uppercase tracking-widest font-bold text-ink/50">Last Login Time</label>
-                        <input type="text" value={user?.metadata?.lastSignInTime || 'N/A'} readOnly className="bg-cream/20 border border-ink/5 rounded-sm py-2 px-3 text-xs text-ink/50 select-all focus:outline-none" />
-                      </div>
-                    </div>
+                // Calculations for expenses
+                const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+                const netProfit = totalCollected - totalExpenses;
 
-                    <div className="flex flex-col gap-4">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-ink/75 border-b border-ink/5 pb-2">Actions</h4>
-                      <div className="flex gap-4">
+                const filteredExpenses = expenses.filter(e => {
+                  const matchSearch = e.description.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                                      e.category.toLowerCase().includes(searchTerm.toLowerCase());
+                  if (expenseStartDateFilter && e.date < expenseStartDateFilter) return false;
+                  if (expenseEndDateFilter && e.date > expenseEndDateFilter) return false;
+                  return matchSearch;
+                });
+
+                // Invoice calculations
+                const invoiceSubtotal = invoiceItems.reduce((sum, item) => sum + (item.quantity * item.rate), 0);
+
+                return (
+                  <div className="w-full flex flex-col gap-6 print-container">
+                    {/* Sub navigation bar inside the Account Tab */}
+                    <div className="flex gap-2 border-b border-ink/5 pb-2 select-none no-print">
+                      {[
+                        { id: 'ledger', name: 'Project Ledger' },
+                        { id: 'expenses', name: 'Expenses' },
+                        { id: 'invoice', name: 'Invoice Generator' },
+                        { id: 'security', name: 'Security & Auth' }
+                      ].map((sub) => (
                         <button
-                          onClick={async () => {
-                            if (window.confirm("Would you like to request a password reset email?")) {
-                              try {
-                                const { sendPasswordResetEmail } = await import('firebase/auth');
-                                await sendPasswordResetEmail(auth, user.email);
-                                alert(`Password reset email sent to ${user.email}!`);
-                              } catch (migErr: any) {
-                                alert(`Error: ${migErr.message}`);
-                              }
-                            }
-                          }}
-                          className="bg-maroon text-white px-4 py-2.5 rounded-sm text-xs font-bold uppercase tracking-wider hover:bg-maroon/90 transition-colors cursor-pointer"
-                        >
-                          Reset Password
-                        </button>
-                        
-                        <button
+                          key={sub.id}
                           onClick={() => {
-                            setIsOtpVerified(false);
-                            setActiveTab('overview');
+                            setAccountSubTab(sub.id as any);
+                            setSearchTerm('');
                           }}
-                          className="bg-ink/5 text-ink/70 px-4 py-2.5 rounded-sm text-xs font-bold uppercase tracking-wider hover:bg-ink/10 transition-colors cursor-pointer border border-ink/10"
+                          className={`px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer border-b-2 ${
+                            accountSubTab === sub.id 
+                              ? 'border-maroon text-maroon font-bold' 
+                              : 'border-transparent text-ink/50 hover:text-maroon'
+                          }`}
                         >
-                          Lock Settings
+                          {sub.name}
                         </button>
-                      </div>
+                      ))}
                     </div>
+
+                    {/* SUB-TAB 1: PROJECT LEDGER */}
+                    {accountSubTab === 'ledger' && (
+                      <div className="flex flex-col gap-6 no-print">
+                        {/* Financial Ledger Summary Cards */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                          <div className="bg-white border border-ink/5 p-5 rounded-sm shadow-sm flex flex-col gap-1">
+                            <span className="text-[9px] uppercase tracking-widest text-ink/40 font-bold">Total Receivables</span>
+                            <span className="text-xl font-serif text-ink/80 font-semibold">₹{totalReceivables.toLocaleString('en-IN')}</span>
+                          </div>
+
+                          <div className="bg-white border border-ink/5 p-5 rounded-sm shadow-sm flex flex-col gap-1">
+                            <span className="text-[9px] uppercase tracking-widest text-ink/40 font-bold">Total Collected</span>
+                            <span className="text-xl font-serif text-green-700 font-semibold">₹{totalCollected.toLocaleString('en-IN')}</span>
+                          </div>
+
+                          <div className="bg-white border border-ink/5 p-5 rounded-sm shadow-sm flex flex-col gap-1">
+                            <span className="text-[9px] uppercase tracking-widest text-ink/40 font-bold">Balance Due</span>
+                            <span className="text-xl font-serif text-maroon font-semibold">₹{totalBalanceDue.toLocaleString('en-IN')}</span>
+                          </div>
+
+                          <div className="bg-white border border-ink/5 p-5 rounded-sm shadow-sm flex flex-col gap-1">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[9px] uppercase tracking-widest text-ink/40 font-bold">
+                                {ledgerStartDateFilter || ledgerEndDateFilter ? 'Filtered Earnings' : "Today's Earnings"}
+                              </span>
+                              <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                            </div>
+                            <span className="text-xl font-serif text-ink/80 font-semibold">₹{filteredLedgerIncome.toLocaleString('en-IN')}</span>
+                          </div>
+                        </div>
+
+                        {/* Date filters and search toolbar */}
+                        <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center bg-cream/20 p-4 rounded-sm border border-ink/5">
+                          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                            <div className="flex flex-col gap-1">
+                              <label className="text-[8px] uppercase tracking-widest font-bold text-ink/40">Start Date</label>
+                              <input 
+                                type="date" 
+                                value={ledgerStartDateFilter} 
+                                onChange={(e) => setLedgerStartDateFilter(e.target.value)} 
+                                className="bg-white border border-ink/10 rounded-sm py-1.5 px-2 text-xs text-ink/75 focus:outline-none"
+                              />
+                            </div>
+                            <div className="flex flex-col gap-1">
+                              <label className="text-[8px] uppercase tracking-widest font-bold text-ink/40">End Date</label>
+                              <input 
+                                type="date" 
+                                value={ledgerEndDateFilter} 
+                                onChange={(e) => setLedgerEndDateFilter(e.target.value)} 
+                                className="bg-white border border-ink/10 rounded-sm py-1.5 px-2 text-xs text-ink/75 focus:outline-none"
+                              />
+                            </div>
+                            {(ledgerStartDateFilter || ledgerEndDateFilter) && (
+                              <button 
+                                onClick={() => { setLedgerStartDateFilter(''); setLedgerEndDateFilter(''); }}
+                                className="mt-4 text-[10px] text-maroon hover:underline font-bold uppercase tracking-wider cursor-pointer"
+                              >
+                                Clear Filter
+                              </button>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-3 w-full md:w-auto self-end">
+                            <div className="relative w-full md:w-64">
+                              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/30" />
+                              <input 
+                                type="text" 
+                                placeholder="Search project or client..." 
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="bg-white border border-ink/10 rounded-sm pl-9 pr-4 py-2 text-xs text-ink/80 focus:outline-none focus:border-maroon w-full"
+                              />
+                            </div>
+                            <button
+                              onClick={() => setShowAddProjectModal(true)}
+                              className="bg-maroon text-white py-2 px-4 rounded-sm text-xs font-bold uppercase tracking-widest hover:bg-maroon/90 transition-colors flex items-center gap-1 cursor-pointer shrink-0"
+                            >
+                              <Plus size={14} />
+                              <span>Add Project</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Project Ledger Table */}
+                        <div className="bg-white border border-ink/5 rounded-sm shadow-sm overflow-x-auto">
+                          <table className="w-full text-left border-collapse min-w-[700px]">
+                            <thead>
+                              <tr className="bg-cream/40 border-b border-ink/5">
+                                <th className="p-4 text-[10px] uppercase tracking-wider font-bold text-ink/50">Project Detail</th>
+                                <th className="p-4 text-[10px] uppercase tracking-wider font-bold text-ink/50">Date Period</th>
+                                <th className="p-4 text-[10px] uppercase tracking-wider font-bold text-ink/50">Project Budget</th>
+                                <th className="p-4 text-[10px] uppercase tracking-wider font-bold text-ink/50">Collected</th>
+                                <th className="p-4 text-[10px] uppercase tracking-wider font-bold text-ink/50">Remaining Balance</th>
+                                <th className="p-4 text-[10px] uppercase tracking-wider font-bold text-ink/50 text-right">Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-ink/5">
+                              {filteredLedgerProjects.length === 0 ? (
+                                <tr>
+                                  <td colSpan={6} className="p-8 text-center text-xs text-ink/40 font-medium">
+                                    No client ledger records found. Click "Add Project" to log your first client ledger.
+                                  </td>
+                                </tr>
+                              ) : (
+                                filteredLedgerProjects.map((p) => {
+                                  const collected = p.payments.reduce((acc, pay) => acc + pay.amount, 0);
+                                  const balance = p.totalAmount - collected;
+                                  const progressPercent = Math.min(100, Math.round((collected / p.totalAmount) * 100)) || 0;
+
+                                  return (
+                                    <tr key={p.id} className="hover:bg-cream/10 transition-colors">
+                                      <td className="p-4">
+                                        <p className="text-xs font-bold text-ink/80">{p.projectName}</p>
+                                        <p className="text-[10px] text-ink/45 mt-0.5">Client: {p.clientName}</p>
+                                      </td>
+                                      <td className="p-4 text-xs text-ink/60 font-mono">
+                                        {p.startDate ? p.startDate : 'N/A'} <span className="text-ink/30">→</span> {p.endDate ? p.endDate : 'N/A'}
+                                      </td>
+                                      <td className="p-4 text-xs font-bold font-mono text-ink/75">
+                                        ₹{p.totalAmount.toLocaleString('en-IN')}
+                                      </td>
+                                      <td className="p-4">
+                                        <div className="flex flex-col gap-1 w-28">
+                                          <div className="flex justify-between items-center text-[10px] font-mono">
+                                            <span className="text-green-700 font-bold">₹{collected.toLocaleString('en-IN')}</span>
+                                            <span className="text-ink/40">{progressPercent}%</span>
+                                          </div>
+                                          <div className="w-full h-1.5 bg-cream rounded-full overflow-hidden">
+                                            <div className="bg-green-600 h-full rounded-full" style={{ width: `${progressPercent}%` }}></div>
+                                          </div>
+                                        </div>
+                                      </td>
+                                      <td className="p-4 text-xs font-bold font-mono">
+                                        <span className={balance > 0 ? 'text-maroon' : 'text-green-700'}>
+                                          ₹{balance.toLocaleString('en-IN')}
+                                        </span>
+                                      </td>
+                                      <td className="p-4 text-right">
+                                        <div className="flex gap-2 justify-end">
+                                          <button
+                                            onClick={() => setSelectedProject(p)}
+                                            className="border border-maroon/20 hover:border-maroon/50 text-maroon px-2.5 py-1.5 rounded-sm text-[10px] uppercase font-bold tracking-wider hover:bg-maroon/5 transition-all cursor-pointer"
+                                          >
+                                            View Payments
+                                          </button>
+                                          <button
+                                            onClick={() => handleDeleteClientProject(p.id!)}
+                                            className="text-ink/30 hover:text-maroon p-1.5 transition-colors cursor-pointer"
+                                          >
+                                            <Trash2 size={13} />
+                                          </button>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  );
+                                })
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {/* Project Installment Drawer/Detail Section */}
+                        {selectedProject && (() => {
+                          const collected = selectedProject.payments.reduce((acc, pay) => acc + pay.amount, 0);
+                          const balance = selectedProject.totalAmount - collected;
+
+                          return (
+                            <div className="bg-cream/20 border border-ink/5 p-6 rounded-sm flex flex-col md:flex-row gap-6 justify-between mt-4">
+                              <div className="w-full md:w-1/2 flex flex-col gap-4">
+                                <div className="flex justify-between items-start border-b border-ink/5 pb-3">
+                                  <div>
+                                    <h4 className="text-sm font-bold text-ink/80">{selectedProject.projectName}</h4>
+                                    <p className="text-xs text-ink/55 mt-0.5">Client: {selectedProject.clientName}</p>
+                                  </div>
+                                  <button 
+                                    onClick={() => setSelectedProject(null)}
+                                    className="text-xs text-ink/40 hover:text-maroon uppercase tracking-wider font-bold cursor-pointer"
+                                  >
+                                    Close Detail
+                                  </button>
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-2 py-2 border-b border-ink/5 font-mono text-center">
+                                  <div className="flex flex-col">
+                                    <span className="text-[8px] uppercase tracking-widest text-ink/45 font-bold">Total Budget</span>
+                                    <span className="text-xs font-bold text-ink/75 mt-0.5">₹{selectedProject.totalAmount.toLocaleString('en-IN')}</span>
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-[8px] uppercase tracking-widest text-ink/45 font-bold">Collected</span>
+                                    <span className="text-xs font-bold text-green-700 mt-0.5">₹{collected.toLocaleString('en-IN')}</span>
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-[8px] uppercase tracking-widest text-ink/45 font-bold">Balance Due</span>
+                                    <span className="text-xs font-bold text-maroon mt-0.5">₹{balance.toLocaleString('en-IN')}</span>
+                                  </div>
+                                </div>
+
+                                {/* Payments timeline */}
+                                <div className="flex flex-col gap-3 max-h-60 overflow-y-auto pr-2 mt-2">
+                                  <h5 className="text-[10px] uppercase tracking-widest text-ink/40 font-bold">Payment Installments Log</h5>
+                                  {selectedProject.payments.length === 0 ? (
+                                    <p className="text-xs text-ink/40 font-medium italic">No payments logged yet.</p>
+                                  ) : (
+                                    selectedProject.payments.map((pay) => (
+                                      <div key={pay.id} className="bg-white border border-ink/5 p-3 rounded-sm flex justify-between items-center relative group">
+                                        <div>
+                                          <p className="text-xs font-bold text-ink/75">{pay.description}</p>
+                                          <p className="text-[9px] text-ink/40 font-mono mt-0.5">{pay.date}</p>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-xs font-bold font-mono text-green-700">₹{pay.amount.toLocaleString('en-IN')}</span>
+                                          <button
+                                            onClick={async () => {
+                                              if (window.confirm('Delete this installment payment record?')) {
+                                                setActionLoading(true);
+                                                try {
+                                                  const filtered = selectedProject.payments.filter(py => py.id !== pay.id);
+                                                  await portfolioService.updateClientProject(selectedProject.id!, { payments: filtered });
+                                                  const updatedList = clientProjects.map(p => {
+                                                    if (p.id === selectedProject.id) {
+                                                      const up = { ...p, payments: filtered };
+                                                      setSelectedProject(up);
+                                                      return up;
+                                                    }
+                                                    return p;
+                                                  });
+                                                  setClientProjects(updatedList);
+                                                  setSuccess('Payment record deleted.');
+                                                  setTimeout(() => setSuccess(''), 3000);
+                                                } catch (delErr: any) {
+                                                  alert(delErr.message);
+                                                } finally {
+                                                  setActionLoading(false);
+                                                }
+                                              }
+                                            }}
+                                            className="text-ink/20 hover:text-maroon opacity-0 group-hover:opacity-100 transition-opacity p-1 cursor-pointer"
+                                          >
+                                            <X size={12} />
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ))
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Add payment installment form */}
+                              <div className="w-full md:w-1/2 bg-white border border-ink/5 p-5 rounded-sm shadow-sm">
+                                <h4 className="text-xs font-bold uppercase tracking-wider text-ink/75 border-b border-ink/5 pb-2 mb-4">Record New Payment Installment</h4>
+                                <form onSubmit={handleAddPayment} className="flex flex-col gap-4">
+                                  <div className="grid grid-cols-2 gap-3">
+                                    <div className="flex flex-col gap-1.5">
+                                      <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">Amount Received (₹)</label>
+                                      <input
+                                        type="number"
+                                        value={paymentAmount}
+                                        onChange={(e) => setPaymentAmount(e.target.value)}
+                                        placeholder="E.g., 5000"
+                                        required
+                                        className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none focus:border-maroon"
+                                      />
+                                    </div>
+                                    <div className="flex flex-col gap-1.5">
+                                      <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">Payment Date</label>
+                                      <input
+                                        type="date"
+                                        value={paymentDate}
+                                        onChange={(e) => setPaymentDate(e.target.value)}
+                                        required
+                                        className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none focus:border-maroon"
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <div className="flex flex-col gap-1.5">
+                                    <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">Description</label>
+                                    <input
+                                      type="text"
+                                      value={paymentDescription}
+                                      onChange={(e) => setPaymentDescription(e.target.value)}
+                                      placeholder="E.g., Second milestone payment"
+                                      required
+                                      className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none focus:border-maroon"
+                                    />
+                                  </div>
+
+                                  <button
+                                    type="submit"
+                                    disabled={actionLoading}
+                                    className="bg-green-700 text-white py-2.5 rounded-sm text-xs font-bold uppercase tracking-widest hover:bg-green-800 transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                                  >
+                                    {actionLoading ? (
+                                      <>
+                                        <RefreshCw size={12} className="animate-spin" />
+                                        <span>Saving...</span>
+                                      </>
+                                    ) : (
+                                      <span>Record Installment Payment</span>
+                                    )}
+                                  </button>
+                                </form>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
+
+                    {/* SUB-TAB 2: EXPENSES TRACKER */}
+                    {accountSubTab === 'expenses' && (
+                      <div className="flex flex-col gap-6 no-print">
+                        {/* Summary Metrics */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                          <div className="bg-white border border-ink/5 p-5 rounded-sm shadow-sm flex flex-col gap-1">
+                            <span className="text-[9px] uppercase tracking-widest text-ink/40 font-bold">Total Ledger Collections</span>
+                            <span className="text-xl font-serif text-green-700 font-semibold">₹{totalCollected.toLocaleString('en-IN')}</span>
+                          </div>
+
+                          <div className="bg-white border border-ink/5 p-5 rounded-sm shadow-sm flex flex-col gap-1">
+                            <span className="text-[9px] uppercase tracking-widest text-ink/40 font-bold">Total Expenses Logged</span>
+                            <span className="text-xl font-serif text-maroon font-semibold">₹{totalExpenses.toLocaleString('en-IN')}</span>
+                          </div>
+
+                          <div className="bg-white border border-ink/5 p-5 rounded-sm shadow-sm flex flex-col gap-1">
+                            <span className="text-[9px] uppercase tracking-widest text-ink/40 font-bold">Net Profit</span>
+                            <span className={`text-xl font-serif font-semibold ${netProfit >= 0 ? 'text-green-700' : 'text-red-600'}`}>
+                              ₹{netProfit.toLocaleString('en-IN')}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Expense filter toolbar */}
+                        <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center bg-cream/20 p-4 rounded-sm border border-ink/5">
+                          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                            <div className="flex flex-col gap-1">
+                              <label className="text-[8px] uppercase tracking-widest font-bold text-ink/40">From Date</label>
+                              <input 
+                                type="date" 
+                                value={expenseStartDateFilter} 
+                                onChange={(e) => setExpenseStartDateFilter(e.target.value)} 
+                                className="bg-white border border-ink/10 rounded-sm py-1.5 px-2 text-xs text-ink/75 focus:outline-none"
+                              />
+                            </div>
+                            <div className="flex flex-col gap-1">
+                              <label className="text-[8px] uppercase tracking-widest font-bold text-ink/40">To Date</label>
+                              <input 
+                                type="date" 
+                                value={expenseEndDateFilter} 
+                                onChange={(e) => setExpenseEndDateFilter(e.target.value)} 
+                                className="bg-white border border-ink/10 rounded-sm py-1.5 px-2 text-xs text-ink/75 focus:outline-none"
+                              />
+                            </div>
+                            {(expenseStartDateFilter || expenseEndDateFilter) && (
+                              <button 
+                                onClick={() => { setExpenseStartDateFilter(''); setExpenseEndDateFilter(''); }}
+                                className="mt-4 text-[10px] text-maroon hover:underline font-bold uppercase tracking-wider cursor-pointer"
+                              >
+                                Clear
+                              </button>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-3 w-full md:w-auto self-end">
+                            <div className="relative w-full md:w-64">
+                              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/30" />
+                              <input 
+                                type="text" 
+                                placeholder="Search expenses or categories..." 
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="bg-white border border-ink/10 rounded-sm pl-9 pr-4 py-2 text-xs text-ink/80 focus:outline-none w-full"
+                              />
+                            </div>
+                            <button
+                              onClick={() => setShowAddExpenseModal(true)}
+                              className="bg-maroon text-white py-2 px-4 rounded-sm text-xs font-bold uppercase tracking-widest hover:bg-maroon/90 transition-colors flex items-center gap-1 cursor-pointer shrink-0"
+                            >
+                              <Plus size={14} />
+                              <span>Log Expense</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Expenses Table */}
+                        <div className="bg-white border border-ink/5 rounded-sm shadow-sm overflow-x-auto">
+                          <table className="w-full text-left border-collapse min-w-[600px]">
+                            <thead>
+                              <tr className="bg-cream/40 border-b border-ink/5">
+                                <th className="p-4 text-[10px] uppercase tracking-wider font-bold text-ink/50">Expense Description</th>
+                                <th className="p-4 text-[10px] uppercase tracking-wider font-bold text-ink/50">Category</th>
+                                <th className="p-4 text-[10px] uppercase tracking-wider font-bold text-ink/50">Date Logged</th>
+                                <th className="p-4 text-[10px] uppercase tracking-wider font-bold text-ink/50">Amount Paid</th>
+                                <th className="p-4 text-[10px] uppercase tracking-wider font-bold text-ink/50 text-right">Action</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-ink/5">
+                              {filteredExpenses.length === 0 ? (
+                                <tr>
+                                  <td colSpan={5} className="p-8 text-center text-xs text-ink/40 font-medium">
+                                    No business expenses logged. Click "Log Expense" to record an expense.
+                                  </td>
+                                </tr>
+                              ) : (
+                                filteredExpenses.map((exp) => (
+                                  <tr key={exp.id} className="hover:bg-cream/10 transition-colors">
+                                    <td className="p-4 text-xs font-bold text-ink/80">{exp.description}</td>
+                                    <td className="p-4">
+                                      <span className="inline-block bg-maroon/5 text-maroon text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border border-maroon/10">
+                                        {exp.category}
+                                      </span>
+                                    </td>
+                                    <td className="p-4 text-xs text-ink/50 font-mono">{exp.date}</td>
+                                    <td className="p-4 text-xs font-bold font-mono text-maroon">
+                                      ₹{exp.amount.toLocaleString('en-IN')}
+                                    </td>
+                                    <td className="p-4 text-right">
+                                      <button
+                                        onClick={() => handleDeleteExpense(exp.id!)}
+                                        className="text-ink/30 hover:text-maroon p-1.5 transition-colors cursor-pointer"
+                                      >
+                                        <Trash2 size={13} />
+                                      </button>
+                                    </td>
+                                  </tr>
+                                ))
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* SUB-TAB 3: INVOICE GENERATOR */}
+                    {accountSubTab === 'invoice' && (
+                      <div className="flex flex-col xl:flex-row gap-6 justify-between items-start">
+                        {/* Invoice Fields Form (Left Side) */}
+                        <div className="w-full xl:w-2/5 bg-white border border-ink/5 p-6 rounded-sm shadow-sm flex flex-col gap-6 no-print">
+                          <div>
+                            <h4 className="text-xs font-bold uppercase tracking-wider text-ink/75 border-b border-ink/5 pb-2 mb-4">Invoice Information</h4>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="flex flex-col gap-1.5">
+                                <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">Invoice Number</label>
+                                <input
+                                  type="text"
+                                  value={invoiceNumber}
+                                  onChange={(e) => setInvoiceNumber(e.target.value)}
+                                  placeholder="E.g., AML-204"
+                                  className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none"
+                                />
+                              </div>
+                              <div className="flex flex-col gap-1.5">
+                                <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">Invoice Date</label>
+                                <input
+                                  type="date"
+                                  value={invoiceDate}
+                                  onChange={(e) => setInvoiceDate(e.target.value)}
+                                  className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none"
+                                />
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-1 mt-3">
+                              <div className="flex flex-col gap-1.5">
+                                <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">Payment Due Date</label>
+                                <input
+                                  type="date"
+                                  value={invoiceDueDate}
+                                  onChange={(e) => setInvoiceDueDate(e.target.value)}
+                                  className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          <div>
+                            <h4 className="text-xs font-bold uppercase tracking-wider text-ink/75 border-b border-ink/5 pb-2 mb-4">Client Billing Details</h4>
+                            <div className="flex flex-col gap-4">
+                              <div className="flex flex-col gap-1.5">
+                                <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">Client Name / Business</label>
+                                <input
+                                  type="text"
+                                  value={invoiceClientName}
+                                  onChange={(e) => setInvoiceClientName(e.target.value)}
+                                  placeholder="E.g., Desi Originals Private Ltd"
+                                  className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none"
+                                />
+                              </div>
+                              <div className="flex flex-col gap-1.5">
+                                <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">Client Email</label>
+                                <input
+                                  type="email"
+                                  value={invoiceClientEmail}
+                                  onChange={(e) => setInvoiceClientEmail(e.target.value)}
+                                  placeholder="E.g., finance@desioriginals.in"
+                                  className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none"
+                                />
+                              </div>
+                              <div className="flex flex-col gap-1.5">
+                                <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">Client Address</label>
+                                <textarea
+                                  value={invoiceClientAddress}
+                                  onChange={(e) => setInvoiceClientAddress(e.target.value)}
+                                  placeholder="E.g., Jubilee Hills, Hyderabad"
+                                  rows={2}
+                                  className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none resize-none"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          <div>
+                            <h4 className="text-xs font-bold uppercase tracking-wider text-ink/75 border-b border-ink/5 pb-2 mb-3">Add Billable Item</h4>
+                            <form
+                              onSubmit={(e) => {
+                                e.preventDefault();
+                                if (!itemDescription || !itemRate) return;
+                                const item = {
+                                  id: Math.random().toString(36).substr(2, 9),
+                                  description: itemDescription,
+                                  quantity: Number(itemQuantity) || 1,
+                                  rate: Number(itemRate)
+                                };
+                                setInvoiceItems([...invoiceItems, item]);
+                                setItemDescription('');
+                                setItemQuantity('1');
+                                setItemRate('');
+                              }}
+                              className="flex flex-col gap-3 bg-cream/10 p-3.5 rounded-sm border border-ink/5"
+                            >
+                              <div className="flex flex-col gap-1.5">
+                                <label className="text-[8px] uppercase tracking-widest font-bold text-ink/50">Item Description</label>
+                                <input
+                                  type="text"
+                                  value={itemDescription}
+                                  onChange={(e) => setItemDescription(e.target.value)}
+                                  placeholder="E.g., Website Development (Phase 1)"
+                                  className="bg-white border border-ink/10 rounded-sm py-1.5 px-2.5 text-xs text-ink/80 focus:outline-none"
+                                />
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-2">
+                                <div className="flex flex-col gap-1.5">
+                                  <label className="text-[8px] uppercase tracking-widest font-bold text-ink/50">Quantity</label>
+                                  <input
+                                    type="number"
+                                    value={itemQuantity}
+                                    onChange={(e) => setItemQuantity(e.target.value)}
+                                    placeholder="1"
+                                    className="bg-white border border-ink/10 rounded-sm py-1.5 px-2.5 text-xs text-ink/80 focus:outline-none"
+                                  />
+                                </div>
+                                <div className="flex flex-col gap-1.5">
+                                  <label className="text-[8px] uppercase tracking-widest font-bold text-ink/50">Unit Rate (₹)</label>
+                                  <input
+                                    type="number"
+                                    value={itemRate}
+                                    onChange={(e) => setItemRate(e.target.value)}
+                                    placeholder="Rate"
+                                    className="bg-white border border-ink/10 rounded-sm py-1.5 px-2.5 text-xs text-ink/80 focus:outline-none"
+                                  />
+                                </div>
+                              </div>
+
+                              <button
+                                type="submit"
+                                className="bg-maroon text-white py-1.5 px-3 rounded-sm text-[10px] uppercase font-bold tracking-wider hover:bg-maroon/90 transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                              >
+                                <Plus size={12} />
+                                <span>Add Item</span>
+                              </button>
+                            </form>
+                          </div>
+                        </div>
+
+                        {/* Interactive Realtime Invoice Preview (Right Side) */}
+                        <div className="w-full xl:w-3/5 flex flex-col gap-4">
+                          <div className="flex justify-between items-center no-print">
+                            <span className="text-[10px] uppercase tracking-widest font-bold text-ink/40">Invoice Live Preview</span>
+                            <button
+                              onClick={() => window.print()}
+                              disabled={invoiceItems.length === 0}
+                              className="bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-sm text-xs font-bold uppercase tracking-widest hover:bg-green-800 transition-colors flex items-center gap-1.5 cursor-pointer"
+                            >
+                              <Globe size={13} />
+                              <span>Print / Save PDF</span>
+                            </button>
+                          </div>
+
+                          {/* Invoice Paper Document */}
+                          <div id="printable-invoice-paper" className="w-full bg-white border border-ink/10 rounded-none shadow-lg p-10 font-sans text-ink/80 min-h-[750px] relative flex flex-col justify-between">
+                            
+                            <div>
+                              {/* Header */}
+                              <div className="flex justify-between items-start border-b border-ink/10 pb-6">
+                                <div>
+                                  <h2 className="text-xl font-serif text-maroon font-bold tracking-wide leading-none uppercase">Ascend Media Labs</h2>
+                                  <p className="text-[9px] uppercase tracking-widest text-ink/40 mt-1 leading-none">Creative Digital Media Agency</p>
+                                  <div className="text-[10px] text-ink/50 leading-normal mt-4">
+                                    <p>reachus@ascendmedialabs.in</p>
+                                    <p>+91 7675852618</p>
+                                    <p>Sagar Nagar, Rushikonda, Vizag</p>
+                                  </div>
+                                </div>
+
+                                <div className="text-right">
+                                  <h1 className="text-2xl font-serif font-semibold tracking-wider text-ink/70">INVOICE</h1>
+                                  <div className="text-[10px] font-mono leading-normal mt-4">
+                                    <p><strong className="text-ink/60 font-sans uppercase text-[8px] tracking-wider">Invoice #:</strong> {invoiceNumber || 'AML-XXXX'}</p>
+                                    <p><strong className="text-ink/60 font-sans uppercase text-[8px] tracking-wider">Date:</strong> {invoiceDate}</p>
+                                    {invoiceDueDate && <p><strong className="text-ink/60 font-sans uppercase text-[8px] tracking-wider text-maroon">Due Date:</strong> {invoiceDueDate}</p>}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Billed To / From */}
+                              <div className="grid grid-cols-2 gap-4 py-8 text-xs">
+                                <div>
+                                  <h4 className="text-[9px] uppercase tracking-widest font-bold text-ink/40 mb-2">Billed To</h4>
+                                  <p className="font-bold text-ink/90">{invoiceClientName || 'Client Name / Business Name'}</p>
+                                  {invoiceClientEmail && <p className="text-ink/50 mt-0.5">{invoiceClientEmail}</p>}
+                                  {invoiceClientAddress && <p className="text-ink/50 whitespace-pre-line mt-1.5">{invoiceClientAddress}</p>}
+                                </div>
+                                
+                                <div>
+                                  <h4 className="text-[9px] uppercase tracking-widest font-bold text-ink/40 mb-2">Payment Remittance</h4>
+                                  <div className="text-ink/50 leading-relaxed">
+                                    <p>Bank: HDFC Bank Limited</p>
+                                    <p>A/C Name: Ascend Media Labs</p>
+                                    <p>A/C Number: 50200067981245</p>
+                                    <p>IFSC Code: HDFC0000456</p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Billable Items Table */}
+                              <table className="w-full text-left border-collapse text-xs mt-4">
+                                <thead>
+                                  <tr className="border-b-2 border-ink/80 text-[10px] uppercase font-bold text-ink/60">
+                                    <th className="py-2">Item Description</th>
+                                    <th className="py-2 text-center w-16">Qty</th>
+                                    <th className="py-2 text-right w-24">Rate (₹)</th>
+                                    <th className="py-2 text-right w-28">Amount (₹)</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-ink/5">
+                                  {invoiceItems.length === 0 ? (
+                                    <tr>
+                                      <td colSpan={4} className="py-6 text-center text-ink/30 italic">
+                                        No items added yet. Please use the form on the left to add billing lines.
+                                      </td>
+                                    </tr>
+                                  ) : (
+                                    invoiceItems.map((item) => (
+                                      <tr key={item.id} className="group">
+                                        <td className="py-3 pr-4 font-medium text-ink/85 flex justify-between items-center">
+                                          <span>{item.description}</span>
+                                          <button
+                                            onClick={() => setInvoiceItems(invoiceItems.filter(it => it.id !== item.id))}
+                                            className="text-red-500 hover:underline text-[9px] font-bold uppercase tracking-wide opacity-0 group-hover:opacity-100 transition-opacity no-print cursor-pointer"
+                                          >
+                                            [Remove]
+                                          </button>
+                                        </td>
+                                        <td className="py-3 text-center font-mono">{item.quantity}</td>
+                                        <td className="py-3 text-right font-mono">₹{item.rate.toLocaleString('en-IN')}</td>
+                                        <td className="py-3 text-right font-mono font-semibold">₹{(item.quantity * item.rate).toLocaleString('en-IN')}</td>
+                                      </tr>
+                                    ))
+                                  )}
+                                </tbody>
+                              </table>
+                            </div>
+
+                            {/* Total and Sign-off */}
+                            <div className="border-t border-ink/10 pt-6 mt-8 flex justify-between items-start">
+                              <div className="w-1/2">
+                                <h4 className="text-[8px] uppercase tracking-widest font-bold text-ink/40 mb-1">Notes & Terms</h4>
+                                <p className="text-[9px] text-ink/45 leading-relaxed">
+                                  1. Please pay within the specified due date.<br />
+                                  2. Payments can be sent via Bank IMPS/UPI.<br />
+                                  3. For queries, contact reachus@ascendmedialabs.in
+                                </p>
+                              </div>
+
+                              <div className="w-1/3 flex flex-col gap-2.5 text-xs text-right">
+                                <div className="flex justify-between items-center text-ink/50">
+                                  <span>Subtotal:</span>
+                                  <span className="font-mono">₹{invoiceSubtotal.toLocaleString('en-IN')}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-ink/50 border-b border-ink/5 pb-2">
+                                  <span>Tax / GST (0%):</span>
+                                  <span className="font-mono">₹0.00</span>
+                                </div>
+                                <div className="flex justify-between items-center text-sm font-bold text-ink/90 font-mono">
+                                  <span className="font-sans uppercase text-[10px] tracking-wider text-ink/50">Grand Total:</span>
+                                  <span className="text-maroon">₹{invoiceSubtotal.toLocaleString('en-IN')}</span>
+                                </div>
+
+                                <div className="flex flex-col items-end mt-8">
+                                  <div className="h-10 w-24 border-b border-ink/20 relative">
+                                    <span className="absolute bottom-1 right-2 text-[9px] font-serif italic text-ink/30">Ascend Labs</span>
+                                  </div>
+                                  <span className="text-[8px] uppercase tracking-widest text-ink/40 font-bold mt-1.5">Authorized Signatory</span>
+                                </div>
+                              </div>
+                            </div>
+
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* SUB-TAB 4: ORIGINAL SECURITY AND ACCOUNT SETTINGS */}
+                    {accountSubTab === 'security' && (
+                      <div className="bg-white border border-ink/5 p-8 rounded-sm shadow-sm max-w-2xl no-print">
+                        <div className="flex items-center gap-2 mb-6 text-maroon border-b border-ink/5 pb-4">
+                          <Lock size={18} />
+                          <h3 className="text-base font-serif">Security settings</h3>
+                        </div>
+
+                        <div className="flex flex-col gap-6">
+                          <div className="flex items-center gap-4 bg-cream/40 p-4 rounded-sm border border-ink/5">
+                            <div className="h-14 w-14 rounded-full bg-maroon text-white flex items-center justify-center font-serif text-xl font-bold uppercase shadow-sm">
+                              {user?.email?.charAt(0) || 'A'}
+                            </div>
+                            <div>
+                              <h4 className="text-sm font-bold text-ink/80">Administrator</h4>
+                              <p className="text-xs text-ink/55">{user?.email || 'admin@ascendmedialabsinfo.com'}</p>
+                              <span className="inline-block mt-1 bg-green-500/10 text-green-700 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">
+                                OTP Verified Session
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col gap-4">
+                            <h4 className="text-xs font-bold uppercase tracking-wider text-ink/75 border-b border-ink/5 pb-2">Firebase Authentication Security</h4>
+                            
+                            <div className="flex flex-col gap-1.5">
+                              <label className="text-[10px] uppercase tracking-widest font-bold text-ink/50">Admin User ID</label>
+                              <input type="text" value={user?.uid || 'Unknown'} readOnly className="bg-cream/20 border border-ink/5 rounded-sm py-2 px-3 text-xs text-ink/50 font-mono select-all focus:outline-none" />
+                            </div>
+
+                            <div className="flex flex-col gap-1.5">
+                              <label className="text-[10px] uppercase tracking-widest font-bold text-ink/50">Last Login Time</label>
+                              <input type="text" value={user?.metadata?.lastSignInTime || 'N/A'} readOnly className="bg-cream/20 border border-ink/5 rounded-sm py-2 px-3 text-xs text-ink/50 select-all focus:outline-none" />
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col gap-4">
+                            <h4 className="text-xs font-bold uppercase tracking-wider text-ink/75 border-b border-ink/5 pb-2">Actions</h4>
+                            <div className="flex gap-4">
+                              <button
+                                onClick={async () => {
+                                  if (window.confirm("Would you like to request a password reset email?")) {
+                                    try {
+                                      const { sendPasswordResetEmail } = await import('firebase/auth');
+                                      await sendPasswordResetEmail(auth, user.email);
+                                      alert(`Password reset email sent to ${user.email}!`);
+                                    } catch (migErr: any) {
+                                      alert(`Error: ${migErr.message}`);
+                                    }
+                                  }
+                                }}
+                                className="bg-maroon text-white px-4 py-2.5 rounded-sm text-xs font-bold uppercase tracking-wider hover:bg-maroon/90 transition-colors cursor-pointer"
+                              >
+                                Reset Password
+                              </button>
+                              
+                              <button
+                                onClick={() => {
+                                  setIsOtpVerified(false);
+                                  setActiveTab('overview');
+                                }}
+                                className="bg-ink/5 text-ink/70 px-4 py-2.5 rounded-sm text-xs font-bold uppercase tracking-wider hover:bg-ink/10 transition-colors cursor-pointer border border-ink/10"
+                              >
+                                Lock Settings
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-              )}
+                );
+              })()}
               
             </div>
           )}
@@ -1604,6 +2592,256 @@ const AdminDashboard = () => {
                     className="w-1/2 bg-maroon text-white py-2.5 rounded-sm text-[10px] uppercase tracking-widest font-bold hover:bg-maroon/90 transition-colors cursor-pointer"
                   >
                     Verify & Unlock
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Add Client Project Ledger Modal */}
+      <AnimatePresence>
+        {showAddProjectModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => { if(!actionLoading) setShowAddProjectModal(false); }}
+              className="absolute inset-0 bg-ink/40 backdrop-blur-sm"
+            />
+            
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white w-full max-w-md p-8 rounded-sm shadow-2xl relative z-10 border border-ink/5"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-serif">Add Project Ledger</h3>
+                <button 
+                  onClick={() => setShowAddProjectModal(false)}
+                  disabled={actionLoading}
+                  className="text-ink/40 hover:text-ink cursor-pointer disabled:opacity-50"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <form onSubmit={handleAddClientProject} className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] uppercase tracking-widest font-bold text-ink/75">Project Name</label>
+                  <input
+                    type="text"
+                    value={ledgerProjectName}
+                    onChange={(e) => setLedgerProjectName(e.target.value)}
+                    placeholder="E.g., Inizio Interiors Website"
+                    className="w-full bg-cream/35 border border-ink/10 rounded-sm py-2 px-3 text-xs focus:outline-none focus:border-maroon transition-colors"
+                    required
+                    disabled={actionLoading}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] uppercase tracking-widest font-bold text-ink/75">Client Name / Organization</label>
+                  <input
+                    type="text"
+                    value={ledgerClientName}
+                    onChange={(e) => setLedgerClientName(e.target.value)}
+                    placeholder="E.g., Inizio Interiors Group"
+                    className="w-full bg-cream/35 border border-ink/10 rounded-sm py-2 px-3 text-xs focus:outline-none focus:border-maroon transition-colors"
+                    required
+                    disabled={actionLoading}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] uppercase tracking-widest font-bold text-ink/75">Start Date</label>
+                    <input
+                      type="date"
+                      value={ledgerStartDate}
+                      onChange={(e) => setLedgerStartDate(e.target.value)}
+                      className="w-full bg-cream/35 border border-ink/10 rounded-sm py-2 px-3 text-xs focus:outline-none focus:border-maroon transition-colors"
+                      disabled={actionLoading}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] uppercase tracking-widest font-bold text-ink/75">End Date</label>
+                    <input
+                      type="date"
+                      value={ledgerEndDate}
+                      onChange={(e) => setLedgerEndDate(e.target.value)}
+                      className="w-full bg-cream/35 border border-ink/10 rounded-sm py-2 px-3 text-xs focus:outline-none focus:border-maroon transition-colors"
+                      disabled={actionLoading}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] uppercase tracking-widest font-bold text-ink/75">Total Agreed Budget (₹)</label>
+                    <input
+                      type="number"
+                      value={ledgerTotalAmount}
+                      onChange={(e) => setLedgerTotalAmount(e.target.value)}
+                      placeholder="Total amount"
+                      className="w-full bg-cream/35 border border-ink/10 rounded-sm py-2 px-3 text-xs focus:outline-none focus:border-maroon transition-colors"
+                      required
+                      disabled={actionLoading}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] uppercase tracking-widest font-bold text-ink/75">Initial Advance Paid (₹)</label>
+                    <input
+                      type="number"
+                      value={ledgerAdvanceAmount}
+                      onChange={(e) => setLedgerAdvanceAmount(e.target.value)}
+                      placeholder="Optional advance"
+                      className="w-full bg-cream/35 border border-ink/10 rounded-sm py-2 px-3 text-xs focus:outline-none focus:border-maroon transition-colors"
+                      disabled={actionLoading}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3 justify-end mt-4 border-t border-ink/5 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddProjectModal(false)}
+                    disabled={actionLoading}
+                    className="border border-ink/10 px-4 py-2 rounded-sm text-xs uppercase tracking-widest font-bold hover:bg-cream transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={actionLoading}
+                    className="bg-maroon text-white px-5 py-2 rounded-sm text-xs uppercase tracking-widest font-bold hover:bg-maroon/90 transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  >
+                    {actionLoading ? (
+                      <>
+                        <RefreshCw size={12} className="animate-spin" />
+                        <span>Saving...</span>
+                      </>
+                    ) : (
+                      <span>Save Project</span>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Log Business Expense Modal */}
+      <AnimatePresence>
+        {showAddExpenseModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => { if(!actionLoading) setShowAddExpenseModal(false); }}
+              className="absolute inset-0 bg-ink/40 backdrop-blur-sm"
+            />
+            
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white w-full max-w-sm p-8 rounded-sm shadow-2xl relative z-10 border border-ink/5"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-serif">Log Expense</h3>
+                <button 
+                  onClick={() => setShowAddExpenseModal(false)}
+                  disabled={actionLoading}
+                  className="text-ink/40 hover:text-ink cursor-pointer disabled:opacity-50"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <form onSubmit={handleAddExpense} className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] uppercase tracking-widest font-bold text-ink/75">Description</label>
+                  <input
+                    type="text"
+                    value={expenseDescription}
+                    onChange={(e) => setExpenseDescription(e.target.value)}
+                    placeholder="E.g., Vercel Hosting Subscription"
+                    className="w-full bg-cream/35 border border-ink/10 rounded-sm py-2 px-3 text-xs focus:outline-none focus:border-maroon transition-colors"
+                    required
+                    disabled={actionLoading}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] uppercase tracking-widest font-bold text-ink/75">Amount Paid (₹)</label>
+                    <input
+                      type="number"
+                      value={expenseAmount}
+                      onChange={(e) => setExpenseAmount(e.target.value)}
+                      placeholder="Amount"
+                      className="w-full bg-cream/35 border border-ink/10 rounded-sm py-2 px-3 text-xs focus:outline-none focus:border-maroon transition-colors"
+                      required
+                      disabled={actionLoading}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] uppercase tracking-widest font-bold text-ink/75">Expense Date</label>
+                    <input
+                      type="date"
+                      value={expenseDate}
+                      onChange={(e) => setExpenseDate(e.target.value)}
+                      required
+                      className="w-full bg-cream/35 border border-ink/10 rounded-sm py-2 px-3 text-xs focus:outline-none focus:border-maroon transition-colors"
+                      disabled={actionLoading}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] uppercase tracking-widest font-bold text-ink/75">Expense Category</label>
+                  <select
+                    value={expenseCategory}
+                    onChange={(e) => setExpenseCategory(e.target.value)}
+                    className="w-full bg-cream/35 border border-ink/10 rounded-sm py-2 px-3 text-xs focus:outline-none focus:border-maroon transition-colors"
+                    disabled={actionLoading}
+                  >
+                    <option value="Domain/Hosting">Domain & Hosting</option>
+                    <option value="Developer Salaries">Developer Salaries</option>
+                    <option value="Content/Media">Content & Media</option>
+                    <option value="Marketing">Marketing / Promotion</option>
+                    <option value="Miscellaneous">Miscellaneous / Others</option>
+                  </select>
+                </div>
+
+                <div className="flex gap-3 justify-end mt-4 border-t border-ink/5 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddExpenseModal(false)}
+                    disabled={actionLoading}
+                    className="border border-ink/10 px-4 py-2 rounded-sm text-xs uppercase tracking-widest font-bold hover:bg-cream transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={actionLoading}
+                    className="bg-maroon text-white px-5 py-2 rounded-sm text-xs uppercase tracking-widest font-bold hover:bg-maroon/90 transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  >
+                    {actionLoading ? (
+                      <>
+                        <RefreshCw size={12} className="animate-spin" />
+                        <span>Logging...</span>
+                      </>
+                    ) : (
+                      <span>Save Expense</span>
+                    )}
                   </button>
                 </div>
               </form>
