@@ -1,6 +1,6 @@
-const nodemailer = require('nodemailer');
+import nodemailer from 'nodemailer';
 
-module.exports = async (req, res) => {
+export default async (req, res) => {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
