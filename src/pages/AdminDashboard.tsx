@@ -64,6 +64,8 @@ const AdminDashboard = () => {
   const [generatedOtp, setGeneratedOtp] = useState('');
   const [userOtpInput, setUserOtpInput] = useState('');
   const [otpError, setOtpError] = useState('');
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [otpSentMessage, setOtpSentMessage] = useState('');
   
   // UI states
   const [activeTab, setActiveTab] = useState<'overview' | 'projects' | 'brands' | 'inquiries' | 'settings' | 'account'>('overview');
@@ -178,6 +180,43 @@ const AdminDashboard = () => {
       setBrands(bFallback);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Trigger OTP dispatch via serverless function
+  const handleTriggerOtp = async () => {
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    setGeneratedOtp(otp);
+    setUserOtpInput('');
+    setOtpError('');
+    setOtpSentMessage('');
+    setShowOtpModal(true);
+    setSendingOtp(true);
+
+    try {
+      const response = await fetch('/api/send-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          otp: otp,
+          email: 'ascendmedialabs@gmail.com'
+        })
+      });
+
+      if (response.ok) {
+        setOtpSentMessage('A secure One-Time Password (OTP) has been sent to your administrator email.');
+      } else {
+        const data = await response.json().catch(() => ({}));
+        console.warn('API OTP Send failed, using screen fallback:', data.error);
+        setOtpSentMessage('Failed to deliver email. Using screen fallback.');
+      }
+    } catch (err) {
+      console.warn('Network error sending OTP, using screen fallback:', err);
+      setOtpSentMessage('Network error. Using screen fallback.');
+    } finally {
+      setSendingOtp(false);
     }
   };
 
@@ -486,12 +525,16 @@ const AdminDashboard = () => {
               <button
                 key={tab.id}
                 onClick={() => {
-                  if (tab.id === 'account' && !isOtpVerified) {
-                    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-                    setGeneratedOtp(otp);
-                    setUserOtpInput('');
-                    setOtpError('');
-                    setShowOtpModal(true);
+                  if (tab.id === 'account') {
+                    if (user?.email !== 'ascendmedialabs@gmail.com') {
+                      alert('Access Denied. Only the primary administrator account (ascendmedialabs@gmail.com) is eligible to view the Account section.');
+                      return;
+                    }
+                    if (!isOtpVerified) {
+                      handleTriggerOtp();
+                    } else {
+                      setActiveTab('account');
+                    }
                   } else {
                     setActiveTab(tab.id as any);
                     setSearchTerm('');
@@ -1486,8 +1529,25 @@ const AdminDashboard = () => {
               
               <h3 className="text-lg font-serif mb-2">Confidential Verification</h3>
               <p className="text-xs text-ink/60 mb-6 leading-relaxed max-w-[280px]">
-                To view your confidential account settings, please enter the 6-digit One-Time Password (OTP) sent to <strong className="text-ink/80">ascendmedialabsinfo@gmail.com</strong>.
+                To view your confidential account settings, please enter the 6-digit One-Time Password (OTP) sent to <strong className="text-ink/80">ascendmedialabs@gmail.com</strong>.
               </p>
+
+              {sendingOtp && (
+                <div className="flex items-center justify-center gap-2 text-xs text-ink/50 mb-4 bg-cream/30 border border-ink/5 p-3 rounded-sm w-full">
+                  <RefreshCw size={12} className="animate-spin text-maroon" />
+                  <span>Sending secure OTP email...</span>
+                </div>
+              )}
+
+              {otpSentMessage && !sendingOtp && (
+                <div className={`w-full text-xs p-3 rounded-sm mb-4 text-center font-medium leading-relaxed ${
+                  otpSentMessage.includes('sent') 
+                    ? 'bg-green-500/10 border border-green-500/20 text-green-700' 
+                    : 'bg-maroon/5 border border-maroon/10 text-maroon'
+                }`}>
+                  {otpSentMessage}
+                </div>
+              )}
 
               {otpError && (
                 <div className="w-full bg-red-500/10 border border-red-500/20 text-red-700 text-xs p-3 rounded-sm mb-4">
