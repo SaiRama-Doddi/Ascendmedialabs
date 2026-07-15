@@ -19,12 +19,25 @@ export interface PaymentInstallment {
 
 export interface ClientProjectFinancial {
   id?: string;
-  projectName: string;
+  date: string;
   clientName: string;
-  startDate: string;
-  endDate: string;
-  totalAmount: number;
-  payments: PaymentInstallment[];
+  clientPoc: string;
+  clientNumber: string;
+  businessCategory: string;
+  requirement: string;
+  agreedAmount: number;
+  advanceReceived: number;
+  advanceReceivedDate: string;
+  expectedClosureDate: string;
+  projectClosed: 'Yes' | 'No';
+  balancePaymentReceived: number;
+  domainAmount: number;
+  balanceToBeReceived: number;
+  clientSatisfied: 'Yes' | 'No';
+  reviewPosted: 'Yes' | 'No';
+  upsellingPossibility: string;
+  nextFollowUpDate: string;
+  paymentMode: 'cheque' | 'cash' | 'UPI';
   createdAt: string;
 }
 
@@ -299,12 +312,25 @@ export const portfolioService = {
         const data = doc.data();
         list.push({
           id: doc.id,
-          projectName: data.projectName || '',
+          date: data.date || '',
           clientName: data.clientName || '',
-          startDate: data.startDate || '',
-          endDate: data.endDate || '',
-          totalAmount: Number(data.totalAmount) || 0,
-          payments: data.payments || [],
+          clientPoc: data.clientPoc || '',
+          clientNumber: data.clientNumber || '',
+          businessCategory: data.businessCategory || '',
+          requirement: data.requirement || '',
+          agreedAmount: Number(data.agreedAmount) || 0,
+          advanceReceived: Number(data.advanceReceived) || 0,
+          advanceReceivedDate: data.advanceReceivedDate || '',
+          expectedClosureDate: data.expectedClosureDate || '',
+          projectClosed: data.projectClosed || 'No',
+          balancePaymentReceived: Number(data.balancePaymentReceived) || 0,
+          domainAmount: Number(data.domainAmount) || 0,
+          balanceToBeReceived: Number(data.balanceToBeReceived) || 0,
+          clientSatisfied: data.clientSatisfied || 'No',
+          reviewPosted: data.reviewPosted || 'No',
+          upsellingPossibility: data.upsellingPossibility || '',
+          nextFollowUpDate: data.nextFollowUpDate || '',
+          paymentMode: data.paymentMode || 'UPI',
           createdAt: data.createdAt || ''
         });
       });
