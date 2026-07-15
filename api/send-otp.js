@@ -27,11 +27,11 @@ module.exports = async (req, res) => {
   }
 
   // Verify email is the eligible one
-  if (email !== 'ascendmedialabs@gmail.com') {
+  if (email !== 'ascendmedialabsinfo@gmail.com') {
     return res.status(403).json({ error: 'Unauthorized email address' });
   }
 
-  const gmailUser = process.env.GMAIL_USER || 'ascendmedialabs@gmail.com';
+  const gmailUser = process.env.GMAIL_USER || 'ascendmedialabsinfo@gmail.com';
   // Use user's app password
   const gmailPass = process.env.GMAIL_APP_PASSWORD || 'hegafcuvcbmlphvn'; 
 

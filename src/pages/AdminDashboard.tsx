@@ -201,7 +201,7 @@ const AdminDashboard = () => {
         },
         body: JSON.stringify({
           otp: otp,
-          email: 'ascendmedialabs@gmail.com'
+          email: 'ascendmedialabsinfo@gmail.com'
         })
       });
 
@@ -526,8 +526,8 @@ const AdminDashboard = () => {
                 key={tab.id}
                 onClick={() => {
                   if (tab.id === 'account') {
-                    if (user?.email !== 'ascendmedialabs@gmail.com') {
-                      alert('Access Denied. Only the primary administrator account (ascendmedialabs@gmail.com) is eligible to view the Account section.');
+                    if (user?.email !== 'ascendmedialabsinfo@gmail.com') {
+                      alert('Access Denied. Only the primary administrator account (ascendmedialabsinfo@gmail.com) is eligible to view the Account section.');
                       return;
                     }
                     if (!isOtpVerified) {
@@ -1529,7 +1529,7 @@ const AdminDashboard = () => {
               
               <h3 className="text-lg font-serif mb-2">Confidential Verification</h3>
               <p className="text-xs text-ink/60 mb-6 leading-relaxed max-w-[280px]">
-                To view your confidential account settings, please enter the 6-digit One-Time Password (OTP) sent to <strong className="text-ink/80">ascendmedialabs@gmail.com</strong>.
+                To view your confidential account settings, please enter the 6-digit One-Time Password (OTP) sent to <strong className="text-ink/80">ascendmedialabsinfo@gmail.com</strong>.
               </p>
 
               {sendingOtp && (
