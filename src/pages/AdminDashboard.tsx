@@ -29,7 +29,9 @@ import {
   Check,
   Image as ImageIcon,
   User,
-  Lock
+  Lock,
+  Eye,
+  Download
 } from 'lucide-react';
 
 export interface Inquiry {
@@ -77,11 +79,15 @@ const AdminDashboard = () => {
   const [showAddProjectModal, setShowAddProjectModal] = useState(false);
   const [showEditProjectModal, setShowEditProjectModal] = useState(false);
   const [editingProject, setEditingProject] = useState<ClientProjectFinancial | null>(null);
+  const [showViewLedgerModal, setShowViewLedgerModal] = useState(false);
+  const [viewingLedger, setViewingLedger] = useState<ClientProjectFinancial | null>(null);
   
   // Excel form states
   const [ledgerDate, setLedgerDate] = useState(new Date().toISOString().split('T')[0]);
   const [ledgerClientName, setLedgerClientName] = useState('');
-  const [ledgerClientPoc, setLedgerClientPoc] = useState('');
+  const [ledgerServerAmount, setLedgerServerAmount] = useState('');
+  const [ledgerRenewalDate, setLedgerRenewalDate] = useState('');
+  const [ledgerInstallments, setLedgerInstallments] = useState<{ amount: string; date: string }[]>([]);
   const [ledgerClientNumber, setLedgerClientNumber] = useState('');
   const [ledgerBusinessCategory, setLedgerBusinessCategory] = useState('');
   const [ledgerRequirement, setLedgerRequirement] = useState('Website');
@@ -92,6 +98,7 @@ const AdminDashboard = () => {
   const [ledgerProjectClosed, setLedgerProjectClosed] = useState<'Yes' | 'No'>('No');
   const [ledgerBalancePaymentReceived, setLedgerBalancePaymentReceived] = useState('');
   const [ledgerDomainAmount, setLedgerDomainAmount] = useState('');
+  const [ledgerDomainName, setLedgerDomainName] = useState('');
   const [ledgerClientSatisfied, setLedgerClientSatisfied] = useState<'Yes' | 'No'>('Yes');
   const [ledgerReviewPosted, setLedgerReviewPosted] = useState<'Yes' | 'No'>('No');
   const [ledgerUpsellingPossibility, setLedgerUpsellingPossibility] = useState('');
@@ -103,7 +110,7 @@ const AdminDashboard = () => {
   const [expenseDescription, setExpenseDescription] = useState('');
   const [expenseAmount, setExpenseAmount] = useState('');
   const [expenseDate, setExpenseDate] = useState(new Date().toISOString().split('T')[0]);
-  const [expenseCategory, setExpenseCategory] = useState('Hosting/Domain');
+  const [expenseNote, setExpenseNote] = useState('');
 
   // Invoice generator state
   const [invoiceClientName, setInvoiceClientName] = useState('');
@@ -131,6 +138,8 @@ const AdminDashboard = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  const calculatedBalanceDue = (Number(ledgerAgreedAmount) || 0) - (Number(ledgerAdvanceReceived) || 0) - ledgerInstallments.reduce((sum, inst) => sum + (Number(inst.amount) || 0), 0);
   const [searchTerm, setSearchTerm] = useState('');
 
   // Modals state
@@ -299,14 +308,20 @@ const AdminDashboard = () => {
     try {
       const agreed = Number(ledgerAgreedAmount) || 0;
       const adv = Number(ledgerAdvanceReceived) || 0;
-      const balPay = Number(ledgerBalancePaymentReceived) || 0;
       const domain = Number(ledgerDomainAmount) || 0;
-      const balDue = agreed - adv - balPay;
+      const server = Number(ledgerServerAmount) || 0;
+      
+      const parsedInstallments = ledgerInstallments.map(inst => ({
+        amount: Number(inst.amount) || 0,
+        date: inst.date || new Date().toISOString().split('T')[0]
+      }));
+
+      const totalInstallmentsReceived = parsedInstallments.reduce((sum, inst) => sum + inst.amount, 0);
+      const balDue = agreed - adv - totalInstallmentsReceived;
 
       const newProj = await portfolioService.addClientProject({
         date: ledgerDate,
         clientName: ledgerClientName,
-        clientPoc: ledgerClientPoc,
         clientNumber: ledgerClientNumber,
         businessCategory: ledgerBusinessCategory,
         requirement: ledgerRequirement,
@@ -315,8 +330,12 @@ const AdminDashboard = () => {
         advanceReceivedDate: ledgerAdvanceReceivedDate,
         expectedClosureDate: ledgerExpectedClosureDate,
         projectClosed: ledgerProjectClosed,
-        balancePaymentReceived: balPay,
+        balancePaymentReceived: totalInstallmentsReceived,
+        installments: parsedInstallments,
         domainAmount: domain,
+        domainName: ledgerDomainName,
+        serverAmount: server,
+        renewalDate: ledgerRenewalDate,
         balanceToBeReceived: balDue,
         clientSatisfied: ledgerClientSatisfied,
         reviewPosted: ledgerReviewPosted,
@@ -344,14 +363,20 @@ const AdminDashboard = () => {
     try {
       const agreed = Number(ledgerAgreedAmount) || 0;
       const adv = Number(ledgerAdvanceReceived) || 0;
-      const balPay = Number(ledgerBalancePaymentReceived) || 0;
       const domain = Number(ledgerDomainAmount) || 0;
-      const balDue = agreed - adv - balPay;
+      const server = Number(ledgerServerAmount) || 0;
+      
+      const parsedInstallments = ledgerInstallments.map(inst => ({
+        amount: Number(inst.amount) || 0,
+        date: inst.date || new Date().toISOString().split('T')[0]
+      }));
+
+      const totalInstallmentsReceived = parsedInstallments.reduce((sum, inst) => sum + inst.amount, 0);
+      const balDue = agreed - adv - totalInstallmentsReceived;
 
       const updateData: Partial<ClientProjectFinancial> = {
         date: ledgerDate,
         clientName: ledgerClientName,
-        clientPoc: ledgerClientPoc,
         clientNumber: ledgerClientNumber,
         businessCategory: ledgerBusinessCategory,
         requirement: ledgerRequirement,
@@ -360,8 +385,12 @@ const AdminDashboard = () => {
         advanceReceivedDate: ledgerAdvanceReceivedDate,
         expectedClosureDate: ledgerExpectedClosureDate,
         projectClosed: ledgerProjectClosed,
-        balancePaymentReceived: balPay,
+        balancePaymentReceived: totalInstallmentsReceived,
+        installments: parsedInstallments,
         domainAmount: domain,
+        domainName: ledgerDomainName,
+        serverAmount: server,
+        renewalDate: ledgerRenewalDate,
         balanceToBeReceived: balDue,
         clientSatisfied: ledgerClientSatisfied,
         reviewPosted: ledgerReviewPosted,
@@ -391,10 +420,30 @@ const AdminDashboard = () => {
     }
   };
 
+  const addInstallmentField = () => {
+    setLedgerInstallments([...ledgerInstallments, { amount: '', date: new Date().toISOString().split('T')[0] }]);
+  };
+
+  const updateInstallmentField = (index: number, key: 'amount' | 'date', value: string) => {
+    const updated = ledgerInstallments.map((inst, i) => {
+      if (i === index) {
+        return { ...inst, [key]: value };
+      }
+      return inst;
+    });
+    setLedgerInstallments(updated);
+  };
+
+  const removeInstallmentField = (index: number) => {
+    setLedgerInstallments(ledgerInstallments.filter((_, i) => i !== index));
+  };
+
   const resetLedgerForm = () => {
     setLedgerDate(new Date().toISOString().split('T')[0]);
     setLedgerClientName('');
-    setLedgerClientPoc('');
+    setLedgerServerAmount('');
+    setLedgerRenewalDate('');
+    setLedgerInstallments([]);
     setLedgerClientNumber('');
     setLedgerBusinessCategory('');
     setLedgerRequirement('Website');
@@ -405,6 +454,7 @@ const AdminDashboard = () => {
     setLedgerProjectClosed('No');
     setLedgerBalancePaymentReceived('');
     setLedgerDomainAmount('');
+    setLedgerDomainName('');
     setLedgerClientSatisfied('Yes');
     setLedgerReviewPosted('No');
     setLedgerUpsellingPossibility('');
@@ -415,7 +465,21 @@ const AdminDashboard = () => {
   const populateLedgerForm = (proj: ClientProjectFinancial) => {
     setLedgerDate(proj.date || '');
     setLedgerClientName(proj.clientName || '');
-    setLedgerClientPoc(proj.clientPoc || '');
+    setLedgerServerAmount(String(proj.serverAmount || ''));
+    setLedgerRenewalDate(proj.renewalDate || '');
+    if ((!proj.installments || proj.installments.length === 0) && proj.balancePaymentReceived && proj.balancePaymentReceived > 0) {
+      setLedgerInstallments([{
+        amount: String(proj.balancePaymentReceived),
+        date: proj.date || new Date().toISOString().split('T')[0]
+      }]);
+    } else {
+      setLedgerInstallments(
+        (proj.installments || []).map(inst => ({
+          amount: String(inst.amount || ''),
+          date: inst.date || ''
+        }))
+      );
+    }
     setLedgerClientNumber(proj.clientNumber || '');
     setLedgerBusinessCategory(proj.businessCategory || '');
     setLedgerRequirement(proj.requirement || 'Website');
@@ -426,11 +490,81 @@ const AdminDashboard = () => {
     setLedgerProjectClosed(proj.projectClosed || 'No');
     setLedgerBalancePaymentReceived(String(proj.balancePaymentReceived || ''));
     setLedgerDomainAmount(String(proj.domainAmount || ''));
+    setLedgerDomainName(proj.domainName || '');
     setLedgerClientSatisfied(proj.clientSatisfied || 'Yes');
     setLedgerReviewPosted(proj.reviewPosted || 'No');
     setLedgerUpsellingPossibility(proj.upsellingPossibility || '');
     setLedgerNextFollowUpDate(proj.nextFollowUpDate || '');
     setLedgerPaymentMode(proj.paymentMode || 'UPI');
+  };
+
+  const downloadCSV = (data: any[], filename: string, headersMap: { [key: string]: string }) => {
+    const csvRows: string[] = [];
+    
+    // 1. Get header row
+    const keys = Object.keys(headersMap);
+    const headerRow = keys.map(key => `"${headersMap[key].replace(/"/g, '""')}"`).join(',');
+    csvRows.push(headerRow);
+    
+    // 2. Add data rows
+    data.forEach(item => {
+      const row = keys.map(key => {
+        let val = item[key];
+        if (val === undefined || val === null) {
+          val = '';
+        } else if (Array.isArray(val)) {
+          // Format installments array as string: eg. "₹1000 (2026-07-16), ₹2000 (2026-07-20)"
+          val = val.map(inst => `₹${inst.amount} (${inst.date})`).join('; ');
+        } else {
+          val = String(val);
+        }
+        return `"${val.replace(/"/g, '""')}"`;
+      });
+      csvRows.push(row.join(','));
+    });
+    
+    // 3. Create blob & download
+    const csvContent = csvRows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const projectHeaders = {
+    date: 'Date Logged',
+    clientName: 'Client Name',
+    clientNumber: 'Client Number',
+    businessCategory: 'Business Category',
+    requirement: 'Project Requirement',
+    agreedAmount: 'Agreed Amount (INR)',
+    advanceReceived: 'Advance Received (INR)',
+    advanceReceivedDate: 'Advance Received Date',
+    balancePaymentReceived: 'Subsequent Installments Paid (INR)',
+    installments: 'Subsequent Installments List',
+    domainName: 'Domain Name',
+    domainAmount: 'Domain Amount (INR)',
+    serverAmount: 'Server Amount (INR)',
+    renewalDate: 'Renewal Date',
+    balanceToBeReceived: 'Balance Due (INR)',
+    projectClosed: 'Project Closed',
+    clientSatisfied: 'Client Satisfied',
+    reviewPosted: 'Review Posted',
+    expectedClosureDate: 'Expected Closure Date',
+    nextFollowUpDate: 'Next Follow-Up Date',
+    paymentMode: 'Payment Mode'
+  };
+
+  const expenseHeaders = {
+    date: 'Date Logged',
+    description: 'Expense Description',
+    note: 'Category / Note',
+    amount: 'Amount Paid (INR)'
   };
 
   const handleDeleteClientProject = async (id: string) => {
@@ -461,7 +595,7 @@ const AdminDashboard = () => {
         description: expenseDescription,
         amount,
         date: expenseDate || new Date().toISOString().split('T')[0],
-        category: expenseCategory
+        note: expenseNote
       });
 
       setExpenses([newExp, ...expenses]);
@@ -469,7 +603,7 @@ const AdminDashboard = () => {
       setExpenseDescription('');
       setExpenseAmount('');
       setExpenseDate(new Date().toISOString().split('T')[0]);
-      setExpenseCategory('Hosting/Domain');
+      setExpenseNote('');
       setSuccess('Expense added successfully!');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err: any) {
@@ -1333,11 +1467,19 @@ const AdminDashboard = () => {
 
               {/* TAB 6: CONFIDENTIAL ACCOUNT DETAILS */}
               {activeTab === 'account' && (() => {
-                // Calculations for ledger
-                const totalReceivables = clientProjects.reduce((sum, p) => sum + p.agreedAmount, 0);
+                // Calculations for ledger (respecting date filters)
+                const totalReceivables = clientProjects.reduce((sum, p) => {
+                  if (ledgerStartDateFilter && p.date < ledgerStartDateFilter) return sum;
+                  if (ledgerEndDateFilter && p.date > ledgerEndDateFilter) return sum;
+                  return sum + p.agreedAmount;
+                }, 0);
+
                 const totalCollected = clientProjects.reduce((sum, p) => {
+                  if (ledgerStartDateFilter && p.date < ledgerStartDateFilter) return sum;
+                  if (ledgerEndDateFilter && p.date > ledgerEndDateFilter) return sum;
                   return sum + p.advanceReceived + p.balancePaymentReceived;
                 }, 0);
+
                 const totalBalanceDue = totalReceivables - totalCollected;
 
                 const todayStr = new Date().toISOString().split('T')[0];
@@ -1354,11 +1496,23 @@ const AdminDashboard = () => {
                 }, 0);
 
                 const filteredLedgerProjects = clientProjects.filter(p => {
-                  const matchSearch = p.clientName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                                      p.clientPoc.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                      p.requirement.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                      p.businessCategory.toLowerCase().includes(searchTerm.toLowerCase());
-                  return matchSearch;
+                  const s = searchTerm.toLowerCase();
+                  return (
+                    p.clientName.toLowerCase().includes(s) ||
+                    p.clientNumber.toLowerCase().includes(s) ||
+                    p.requirement.toLowerCase().includes(s) ||
+                    (p.businessCategory || '').toLowerCase().includes(s) ||
+                    (p.domainName || '').toLowerCase().includes(s) ||
+                    (p.renewalDate || '').toLowerCase().includes(s) ||
+                    (p.paymentMode || '').toLowerCase().includes(s) ||
+                    (p.projectClosed || '').toLowerCase().includes(s) ||
+                    (p.clientSatisfied || '').toLowerCase().includes(s) ||
+                    String(p.agreedAmount).includes(s) ||
+                    String(p.advanceReceived).includes(s) ||
+                    String(p.balanceToBeReceived).includes(s) ||
+                    String(p.domainAmount).includes(s) ||
+                    String(p.serverAmount).includes(s)
+                  );
                 });
 
                 // Calculations for expenses
@@ -1366,8 +1520,11 @@ const AdminDashboard = () => {
                 const netProfit = totalCollected - totalExpenses;
 
                 const filteredExpenses = expenses.filter(e => {
-                  const matchSearch = e.description.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                                      e.category.toLowerCase().includes(searchTerm.toLowerCase());
+                  const s = searchTerm.toLowerCase();
+                  const matchSearch = e.description.toLowerCase().includes(s) || 
+                                      e.note.toLowerCase().includes(s) ||
+                                      e.date.toLowerCase().includes(s) ||
+                                      String(e.amount).includes(s);
                   if (expenseStartDateFilter && e.date < expenseStartDateFilter) return false;
                   if (expenseEndDateFilter && e.date > expenseEndDateFilter) return false;
                   return matchSearch;
@@ -1411,16 +1568,19 @@ const AdminDashboard = () => {
                           <div className="bg-white border border-ink/5 p-5 rounded-sm shadow-sm flex flex-col gap-1">
                             <span className="text-[9px] uppercase tracking-widest text-ink/40 font-bold">Total Receivables</span>
                             <span className="text-xl font-serif text-ink/80 font-semibold">₹{totalReceivables.toLocaleString('en-IN')}</span>
+                            <span className="text-[9px] text-ink/40 italic">Total agreed budget of projects</span>
                           </div>
 
                           <div className="bg-white border border-ink/5 p-5 rounded-sm shadow-sm flex flex-col gap-1">
                             <span className="text-[9px] uppercase tracking-widest text-ink/40 font-bold">Total Collected</span>
                             <span className="text-xl font-serif text-green-700 font-semibold">₹{totalCollected.toLocaleString('en-IN')}</span>
+                            <span className="text-[9px] text-ink/40 italic">Advances + installments received</span>
                           </div>
 
                           <div className="bg-white border border-ink/5 p-5 rounded-sm shadow-sm flex flex-col gap-1">
                             <span className="text-[9px] uppercase tracking-widest text-ink/40 font-bold">Balance Due</span>
                             <span className="text-xl font-serif text-maroon font-semibold">₹{totalBalanceDue.toLocaleString('en-IN')}</span>
+                            <span className="text-[9px] text-ink/40 italic">Outstanding amount to collect</span>
                           </div>
 
                           <div className="bg-white border border-ink/5 p-5 rounded-sm shadow-sm flex flex-col gap-1">
@@ -1431,6 +1591,9 @@ const AdminDashboard = () => {
                               <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></span>
                             </div>
                             <span className="text-xl font-serif text-ink/80 font-semibold">₹{filteredLedgerIncome.toLocaleString('en-IN')}</span>
+                            <span className="text-[9px] text-ink/40 italic">
+                              {ledgerStartDateFilter || ledgerEndDateFilter ? 'Income in date range' : "Income logged today"}
+                            </span>
                           </div>
                         </div>
 
@@ -1477,6 +1640,14 @@ const AdminDashboard = () => {
                               />
                             </div>
                             <button
+                              onClick={() => downloadCSV(filteredLedgerProjects, 'projects_ledger.csv', projectHeaders)}
+                              className="border border-green-600/40 hover:border-green-600 text-green-700 py-2 px-3.5 rounded-sm text-xs font-bold uppercase tracking-widest hover:bg-green-50 transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
+                              title="Export filtered ledger to Excel"
+                            >
+                              <Download size={14} />
+                              <span>Export Excel</span>
+                            </button>
+                            <button
                               onClick={() => setShowAddProjectModal(true)}
                               className="bg-maroon text-white py-2 px-4 rounded-sm text-xs font-bold uppercase tracking-widest hover:bg-maroon/90 transition-colors flex items-center gap-1 cursor-pointer shrink-0"
                             >
@@ -1488,53 +1659,23 @@ const AdminDashboard = () => {
 
                         {/* Project Ledger Table */}
                         <div className="bg-white border border-ink/5 rounded-sm shadow-sm overflow-x-auto">
-                          <table className="w-full text-left border-collapse min-w-[2000px] table-fixed">
-                            <colgroup>
-                              <col className="w-14" /> {/* S.No */}
-                              <col className="w-28" /> {/* Date */}
-                              <col className="w-60" /> {/* Client Name / POC / Contact */}
-                              <col className="w-40" /> {/* Business Category */}
-                              <col className="w-56" /> {/* Requirement */}
-                              <col className="w-32" /> {/* Agreed Amount */}
-                              <col className="w-40" /> {/* Advance received */}
-                              <col className="w-36" /> {/* Expected Closure */}
-                              <col className="w-24" /> {/* Project Closed */}
-                              <col className="w-32" /> {/* Balance Payment Received */}
-                              <col className="w-28" /> {/* Domain Amount */}
-                              <col className="w-32" /> {/* Balance to be received */}
-                              <col className="w-28" /> {/* Client Satisfied */}
-                              <col className="w-28" /> {/* Review Posted */}
-                              <col className="w-44" /> {/* Any Upselling Possibility */}
-                              <col className="w-36" /> {/* Next follow Up date */}
-                              <col className="w-28" /> {/* Payment Mode */}
-                              <col className="w-28 text-right" /> {/* Actions */}
-                            </colgroup>
+                          <table className="w-full text-left border-collapse min-w-full">
                             <thead>
                               <tr className="bg-cream/40 border-b border-ink/5">
-                                <th className="p-3 text-[9px] uppercase tracking-wider font-bold text-ink/50">S.No</th>
-                                <th className="p-3 text-[9px] uppercase tracking-wider font-bold text-ink/50">Date</th>
-                                <th className="p-3 text-[9px] uppercase tracking-wider font-bold text-ink/50">Client Name</th>
-                                <th className="p-3 text-[9px] uppercase tracking-wider font-bold text-ink/50">Business Category</th>
-                                <th className="p-3 text-[9px] uppercase tracking-wider font-bold text-ink/50">Requirement</th>
-                                <th className="p-3 text-[9px] uppercase tracking-wider font-bold text-ink/50">Agreed Amount</th>
-                                <th className="p-3 text-[9px] uppercase tracking-wider font-bold text-ink/50">Advance Received</th>
-                                <th className="p-3 text-[9px] uppercase tracking-wider font-bold text-ink/50">Expected Closure</th>
-                                <th className="p-3 text-[9px] uppercase tracking-wider font-bold text-ink/50">Closed?</th>
-                                <th className="p-3 text-[9px] uppercase tracking-wider font-bold text-ink/50">Balance Rec.</th>
-                                <th className="p-3 text-[9px] uppercase tracking-wider font-bold text-ink/50">Domain Amt</th>
-                                <th className="p-3 text-[9px] uppercase tracking-wider font-bold text-ink/50">Balance Due</th>
-                                <th className="p-3 text-[9px] uppercase tracking-wider font-bold text-ink/50">Satisfied?</th>
-                                <th className="p-3 text-[9px] uppercase tracking-wider font-bold text-ink/50">Review?</th>
-                                <th className="p-3 text-[9px] uppercase tracking-wider font-bold text-ink/50">Upselling</th>
-                                <th className="p-3 text-[9px] uppercase tracking-wider font-bold text-ink/50">Next Follow-Up</th>
-                                <th className="p-3 text-[9px] uppercase tracking-wider font-bold text-ink/50">Mode</th>
-                                <th className="p-3 text-[9px] uppercase tracking-wider font-bold text-ink/50 text-right">Actions</th>
+                                <th className="p-3 text-[9px] uppercase tracking-wider font-bold text-ink/50 w-14">S.No</th>
+                                <th className="p-3 text-[9px] uppercase tracking-wider font-bold text-ink/50 w-28">Date Logged</th>
+                                <th className="p-3 text-[9px] uppercase tracking-wider font-bold text-ink/50 w-60">Client Name</th>
+                                <th className="p-3 text-[9px] uppercase tracking-wider font-bold text-ink/50 w-56">Project Name</th>
+                                <th className="p-3 text-[9px] uppercase tracking-wider font-bold text-ink/50 w-32">Total Amount</th>
+                                <th className="p-3 text-[9px] uppercase tracking-wider font-bold text-ink/50 w-32">Balance Due</th>
+                                <th className="p-3 text-[9px] uppercase tracking-wider font-bold text-ink/50 w-32">End Date</th>
+                                <th className="p-3 text-[9px] uppercase tracking-wider font-bold text-ink/50 text-right w-36">Actions</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-ink/5">
                               {filteredLedgerProjects.length === 0 ? (
                                 <tr>
-                                  <td colSpan={18} className="p-8 text-center text-xs text-ink/40 font-medium">
+                                  <td colSpan={8} className="p-8 text-center text-xs text-ink/40 font-medium">
                                     No client ledger records found. Click "Add Project" to log your first client ledger.
                                   </td>
                                 </tr>
@@ -1546,53 +1687,30 @@ const AdminDashboard = () => {
                                       <td className="p-3 text-xs text-ink/70 font-mono">{p.date || 'N/A'}</td>
                                       <td className="p-3">
                                         <p className="text-xs font-bold text-ink/80 truncate" title={p.clientName}>{p.clientName}</p>
-                                        <p className="text-[10px] text-ink/50 mt-0.5 truncate" title={`POC: ${p.clientPoc} | ${p.clientNumber}`}>
-                                          POC: {p.clientPoc || 'N/A'} {p.clientNumber && `(${p.clientNumber})`}
+                                        <p className="text-[10px] text-ink/50 mt-0.5 truncate" title={`Contact: ${p.clientNumber}`}>
+                                          Contact: {p.clientNumber || 'N/A'}
                                         </p>
                                       </td>
-                                      <td className="p-3 text-xs text-ink/75 truncate" title={p.businessCategory}>{p.businessCategory || 'N/A'}</td>
-                                      <td className="p-3 text-xs text-ink/75 truncate" title={p.requirement}>{p.requirement || 'N/A'}</td>
+                                      <td className="p-3 text-xs text-ink/75 truncate font-semibold" title={p.requirement}>{p.requirement || 'N/A'}</td>
                                       <td className="p-3 text-xs font-bold font-mono text-ink/80">₹{(p.agreedAmount || 0).toLocaleString('en-IN')}</td>
-                                      <td className="p-3">
-                                        <span className="text-xs font-bold font-mono text-green-700">₹{(p.advanceReceived || 0).toLocaleString('en-IN')}</span>
-                                        {p.advanceReceivedDate && (
-                                          <p className="text-[9px] text-ink/40 font-mono mt-0.5">{p.advanceReceivedDate}</p>
-                                        )}
-                                      </td>
-                                      <td className="p-3 text-xs text-ink/60 font-mono">{p.expectedClosureDate || 'N/A'}</td>
-                                      <td className="p-3 text-xs font-bold">
-                                        <span className={`px-1.5 py-0.5 rounded-sm text-[10px] uppercase font-bold tracking-wider ${
-                                          p.projectClosed === 'Yes' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                                        }`}>
-                                          {p.projectClosed || 'No'}
-                                        </span>
-                                      </td>
-                                      <td className="p-3 text-xs font-bold font-mono text-green-700">₹{(p.balancePaymentReceived || 0).toLocaleString('en-IN')}</td>
-                                      <td className="p-3 text-xs font-mono text-ink/65">₹{(p.domainAmount || 0).toLocaleString('en-IN')}</td>
                                       <td className="p-3 text-xs font-bold font-mono">
                                         <span className={p.balanceToBeReceived > 0 ? 'text-maroon' : 'text-green-700'}>
                                           ₹{(p.balanceToBeReceived || 0).toLocaleString('en-IN')}
                                         </span>
                                       </td>
-                                      <td className="p-3 text-xs font-bold">
-                                        <span className={`px-1.5 py-0.5 rounded-sm text-[10px] uppercase font-bold tracking-wider ${
-                                          p.clientSatisfied === 'Yes' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                        }`}>
-                                          {p.clientSatisfied || 'No'}
-                                        </span>
-                                      </td>
-                                      <td className="p-3 text-xs font-bold">
-                                        <span className={`px-1.5 py-0.5 rounded-sm text-[10px] uppercase font-bold tracking-wider ${
-                                          p.reviewPosted === 'Yes' ? 'bg-blue-100 text-blue-800' : 'bg-ink/10 text-ink/60'
-                                        }`}>
-                                          {p.reviewPosted || 'No'}
-                                        </span>
-                                      </td>
-                                      <td className="p-3 text-xs text-ink/70 truncate" title={p.upsellingPossibility}>{p.upsellingPossibility || 'None'}</td>
-                                      <td className="p-3 text-xs text-ink/60 font-mono">{p.nextFollowUpDate || 'N/A'}</td>
-                                      <td className="p-3 text-xs uppercase tracking-wider font-bold text-ink/60">{p.paymentMode || 'UPI'}</td>
+                                      <td className="p-3 text-xs text-ink/60 font-mono">{p.expectedClosureDate || 'N/A'}</td>
                                       <td className="p-3 text-right">
-                                        <div className="flex gap-1.5 justify-end">
+                                        <div className="flex gap-2 justify-end">
+                                          <button
+                                            onClick={() => {
+                                              setViewingLedger(p);
+                                              setShowViewLedgerModal(true);
+                                            }}
+                                            className="border border-blue-500/20 hover:border-blue-500/50 text-blue-600 p-1.5 rounded-sm hover:bg-blue-500/5 transition-all cursor-pointer"
+                                            title="View Full Details"
+                                          >
+                                            <Eye size={12} />
+                                          </button>
                                           <button
                                             onClick={() => {
                                               populateLedgerForm(p);
@@ -1689,6 +1807,14 @@ const AdminDashboard = () => {
                               />
                             </div>
                             <button
+                              onClick={() => downloadCSV(filteredExpenses, 'expenses_ledger.csv', expenseHeaders)}
+                              className="border border-green-600/40 hover:border-green-600 text-green-700 py-2 px-3.5 rounded-sm text-xs font-bold uppercase tracking-widest hover:bg-green-50 transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
+                              title="Export filtered expenses to Excel"
+                            >
+                              <Download size={14} />
+                              <span>Export Excel</span>
+                            </button>
+                            <button
                               onClick={() => setShowAddExpenseModal(true)}
                               className="bg-maroon text-white py-2 px-4 rounded-sm text-xs font-bold uppercase tracking-widest hover:bg-maroon/90 transition-colors flex items-center gap-1 cursor-pointer shrink-0"
                             >
@@ -1704,7 +1830,7 @@ const AdminDashboard = () => {
                             <thead>
                               <tr className="bg-cream/40 border-b border-ink/5">
                                 <th className="p-4 text-[10px] uppercase tracking-wider font-bold text-ink/50">Expense Description</th>
-                                <th className="p-4 text-[10px] uppercase tracking-wider font-bold text-ink/50">Category</th>
+                                <th className="p-4 text-[10px] uppercase tracking-wider font-bold text-ink/50">Note</th>
                                 <th className="p-4 text-[10px] uppercase tracking-wider font-bold text-ink/50">Date Logged</th>
                                 <th className="p-4 text-[10px] uppercase tracking-wider font-bold text-ink/50">Amount Paid</th>
                                 <th className="p-4 text-[10px] uppercase tracking-wider font-bold text-ink/50 text-right">Action</th>
@@ -1723,7 +1849,7 @@ const AdminDashboard = () => {
                                     <td className="p-4 text-xs font-bold text-ink/80">{exp.description}</td>
                                     <td className="p-4">
                                       <span className="inline-block bg-maroon/5 text-maroon text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border border-maroon/10">
-                                        {exp.category}
+                                        {exp.note}
                                       </span>
                                     </td>
                                     <td className="p-4 text-xs text-ink/50 font-mono">{exp.date}</td>
@@ -1731,12 +1857,22 @@ const AdminDashboard = () => {
                                       ₹{exp.amount.toLocaleString('en-IN')}
                                     </td>
                                     <td className="p-4 text-right">
-                                      <button
-                                        onClick={() => handleDeleteExpense(exp.id!)}
-                                        className="text-ink/30 hover:text-maroon p-1.5 transition-colors cursor-pointer"
-                                      >
-                                        <Trash2 size={13} />
-                                      </button>
+                                      <div className="flex gap-1.5 justify-end">
+                                        <button
+                                          onClick={() => downloadCSV([exp], `${exp.description.replace(/\s+/g, '_')}_expense.csv`, expenseHeaders)}
+                                          className="border border-blue-500/20 hover:border-blue-500/50 text-blue-600 p-1.5 rounded-sm hover:bg-blue-500/5 transition-all cursor-pointer"
+                                          title="Export this expense to Excel"
+                                        >
+                                          <Download size={12} />
+                                        </button>
+                                        <button
+                                          onClick={() => handleDeleteExpense(exp.id!)}
+                                          className="text-ink/30 hover:text-maroon p-1.5 transition-colors cursor-pointer"
+                                          title="Delete Expense"
+                                        >
+                                          <Trash2 size={13} />
+                                        </button>
+                                      </div>
                                     </td>
                                   </tr>
                                 ))
@@ -2579,6 +2715,209 @@ const AdminDashboard = () => {
         )}
       </AnimatePresence>
 
+      {/* View Client Project Ledger Modal */}
+      <AnimatePresence>
+        {showViewLedgerModal && viewingLedger && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowViewLedgerModal(false)}
+              className="absolute inset-0 bg-ink/40 backdrop-blur-sm"
+            />
+            
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white w-full max-w-2xl p-8 rounded-sm shadow-2xl relative z-10 border border-ink/5"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-serif">Project Ledger Details</h3>
+                <button 
+                  onClick={() => setShowViewLedgerModal(false)}
+                  className="text-ink/40 hover:text-ink cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[70vh] overflow-y-auto pr-2">
+                {/* Client Info Section */}
+                <div className="flex flex-col gap-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-maroon border-b border-ink/5 pb-1">Client Info</h4>
+                  <div className="flex flex-col gap-2.5">
+                    <div>
+                      <span className="text-[9px] uppercase tracking-widest font-bold text-ink/40 block">Date Logged</span>
+                      <span className="text-xs text-ink/80 font-mono font-bold">{viewingLedger.date || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-[9px] uppercase tracking-widest font-bold text-ink/40 block">Client Name</span>
+                      <span className="text-xs text-ink/80 font-bold">{viewingLedger.clientName || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-[9px] uppercase tracking-widest font-bold text-ink/40 block">Client Number</span>
+                      <span className="text-xs text-ink/80 font-mono">{viewingLedger.clientNumber || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-[9px] uppercase tracking-widest font-bold text-ink/40 block">Business Category</span>
+                      <span className="text-xs text-ink/80">{viewingLedger.businessCategory || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-[9px] uppercase tracking-widest font-bold text-ink/40 block">Project Name</span>
+                      <span className="text-xs text-ink/80 font-semibold">{viewingLedger.requirement || 'N/A'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Financials Section */}
+                <div className="flex flex-col gap-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-maroon border-b border-ink/5 pb-1">Financials & Dates</h4>
+                  <div className="flex flex-col gap-2.5">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <span className="text-[9px] uppercase tracking-widest font-bold text-ink/40 block">Agreed Amount</span>
+                        <span className="text-xs text-ink/80 font-bold font-mono">₹{viewingLedger.agreedAmount.toLocaleString('en-IN')}</span>
+                      </div>
+                      <div>
+                        <span className="text-[9px] uppercase tracking-widest font-bold text-ink/40 block">Payment Mode</span>
+                        <span className="text-xs text-ink/85 font-mono font-bold uppercase">{viewingLedger.paymentMode || 'UPI'}</span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <span className="text-[9px] uppercase tracking-widest font-bold text-ink/40 block">Advance Received</span>
+                        <span className="text-xs text-green-700 font-bold font-mono">₹{viewingLedger.advanceReceived.toLocaleString('en-IN')}</span>
+                      </div>
+                      <div>
+                        <span className="text-[9px] uppercase tracking-widest font-bold text-ink/40 block">Advance Date</span>
+                        <span className="text-xs text-ink/80 font-mono">{viewingLedger.advanceReceivedDate || 'N/A'}</span>
+                      </div>
+                    </div>
+
+                    {/* Installments in View */}
+                    {viewingLedger.installments && viewingLedger.installments.length > 0 && (
+                      <div className="bg-cream/10 p-2.5 rounded-sm border border-ink/5">
+                        <span className="text-[9px] uppercase tracking-widest font-bold text-maroon block mb-1">Subsequent Payments</span>
+                        <div className="flex flex-col gap-1 max-h-24 overflow-y-auto">
+                          {viewingLedger.installments.map((inst, idx) => (
+                            <div key={idx} className="flex justify-between text-xs font-mono py-0.5 border-b border-ink/5 last:border-0">
+                              <span className="text-ink/65">Installment {idx + 1}</span>
+                              <span className="text-green-700 font-bold">₹{inst.amount.toLocaleString('en-IN')} ({inst.date})</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <span className="text-[9px] uppercase tracking-widest font-bold text-ink/40 block">Domain Name</span>
+                        <span className="text-xs text-ink/80 font-semibold">{viewingLedger.domainName || 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-[9px] uppercase tracking-widest font-bold text-ink/40 block">Domain Amount</span>
+                        <span className="text-xs text-ink/70 font-mono">₹{viewingLedger.domainAmount.toLocaleString('en-IN')}</span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <span className="text-[9px] uppercase tracking-widest font-bold text-ink/40 block">Server Amount</span>
+                        <span className="text-xs text-ink/70 font-mono">₹{viewingLedger.serverAmount.toLocaleString('en-IN')}</span>
+                      </div>
+                      <div>
+                        <span className="text-[9px] uppercase tracking-widest font-bold text-ink/40 block">Renewal Date</span>
+                        <span className="text-xs text-ink/80 font-mono">{viewingLedger.renewalDate || 'N/A'}</span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <span className="text-[9px] uppercase tracking-widest font-bold text-maroon block">Balance Due</span>
+                        <span className="text-xs font-bold font-mono text-maroon">₹{viewingLedger.balanceToBeReceived.toLocaleString('en-IN')}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status & Feedback Details */}
+                <div className="md:col-span-2 flex flex-col gap-3 border-t border-ink/5 pt-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-maroon border-b border-ink/5 pb-1">Feedback, Upselling & Schedule</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div>
+                      <span className="text-[9px] uppercase tracking-widest font-bold text-ink/40 block">Expected Closure</span>
+                      <span className="text-xs text-ink/80 font-mono">{viewingLedger.expectedClosureDate || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-[9px] uppercase tracking-widest font-bold text-ink/40 block">Project Closed?</span>
+                      <span className={`inline-block px-1.5 py-0.5 rounded-sm text-[10px] uppercase font-bold tracking-wider ${
+                        viewingLedger.projectClosed === 'Yes' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                      }`}>{viewingLedger.projectClosed || 'No'}</span>
+                    </div>
+                    <div>
+                      <span className="text-[9px] uppercase tracking-widest font-bold text-ink/40 block">Client Satisfied?</span>
+                      <span className={`inline-block px-1.5 py-0.5 rounded-sm text-[10px] uppercase font-bold tracking-wider ${
+                        viewingLedger.clientSatisfied === 'Yes' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>{viewingLedger.clientSatisfied || 'No'}</span>
+                    </div>
+                    <div>
+                      <span className="text-[9px] uppercase tracking-widest font-bold text-ink/40 block">Review Posted?</span>
+                      <span className={`inline-block px-1.5 py-0.5 rounded-sm text-[10px] uppercase font-bold tracking-wider ${
+                        viewingLedger.reviewPosted === 'Yes' ? 'bg-blue-100 text-blue-800' : 'bg-ink/10 text-ink/60'
+                      }`}>{viewingLedger.reviewPosted || 'No'}</span>
+                    </div>
+                    <div>
+                      <span className="text-[9px] uppercase tracking-widest font-bold text-ink/40 block">Next Follow-Up Date</span>
+                      <span className="text-xs text-ink/80 font-mono">{viewingLedger.nextFollowUpDate || 'N/A'}</span>
+                    </div>
+                    <div className="col-span-2 md:col-span-3">
+                      <span className="text-[9px] uppercase tracking-widest font-bold text-ink/40 block">Upselling comments</span>
+                      <p className="text-xs text-ink/85 mt-0.5 whitespace-pre-wrap">{viewingLedger.upsellingPossibility || 'None'}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Actions */}
+              <div className="flex gap-3 justify-end mt-6 border-t border-ink/5 pt-4">
+                <button
+                  type="button"
+                  onClick={() => downloadCSV([viewingLedger], `${viewingLedger.clientName.replace(/\s+/g, '_')}_project_ledger.csv`, projectHeaders)}
+                  className="border border-green-600/40 hover:border-green-600 text-green-700 px-4 py-2 rounded-sm text-xs uppercase tracking-widest font-bold hover:bg-green-50 transition-colors flex items-center gap-1.5 cursor-pointer animate-hover"
+                  title="Export this project details to Excel"
+                >
+                  <Download size={12} />
+                  <span>Export Excel</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowViewLedgerModal(false)}
+                  className="border border-ink/10 px-4 py-2 rounded-sm text-xs uppercase tracking-widest font-bold hover:bg-cream transition-colors cursor-pointer"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowViewLedgerModal(false);
+                    populateLedgerForm(viewingLedger);
+                    setEditingProject(viewingLedger);
+                    setShowEditProjectModal(true);
+                  }}
+                  className="bg-maroon text-white px-5 py-2 rounded-sm text-xs uppercase tracking-widest font-bold hover:bg-maroon/90 transition-colors flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Edit size={12} />
+                  <span>Edit Record</span>
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Add Client Project Ledger Modal */}
       <AnimatePresence>
         {showAddProjectModal && (
@@ -2639,29 +2978,16 @@ const AdminDashboard = () => {
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[9px] uppercase tracking-widest font-bold text-ink/60">Client POC</label>
-                        <input
-                          type="text"
-                          value={ledgerClientPoc}
-                          onChange={(e) => setLedgerClientPoc(e.target.value)}
-                          placeholder="POC Person"
-                          className="bg-cream/25 border border-ink/10 rounded-sm py-1.5 px-2.5 text-xs text-ink/80 focus:outline-none focus:border-maroon"
-                          disabled={actionLoading}
-                        />
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[9px] uppercase tracking-widest font-bold text-ink/60">Client Number</label>
-                        <input
-                          type="text"
-                          value={ledgerClientNumber}
-                          onChange={(e) => setLedgerClientNumber(e.target.value)}
-                          placeholder="Phone Number"
-                          className="bg-cream/25 border border-ink/10 rounded-sm py-1.5 px-2.5 text-xs text-ink/80 focus:outline-none focus:border-maroon"
-                          disabled={actionLoading}
-                        />
-                      </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[9px] uppercase tracking-widest font-bold text-ink/60">Client Number</label>
+                      <input
+                        type="text"
+                        value={ledgerClientNumber}
+                        onChange={(e) => setLedgerClientNumber(e.target.value)}
+                        placeholder="Phone Number"
+                        className="bg-cream/25 border border-ink/10 rounded-sm py-1.5 px-2.5 text-xs text-ink/80 focus:outline-none focus:border-maroon"
+                        disabled={actionLoading}
+                      />
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
@@ -2747,14 +3073,67 @@ const AdminDashboard = () => {
                       </div>
                     </div>
 
+                    {/* Dynamic Installments List */}
+                    <div className="flex flex-col gap-2 border border-ink/5 bg-cream/10 p-3 rounded-sm my-1">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] uppercase tracking-wider font-bold text-maroon">Subsequent Payments (Installments)</span>
+                        <button
+                          type="button"
+                          onClick={addInstallmentField}
+                          className="text-[9px] uppercase tracking-widest font-bold bg-maroon text-white px-2 py-0.5 rounded-sm hover:bg-maroon/90 cursor-pointer transition-colors"
+                        >
+                          + Add Payment
+                        </button>
+                      </div>
+
+                      {ledgerInstallments.length === 0 ? (
+                        <p className="text-[10px] text-ink/40 italic text-center py-1">No subsequent payments recorded.</p>
+                      ) : (
+                        <div className="flex flex-col gap-2 mt-1 max-h-36 overflow-y-auto pr-1">
+                          {ledgerInstallments.map((inst, idx) => (
+                            <div key={idx} className="flex gap-2 items-center">
+                              <div className="flex-1 flex flex-col gap-0.5">
+                                <label className="text-[8px] uppercase tracking-widest font-bold text-ink/45">Amount (₹)</label>
+                                <input
+                                  type="number"
+                                  value={inst.amount}
+                                  onChange={(e) => updateInstallmentField(idx, 'amount', e.target.value)}
+                                  placeholder="Amount paid"
+                                  className="bg-white border border-ink/10 rounded-sm py-1 px-2 text-xs text-ink/80 focus:outline-none focus:border-maroon"
+                                  disabled={actionLoading}
+                                />
+                              </div>
+                              <div className="flex-1 flex flex-col gap-0.5">
+                                <label className="text-[8px] uppercase tracking-widest font-bold text-ink/45">Date Paid</label>
+                                <input
+                                  type="date"
+                                  value={inst.date}
+                                  onChange={(e) => updateInstallmentField(idx, 'date', e.target.value)}
+                                  className="bg-white border border-ink/10 rounded-sm py-1 px-2 text-xs text-ink/80 focus:outline-none focus:border-maroon"
+                                  disabled={actionLoading}
+                                />
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => removeInstallmentField(idx)}
+                                className="text-red-600 hover:text-red-800 text-[10px] mt-3 font-bold cursor-pointer hover:underline"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
                     <div className="grid grid-cols-2 gap-2">
                       <div className="flex flex-col gap-1">
-                        <label className="text-[9px] uppercase tracking-widest font-bold text-ink/60">Balance Received (₹)</label>
+                        <label className="text-[9px] uppercase tracking-widest font-bold text-ink/60">Domain Name</label>
                         <input
-                          type="number"
-                          value={ledgerBalancePaymentReceived}
-                          onChange={(e) => setLedgerBalancePaymentReceived(e.target.value)}
-                          placeholder="Balance Rec."
+                          type="text"
+                          value={ledgerDomainName}
+                          onChange={(e) => setLedgerDomainName(e.target.value)}
+                          placeholder="e.g., example.com"
                           className="bg-cream/25 border border-ink/10 rounded-sm py-1.5 px-2.5 text-xs text-ink/80 focus:outline-none focus:border-maroon"
                           disabled={actionLoading}
                         />
@@ -2768,6 +3147,42 @@ const AdminDashboard = () => {
                           placeholder="Domain Cost"
                           className="bg-cream/25 border border-ink/10 rounded-sm py-1.5 px-2.5 text-xs text-ink/80 focus:outline-none focus:border-maroon"
                           disabled={actionLoading}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[9px] uppercase tracking-widest font-bold text-ink/60">Server Amount (₹)</label>
+                        <input
+                          type="number"
+                          value={ledgerServerAmount}
+                          onChange={(e) => setLedgerServerAmount(e.target.value)}
+                          placeholder="Server Cost"
+                          className="bg-cream/25 border border-ink/10 rounded-sm py-1.5 px-2.5 text-xs text-ink/80 focus:outline-none focus:border-maroon"
+                          disabled={actionLoading}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[9px] uppercase tracking-widest font-bold text-ink/60">Renewal Date</label>
+                        <input
+                          type="date"
+                          value={ledgerRenewalDate}
+                          onChange={(e) => setLedgerRenewalDate(e.target.value)}
+                          className="bg-cream/25 border border-ink/10 rounded-sm py-1.5 px-2.5 text-xs text-ink/80 focus:outline-none focus:border-maroon"
+                          disabled={actionLoading}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[9px] uppercase tracking-widest font-bold text-ink/60">Balance Due (₹) (Auto-calculated)</label>
+                        <input
+                          type="text"
+                          value={`₹${calculatedBalanceDue.toLocaleString('en-IN')}`}
+                          className="bg-cream/15 border border-ink/10 rounded-sm py-1.5 px-2.5 text-xs text-ink/40 font-mono focus:outline-none cursor-not-allowed font-bold"
+                          disabled
                         />
                       </div>
                     </div>
@@ -2945,29 +3360,16 @@ const AdminDashboard = () => {
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[9px] uppercase tracking-widest font-bold text-ink/60">Client POC</label>
-                        <input
-                          type="text"
-                          value={ledgerClientPoc}
-                          onChange={(e) => setLedgerClientPoc(e.target.value)}
-                          placeholder="POC Person"
-                          className="bg-cream/25 border border-ink/10 rounded-sm py-1.5 px-2.5 text-xs text-ink/80 focus:outline-none focus:border-maroon"
-                          disabled={actionLoading}
-                        />
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[9px] uppercase tracking-widest font-bold text-ink/60">Client Number</label>
-                        <input
-                          type="text"
-                          value={ledgerClientNumber}
-                          onChange={(e) => setLedgerClientNumber(e.target.value)}
-                          placeholder="Phone Number"
-                          className="bg-cream/25 border border-ink/10 rounded-sm py-1.5 px-2.5 text-xs text-ink/80 focus:outline-none focus:border-maroon"
-                          disabled={actionLoading}
-                        />
-                      </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[9px] uppercase tracking-widest font-bold text-ink/60">Client Number</label>
+                      <input
+                        type="text"
+                        value={ledgerClientNumber}
+                        onChange={(e) => setLedgerClientNumber(e.target.value)}
+                        placeholder="Phone Number"
+                        className="bg-cream/25 border border-ink/10 rounded-sm py-1.5 px-2.5 text-xs text-ink/80 focus:outline-none focus:border-maroon"
+                        disabled={actionLoading}
+                      />
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
@@ -3053,14 +3455,67 @@ const AdminDashboard = () => {
                       </div>
                     </div>
 
+                    {/* Dynamic Installments List */}
+                    <div className="flex flex-col gap-2 border border-ink/5 bg-cream/10 p-3 rounded-sm my-1">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] uppercase tracking-wider font-bold text-maroon">Subsequent Payments (Installments)</span>
+                        <button
+                          type="button"
+                          onClick={addInstallmentField}
+                          className="text-[9px] uppercase tracking-widest font-bold bg-maroon text-white px-2 py-0.5 rounded-sm hover:bg-maroon/90 cursor-pointer transition-colors"
+                        >
+                          + Add Payment
+                        </button>
+                      </div>
+
+                      {ledgerInstallments.length === 0 ? (
+                        <p className="text-[10px] text-ink/40 italic text-center py-1">No subsequent payments recorded.</p>
+                      ) : (
+                        <div className="flex flex-col gap-2 mt-1 max-h-36 overflow-y-auto pr-1">
+                          {ledgerInstallments.map((inst, idx) => (
+                            <div key={idx} className="flex gap-2 items-center">
+                              <div className="flex-1 flex flex-col gap-0.5">
+                                <label className="text-[8px] uppercase tracking-widest font-bold text-ink/45">Amount (₹)</label>
+                                <input
+                                  type="number"
+                                  value={inst.amount}
+                                  onChange={(e) => updateInstallmentField(idx, 'amount', e.target.value)}
+                                  placeholder="Amount paid"
+                                  className="bg-white border border-ink/10 rounded-sm py-1 px-2 text-xs text-ink/80 focus:outline-none focus:border-maroon"
+                                  disabled={actionLoading}
+                                />
+                              </div>
+                              <div className="flex-1 flex flex-col gap-0.5">
+                                <label className="text-[8px] uppercase tracking-widest font-bold text-ink/45">Date Paid</label>
+                                <input
+                                  type="date"
+                                  value={inst.date}
+                                  onChange={(e) => updateInstallmentField(idx, 'date', e.target.value)}
+                                  className="bg-white border border-ink/10 rounded-sm py-1 px-2 text-xs text-ink/80 focus:outline-none focus:border-maroon"
+                                  disabled={actionLoading}
+                                />
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => removeInstallmentField(idx)}
+                                className="text-red-600 hover:text-red-800 text-[10px] mt-3 font-bold cursor-pointer hover:underline"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
                     <div className="grid grid-cols-2 gap-2">
                       <div className="flex flex-col gap-1">
-                        <label className="text-[9px] uppercase tracking-widest font-bold text-ink/60">Balance Received (₹)</label>
+                        <label className="text-[9px] uppercase tracking-widest font-bold text-ink/60">Domain Name</label>
                         <input
-                          type="number"
-                          value={ledgerBalancePaymentReceived}
-                          onChange={(e) => setLedgerBalancePaymentReceived(e.target.value)}
-                          placeholder="Balance Rec."
+                          type="text"
+                          value={ledgerDomainName}
+                          onChange={(e) => setLedgerDomainName(e.target.value)}
+                          placeholder="e.g., example.com"
                           className="bg-cream/25 border border-ink/10 rounded-sm py-1.5 px-2.5 text-xs text-ink/80 focus:outline-none focus:border-maroon"
                           disabled={actionLoading}
                         />
@@ -3074,6 +3529,42 @@ const AdminDashboard = () => {
                           placeholder="Domain Cost"
                           className="bg-cream/25 border border-ink/10 rounded-sm py-1.5 px-2.5 text-xs text-ink/80 focus:outline-none focus:border-maroon"
                           disabled={actionLoading}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[9px] uppercase tracking-widest font-bold text-ink/60">Server Amount (₹)</label>
+                        <input
+                          type="number"
+                          value={ledgerServerAmount}
+                          onChange={(e) => setLedgerServerAmount(e.target.value)}
+                          placeholder="Server Cost"
+                          className="bg-cream/25 border border-ink/10 rounded-sm py-1.5 px-2.5 text-xs text-ink/80 focus:outline-none focus:border-maroon"
+                          disabled={actionLoading}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[9px] uppercase tracking-widest font-bold text-ink/60">Renewal Date</label>
+                        <input
+                          type="date"
+                          value={ledgerRenewalDate}
+                          onChange={(e) => setLedgerRenewalDate(e.target.value)}
+                          className="bg-cream/25 border border-ink/10 rounded-sm py-1.5 px-2.5 text-xs text-ink/80 focus:outline-none focus:border-maroon"
+                          disabled={actionLoading}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[9px] uppercase tracking-widest font-bold text-ink/60">Balance Due (₹) (Auto-calculated)</label>
+                        <input
+                          type="text"
+                          value={`₹${calculatedBalanceDue.toLocaleString('en-IN')}`}
+                          className="bg-cream/15 border border-ink/10 rounded-sm py-1.5 px-2.5 text-xs text-ink/40 font-mono focus:outline-none cursor-not-allowed font-bold"
+                          disabled
                         />
                       </div>
                     </div>
@@ -3261,19 +3752,15 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] uppercase tracking-widest font-bold text-ink/75">Expense Category</label>
-                  <select
-                    value={expenseCategory}
-                    onChange={(e) => setExpenseCategory(e.target.value)}
+                  <label className="text-[10px] uppercase tracking-widest font-bold text-ink/75">Expense Note</label>
+                  <input
+                    type="text"
+                    value={expenseNote}
+                    onChange={(e) => setExpenseNote(e.target.value)}
+                    placeholder="E.g., Vercel subscription, developer salary, domain, etc."
                     className="w-full bg-cream/35 border border-ink/10 rounded-sm py-2 px-3 text-xs focus:outline-none focus:border-maroon transition-colors"
                     disabled={actionLoading}
-                  >
-                    <option value="Domain/Hosting">Domain & Hosting</option>
-                    <option value="Developer Salaries">Developer Salaries</option>
-                    <option value="Content/Media">Content & Media</option>
-                    <option value="Marketing">Marketing / Promotion</option>
-                    <option value="Miscellaneous">Miscellaneous / Others</option>
-                  </select>
+                  />
                 </div>
 
                 <div className="flex gap-3 justify-end mt-4 border-t border-ink/5 pt-4">

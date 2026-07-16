@@ -17,11 +17,15 @@ export interface PaymentInstallment {
   description: string;
 }
 
+export interface ClientInstallment {
+  amount: number;
+  date: string;
+}
+
 export interface ClientProjectFinancial {
   id?: string;
   date: string;
   clientName: string;
-  clientPoc: string;
   clientNumber: string;
   businessCategory: string;
   requirement: string;
@@ -31,7 +35,11 @@ export interface ClientProjectFinancial {
   expectedClosureDate: string;
   projectClosed: 'Yes' | 'No';
   balancePaymentReceived: number;
+  installments?: ClientInstallment[];
   domainAmount: number;
+  domainName?: string;
+  serverAmount: number;
+  renewalDate: string;
   balanceToBeReceived: number;
   clientSatisfied: 'Yes' | 'No';
   reviewPosted: 'Yes' | 'No';
@@ -46,7 +54,7 @@ export interface Expense {
   description: string;
   amount: number;
   date: string;
-  category: string;
+  note: string;
   createdAt: string;
 }
 
@@ -314,7 +322,6 @@ export const portfolioService = {
           id: doc.id,
           date: data.date || '',
           clientName: data.clientName || '',
-          clientPoc: data.clientPoc || '',
           clientNumber: data.clientNumber || '',
           businessCategory: data.businessCategory || '',
           requirement: data.requirement || '',
@@ -324,7 +331,11 @@ export const portfolioService = {
           expectedClosureDate: data.expectedClosureDate || '',
           projectClosed: data.projectClosed || 'No',
           balancePaymentReceived: Number(data.balancePaymentReceived) || 0,
+          installments: data.installments || [],
           domainAmount: Number(data.domainAmount) || 0,
+          domainName: data.domainName || '',
+          serverAmount: Number(data.serverAmount) || 0,
+          renewalDate: data.renewalDate || '',
           balanceToBeReceived: Number(data.balanceToBeReceived) || 0,
           clientSatisfied: data.clientSatisfied || 'No',
           reviewPosted: data.reviewPosted || 'No',
@@ -375,7 +386,7 @@ export const portfolioService = {
           description: data.description || '',
           amount: Number(data.amount) || 0,
           date: data.date || '',
-          category: data.category || '',
+          note: data.note || data.category || '',
           createdAt: data.createdAt || ''
         });
       });
