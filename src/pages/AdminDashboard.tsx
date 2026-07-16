@@ -120,6 +120,15 @@ const AdminDashboard = () => {
   const [invoiceDueDate, setInvoiceDueDate] = useState('');
   const [invoiceNumber, setInvoiceNumber] = useState(`AML-${Math.floor(1000 + Math.random() * 9000)}`);
   const [invoiceItems, setInvoiceItems] = useState<{ id: string; description: string; quantity: number; rate: number }[]>([]);
+
+  // Invoice payment remittance states
+  const [invoicePaymentType, setInvoicePaymentType] = useState<'bank' | 'upi'>('bank');
+  const [invoiceBankName, setInvoiceBankName] = useState('HDFC Bank Limited');
+  const [invoiceAccountName, setInvoiceAccountName] = useState('Ascend Media Labs');
+  const [invoiceAccountNumber, setInvoiceAccountNumber] = useState('50200067981245');
+  const [invoiceIfscCode, setInvoiceIfscCode] = useState('HDFC0000456');
+  const [invoiceUpiId, setInvoiceUpiId] = useState('reachus@ascendmedialabs.in');
+  const [invoiceUpiName, setInvoiceUpiName] = useState('Ascend Media Labs');
   
   // New line item form
   const [itemDescription, setItemDescription] = useState('');
@@ -912,11 +921,13 @@ const AdminDashboard = () => {
       {/* Sidebar Section */}
       <aside className="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-ink/5 flex flex-col justify-between shrink-0 z-20">
         <div className="p-6">
-          <div className="flex items-center gap-2 mb-8 select-none">
-            <div className="w-8 h-8 rounded-full bg-maroon flex items-center justify-center text-white font-bold text-sm">A</div>
+          <div className="flex items-center gap-3 mb-8 select-none group">
+            <div className="w-9 h-9 rounded-sm bg-maroon flex items-center justify-center text-white font-serif font-bold text-lg tracking-tighter shrink-0 transition-transform group-hover:scale-105 border border-maroon">
+              A
+            </div>
             <div>
-              <p className="text-sm font-bold text-maroon uppercase tracking-wide leading-none">Ascend</p>
-              <p className="text-[9px] uppercase tracking-widest text-ink/40 mt-0.5 leading-none">Media Labs</p>
+              <p className="text-xs font-serif font-bold text-maroon uppercase tracking-wider leading-none">Ascend</p>
+              <p className="text-[8px] uppercase tracking-widest text-ink/40 mt-1 leading-none font-semibold">Media Labs</p>
             </div>
           </div>
 
@@ -967,7 +978,7 @@ const AdminDashboard = () => {
             ))}
           </nav>
           <a
-            href="/"
+            href={window.location.hostname === 'localhost' ? '/' : 'https://ascendmedialabs.com'}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-3 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-ink/60 hover:text-maroon hover:bg-cream/40 rounded-sm mt-4 border-t border-dashed border-ink/10"
@@ -978,23 +989,14 @@ const AdminDashboard = () => {
         </div>
 
         {/* Profile Card */}
-        <div className="p-6 border-t border-ink/5 bg-cream/20">
-          <div className="flex items-center gap-3 mb-4 truncate">
-            <div className="w-9 h-9 rounded-full bg-cream-dark border border-ink/10 flex items-center justify-center font-bold text-maroon text-sm shrink-0">
-              {user?.email ? user.email[0].toUpperCase() : 'A'}
-            </div>
-            <div className="truncate">
-              <p className="text-xs font-bold text-ink leading-none">Administrator</p>
-              <p className="text-[10px] text-ink/40 mt-1 truncate">{user?.email}</p>
-            </div>
+        <div className="p-6 border-t border-ink/5 bg-cream/10 flex items-center gap-3 truncate">
+          <div className="w-9 h-9 rounded-full bg-maroon/10 border border-maroon/20 flex items-center justify-center font-bold text-maroon text-xs shrink-0">
+            {user?.email ? user.email[0].toUpperCase() : 'A'}
           </div>
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 border border-ink/10 text-ink/75 hover:bg-ink hover:text-white py-2.5 rounded-sm text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
-          >
-            <LogOut size={13} />
-            <span>Sign Out</span>
-          </button>
+          <div className="truncate">
+            <p className="text-[10px] uppercase tracking-wider font-bold text-ink/80 leading-none">Administrator</p>
+            <p className="text-[9px] text-ink/40 mt-1.5 truncate font-mono">{user?.email}</p>
+          </div>
         </div>
       </aside>
 
@@ -1008,7 +1010,7 @@ const AdminDashboard = () => {
             <span className="text-xs uppercase tracking-widest font-bold text-maroon">{activeTab === 'brands' ? 'Partner Brands' : activeTab}</span>
           </div>
 
-          <div className="flex items-center gap-4 w-full sm:w-auto">
+          <div className="flex items-center gap-3.5 w-full sm:w-auto justify-end">
             {/* Search Input */}
             {(activeTab === 'projects' || activeTab === 'inquiries' || activeTab === 'brands') && (
               <div className="relative w-full sm:w-64">
@@ -1048,6 +1050,27 @@ const AdminDashboard = () => {
                 <span>Add Brand logo</span>
               </button>
             )}
+
+            {/* Separator and Admin Info / Logout button */}
+            <div className="flex items-center gap-3 border-l border-ink/10 pl-3.5">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-maroon/10 border border-maroon/20 flex items-center justify-center font-bold text-maroon text-xs shrink-0" title={user?.email || 'Admin'}>
+                  {user?.email ? user.email[0].toUpperCase() : 'A'}
+                </div>
+                <div className="hidden lg:block text-left shrink-0">
+                  <p className="text-[10px] font-bold text-ink/80 leading-none">Admin</p>
+                  <p className="text-[8px] text-ink/40 font-mono mt-0.5">{user?.email ? user.email.split('@')[0] : 'ascend'}</p>
+                </div>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-1.5 border border-maroon/25 hover:border-maroon text-maroon hover:bg-maroon/5 py-1.5 px-3 rounded-sm text-[10px] font-bold uppercase tracking-widest transition-all cursor-pointer shadow-xs ml-1"
+                title="Sign Out of Portal"
+              >
+                <LogOut size={12} />
+                <span>Logout</span>
+              </button>
+            </div>
           </div>
         </header>
 
@@ -1092,6 +1115,53 @@ const AdminDashboard = () => {
               {/* TAB 1: OVERVIEW */}
               {activeTab === 'overview' && (
                 <div className="flex flex-col gap-8">
+                  {/* Domain & Server Renewal Reminders (Upcoming in 30 Days) */}
+                  {(() => {
+                    const thirtyDaysFromNow = new Date();
+                    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+                    const today = new Date();
+                    today.setHours(0,0,0,0);
+
+                    // Find upcoming renewals
+                    const upcomingRenewals = clientProjects.filter(p => {
+                      if (!p.renewalDate) return false;
+                      const renDate = new Date(p.renewalDate);
+                      return renDate >= today && renDate <= thirtyDaysFromNow;
+                    });
+
+                    if (upcomingRenewals.length === 0) return null;
+
+                    return (
+                      <div className="bg-amber-50 border border-amber-200/50 p-5 rounded-sm animate-fade-in flex flex-col gap-3 shadow-xs">
+                        <div className="flex items-center gap-2 text-amber-800">
+                          <AlertCircle size={16} className="shrink-0" />
+                          <h4 className="text-xs uppercase tracking-widest font-bold">Upcoming Renewals (Next 30 Days)</h4>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {upcomingRenewals.map((proj) => {
+                            const diffTime = new Date(proj.renewalDate).getTime() - today.getTime();
+                            const daysRemaining = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+                            return (
+                              <div key={proj.id} className="bg-white p-3 border border-amber-100 rounded-sm shadow-xs flex justify-between items-center hover:shadow-sm transition-shadow">
+                                <div className="truncate pr-2">
+                                  <h5 className="text-xs font-bold text-ink/80 truncate" title={proj.domainName}>{proj.domainName || 'No Domain Name'}</h5>
+                                  <p className="text-[9px] text-ink/50 mt-0.5 truncate">{proj.clientName}</p>
+                                  <p className="text-[10px] text-ink/75 font-semibold mt-1">Cost: ₹{proj.serverAmount.toLocaleString('en-IN')}</p>
+                                </div>
+                                <div className="text-right shrink-0">
+                                  <span className="text-[9px] font-bold text-amber-800 font-mono bg-amber-50 px-1.5 py-0.5 rounded-sm">
+                                    {daysRemaining === 0 ? 'Today' : `in ${daysRemaining} days`}
+                                  </span>
+                                  <p className="text-[9px] text-ink/40 font-mono mt-1.5">{proj.renewalDate}</p>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     {[
                       { label: 'Total Portfolio Projects', value: totalProjects, sub: 'Syncing with Firestore', color: 'text-maroon', icon: <Briefcase size={16} /> },
@@ -1454,7 +1524,7 @@ const AdminDashboard = () => {
 
                     <div className="flex flex-col gap-1.5">
                       <label className="text-[10px] uppercase tracking-widest font-bold text-ink/50">Studio Address</label>
-                      <input type="text" defaultValue="Sagar Nagar, Rushikonda, Vizag" disabled className="bg-cream/40 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/65 cursor-not-allowed" />
+                      <input type="text" defaultValue="Visakhapatnam" disabled className="bg-cream/40 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/65 cursor-not-allowed" />
                     </div>
                     
                     <div className="bg-maroon/5 border border-maroon/10 p-4 rounded-sm text-xs text-maroon leading-relaxed flex gap-2">
@@ -1596,6 +1666,97 @@ const AdminDashboard = () => {
                             </span>
                           </div>
                         </div>
+
+                        {/* Monthly Cash Flow Chart */}
+                        {(() => {
+                          const monthlyData: { [key: string]: { income: number; expenses: number } } = {};
+                          
+                          clientProjects.forEach(p => {
+                            if (!p.date) return;
+                            const month = p.date.substring(0, 7); // "YYYY-MM"
+                            if (!monthlyData[month]) monthlyData[month] = { income: 0, expenses: 0 };
+                            monthlyData[month].income += p.advanceReceived + p.balancePaymentReceived;
+                          });
+                          
+                          expenses.forEach(e => {
+                            if (!e.date) return;
+                            const month = e.date.substring(0, 7); // "YYYY-MM"
+                            if (!monthlyData[month]) monthlyData[month] = { income: 0, expenses: 0 };
+                            monthlyData[month].expenses += e.amount;
+                          });
+                          
+                          const sortedMonths = Object.keys(monthlyData).sort().slice(-6);
+                          if (sortedMonths.length === 0) return null;
+
+                          // Find max value to scale chart heights
+                          const maxVal = Math.max(
+                            ...sortedMonths.map(m => Math.max(monthlyData[m].income, monthlyData[m].expenses)),
+                            10000 // default minimum scale
+                          );
+
+                          return (
+                            <div className="bg-white border border-ink/5 p-6 rounded-sm shadow-sm animate-fade-in">
+                              <div className="flex items-center gap-2 mb-4 text-maroon">
+                                <BarChart2 size={16} />
+                                <h3 className="text-xs uppercase tracking-widest font-bold text-ink">Cash Flow Analysis (Last 6 Months)</h3>
+                              </div>
+                              <div className="flex justify-between items-end h-48 pt-6 border-b border-ink/10 px-2 gap-4">
+                                {sortedMonths.map(m => {
+                                  const data = monthlyData[m];
+                                  const incomeHeight = (data.income / maxVal) * 100;
+                                  const expenseHeight = (data.expenses / maxVal) * 100;
+                                  
+                                  // Format month label: "2026-07" -> "Jul 26"
+                                  const [yr, mn] = m.split('-');
+                                  const dateObj = new Date(Number(yr), Number(mn) - 1, 1);
+                                  const monthLabel = dateObj.toLocaleString('default', { month: 'short', year: '2-digit' });
+
+                                  return (
+                                    <div key={m} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group relative">
+                                      <div className="flex items-end gap-1.5 h-full w-full justify-center">
+                                        {/* Income Bar (Green) */}
+                                        <div className="w-4 sm:w-6 flex flex-col justify-end h-full">
+                                          <div 
+                                            style={{ height: `${incomeHeight}%` }} 
+                                            className="bg-emerald-600 rounded-t-xs hover:bg-emerald-700 transition-all shadow-sm cursor-pointer"
+                                            title={`Collections: ₹${data.income.toLocaleString('en-IN')}`}
+                                          />
+                                        </div>
+                                        {/* Expense Bar (Red) */}
+                                        <div className="w-4 sm:w-6 flex flex-col justify-end h-full">
+                                          <div 
+                                            style={{ height: `${expenseHeight}%` }} 
+                                            className="bg-maroon rounded-t-xs hover:bg-maroon/90 transition-all shadow-sm cursor-pointer"
+                                            title={`Expenses: ₹${data.expenses.toLocaleString('en-IN')}`}
+                                          />
+                                        </div>
+                                      </div>
+                                      <span className="text-[9px] uppercase tracking-wider font-bold text-ink/50 mt-1">{monthLabel}</span>
+                                      
+                                      {/* Tooltip on Hover */}
+                                      <div className="absolute bottom-full mb-2 bg-ink text-white text-[9px] p-2 rounded-sm opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-10 shadow-lg min-w-[120px] flex flex-col gap-0.5 border border-white/10 font-mono">
+                                        <span className="font-bold border-b border-white/10 pb-0.5 mb-0.5 text-cream font-sans">{monthLabel}</span>
+                                        <span className="text-emerald-400">In: ₹{data.income.toLocaleString('en-IN')}</span>
+                                        <span className="text-red-400">Out: ₹{data.expenses.toLocaleString('en-IN')}</span>
+                                        <span className="text-white border-t border-white/10 pt-0.5 mt-0.5">Net: ₹{(data.income - data.expenses).toLocaleString('en-IN')}</span>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                              <div className="flex gap-4 mt-3 justify-center text-[9px] font-bold uppercase tracking-wider text-ink/55">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="w-2.5 h-2.5 bg-emerald-600 rounded-xs"></span>
+                                  <span>Income / Collections</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="w-2.5 h-2.5 bg-maroon rounded-xs"></span>
+                                  <span>Expenses Logged</span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
 
                         {/* Date filters and search toolbar */}
                         <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center bg-cream/20 p-4 rounded-sm border border-ink/5">
@@ -1890,6 +2051,44 @@ const AdminDashboard = () => {
                         <div className="w-full xl:w-2/5 bg-white border border-ink/5 p-6 rounded-sm shadow-sm flex flex-col gap-6 no-print">
                           <div>
                             <h4 className="text-xs font-bold uppercase tracking-wider text-ink/75 border-b border-ink/5 pb-2 mb-4">Invoice Information</h4>
+                            
+                            {/* Import from Ledger Option */}
+                            {clientProjects.length > 0 && (
+                              <div className="flex flex-col gap-1.5 mb-4 bg-cream/15 p-3 rounded-sm border border-ink/5 animate-fade-in">
+                                <label className="text-[9px] uppercase tracking-widest font-bold text-maroon">Quick Import from Ledger</label>
+                                <select
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    if (!val) return;
+                                    const proj = clientProjects.find(p => p.id === val);
+                                    if (proj) {
+                                      setInvoiceClientName(proj.clientName);
+                                      setInvoiceClientAddress(`Contact: ${proj.clientNumber || 'N/A'}\nDomain: ${proj.domainName || 'N/A'}`);
+                                      // Pre-fill a main service billable item
+                                      setInvoiceItems([
+                                        {
+                                          id: Math.random().toString(36).substring(2, 9),
+                                          description: `${proj.requirement || 'Website Development'}`,
+                                          quantity: 1,
+                                          rate: proj.agreedAmount
+                                        }
+                                      ]);
+                                    }
+                                    e.target.value = ''; // Reset select value
+                                  }}
+                                  className="bg-white border border-ink/10 rounded-sm py-1.5 px-2 text-xs text-ink/80 focus:outline-none focus:border-maroon"
+                                >
+                                  <option value="">-- Choose Project Ledger --</option>
+                                  {clientProjects.map((p) => (
+                                    <option key={p.id} value={p.id}>
+                                      {p.clientName} ({p.requirement || 'Project'}) - ₹{p.agreedAmount.toLocaleString('en-IN')}
+                                    </option>
+                                  ))}
+                                </select>
+                                <span className="text-[8px] text-ink/40">Auto-populates client name, contact, domain info, and creates a project billable line item automatically.</span>
+                              </div>
+                            )}
+
                             <div className="grid grid-cols-2 gap-3">
                               <div className="flex flex-col gap-1.5">
                                 <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">Invoice Number</label>
@@ -1924,7 +2123,106 @@ const AdminDashboard = () => {
                             </div>
                           </div>
 
-                          <div>
+                          <div className="border-t border-ink/5 pt-4">
+                            <h4 className="text-xs font-bold uppercase tracking-wider text-ink/75 border-b border-ink/5 pb-2 mb-4">Payment Remittance Details</h4>
+                            <div className="flex flex-col gap-4">
+                              <div className="flex flex-col gap-1.5">
+                                <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">Remittance Type</label>
+                                <div className="flex gap-4">
+                                  <label className="flex items-center gap-1.5 text-xs text-ink/80 font-semibold cursor-pointer">
+                                    <input
+                                      type="radio"
+                                      name="remittanceType"
+                                      checked={invoicePaymentType === 'bank'}
+                                      onChange={() => setInvoicePaymentType('bank')}
+                                      className="accent-maroon"
+                                    />
+                                    <span>Bank Transfer</span>
+                                  </label>
+                                  <label className="flex items-center gap-1.5 text-xs text-ink/80 font-semibold cursor-pointer">
+                                    <input
+                                      type="radio"
+                                      name="remittanceType"
+                                      checked={invoicePaymentType === 'upi'}
+                                      onChange={() => setInvoicePaymentType('upi')}
+                                      className="accent-maroon"
+                                    />
+                                    <span>UPI Pay</span>
+                                  </label>
+                                </div>
+                              </div>
+
+                              {invoicePaymentType === 'bank' ? (
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div className="flex flex-col gap-1.5">
+                                    <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">Bank Name</label>
+                                    <input
+                                      type="text"
+                                      value={invoiceBankName}
+                                      onChange={(e) => setInvoiceBankName(e.target.value)}
+                                      placeholder="HDFC Bank"
+                                      className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none"
+                                    />
+                                  </div>
+                                  <div className="flex flex-col gap-1.5">
+                                    <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">A/C Name</label>
+                                    <input
+                                      type="text"
+                                      value={invoiceAccountName}
+                                      onChange={(e) => setInvoiceAccountName(e.target.value)}
+                                      placeholder="Account Name"
+                                      className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none"
+                                    />
+                                  </div>
+                                  <div className="flex flex-col gap-1.5">
+                                    <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">A/C Number</label>
+                                    <input
+                                      type="text"
+                                      value={invoiceAccountNumber}
+                                      onChange={(e) => setInvoiceAccountNumber(e.target.value)}
+                                      placeholder="Account Number"
+                                      className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none"
+                                    />
+                                  </div>
+                                  <div className="flex flex-col gap-1.5">
+                                    <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">IFSC Code</label>
+                                    <input
+                                      type="text"
+                                      value={invoiceIfscCode}
+                                      onChange={(e) => setInvoiceIfscCode(e.target.value)}
+                                      placeholder="IFSC Code"
+                                      className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none"
+                                    />
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div className="flex flex-col gap-1.5">
+                                    <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">UPI ID / VPA</label>
+                                    <input
+                                      type="text"
+                                      value={invoiceUpiId}
+                                      onChange={(e) => setInvoiceUpiId(e.target.value)}
+                                      placeholder="reachus@vpa"
+                                      className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none"
+                                    />
+                                  </div>
+                                  <div className="flex flex-col gap-1.5">
+                                    <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">Payee Name</label>
+                                    <input
+                                      type="text"
+                                      value={invoiceUpiName}
+                                      onChange={(e) => setInvoiceUpiName(e.target.value)}
+                                      placeholder="Payee Name"
+                                      className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="border-t border-ink/5 pt-4">
                             <h4 className="text-xs font-bold uppercase tracking-wider text-ink/75 border-b border-ink/5 pb-2 mb-4">Client Billing Details</h4>
                             <div className="flex flex-col gap-4">
                               <div className="flex flex-col gap-1.5">
@@ -2043,14 +2341,21 @@ const AdminDashboard = () => {
                             
                             <div>
                               {/* Header */}
-                              <div className="flex justify-between items-start border-b border-ink/10 pb-6">
+                               <div className="flex justify-between items-start border-b border-ink/10 pb-6">
                                 <div>
-                                  <h2 className="text-xl font-serif text-maroon font-bold tracking-wide leading-none uppercase">Ascend Media Labs</h2>
-                                  <p className="text-[9px] uppercase tracking-widest text-ink/40 mt-1 leading-none">Creative Digital Media Agency</p>
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-sm bg-maroon flex items-center justify-center text-white font-serif font-bold text-xl tracking-tight shrink-0 border border-maroon">
+                                      A
+                                    </div>
+                                    <div>
+                                      <h2 className="text-xl font-serif text-maroon font-bold tracking-wide leading-none uppercase">Ascend Media Labs</h2>
+                                      <p className="text-[9px] uppercase tracking-widest text-ink/40 mt-1 leading-none">Creative Digital Media Agency</p>
+                                    </div>
+                                  </div>
                                   <div className="text-[10px] text-ink/50 leading-normal mt-4">
                                     <p>reachus@ascendmedialabs.in</p>
                                     <p>+91 7675852618</p>
-                                    <p>Sagar Nagar, Rushikonda, Vizag</p>
+                                    <p>Visakhapatnam</p>
                                   </div>
                                 </div>
 
@@ -2076,10 +2381,19 @@ const AdminDashboard = () => {
                                 <div>
                                   <h4 className="text-[9px] uppercase tracking-widest font-bold text-ink/40 mb-2">Payment Remittance</h4>
                                   <div className="text-ink/50 leading-relaxed">
-                                    <p>Bank: HDFC Bank Limited</p>
-                                    <p>A/C Name: Ascend Media Labs</p>
-                                    <p>A/C Number: 50200067981245</p>
-                                    <p>IFSC Code: HDFC0000456</p>
+                                    {invoicePaymentType === 'bank' ? (
+                                      <>
+                                        <p>Bank: {invoiceBankName}</p>
+                                        <p>A/C Name: {invoiceAccountName}</p>
+                                        <p>A/C Number: {invoiceAccountNumber}</p>
+                                        <p>IFSC Code: {invoiceIfscCode}</p>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <p>UPI ID: {invoiceUpiId}</p>
+                                        <p>Payee Name: {invoiceUpiName}</p>
+                                      </>
+                                    )}
                                   </div>
                                 </div>
                               </div>

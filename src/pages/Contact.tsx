@@ -80,7 +80,7 @@ const Contact = () => {
                 <MapPin size={20} />
               </div>
               <h4 className="text-[10px] uppercase tracking-widest font-medium text-ink/40 mb-2">Studio Address</h4>
-              <p className="text-base font-serif">Sagar Nagar, Rushikonda, Vizag</p>
+              <p className="text-base font-serif">Visakhapatnam</p>
             </div>
 
             <div className="bg-white w-full p-8 rounded-sm border border-ink/5 shadow-sm flex flex-col items-center text-center">
