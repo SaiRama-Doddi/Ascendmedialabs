@@ -27,6 +27,17 @@
 }
 
 @media print {
+  @page {
+    size: A4 portrait;
+    margin: 0; /* Removes default browser headers & footers (url, date, page info) */
+  }
+  body {
+    margin: 0;
+    padding: 0;
+    background: #ffffff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
   /* Hide all dashboard/portal sections */
   body * {
     visibility: hidden;
@@ -39,12 +50,15 @@
     position: absolute;
     left: 0;
     top: 0;
-    width: 100% !important;
+    width: 210mm !important;
+    height: 297mm !important;
     max-width: 100% !important;
     border: none !important;
     box-shadow: none !important;
-    padding: 0 !important;
+    padding: 20mm 20mm !important; /* Premium document margins */
     margin: 0 !important;
+    box-sizing: border-box !important;
+    background: white !important;
   }
   /* Explicitly hide non-printable indicators inside printable section */
   .no-print {

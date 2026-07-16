@@ -1854,10 +1854,31 @@ const AdminDashboard = () => {
                                       </td>
                                       <td className="p-3 text-xs text-ink/75 truncate font-semibold" title={p.requirement}>{p.requirement || 'N/A'}</td>
                                       <td className="p-3 text-xs font-bold font-mono text-ink/80">₹{(p.agreedAmount || 0).toLocaleString('en-IN')}</td>
-                                      <td className="p-3 text-xs font-bold font-mono">
-                                        <span className={p.balanceToBeReceived > 0 ? 'text-maroon' : 'text-green-700'}>
-                                          ₹{(p.balanceToBeReceived || 0).toLocaleString('en-IN')}
-                                        </span>
+                                      <td className="p-3">
+                                        <div className="text-xs font-bold font-mono text-ink/80">
+                                          <span className={p.balanceToBeReceived > 0 ? 'text-maroon' : 'text-green-700'}>
+                                            ₹{(p.balanceToBeReceived || 0).toLocaleString('en-IN')}
+                                          </span>
+                                        </div>
+                                        <div className="mt-1">
+                                          {p.balanceToBeReceived === 0 ? (
+                                            <span className="inline-block text-[8px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200/50 px-1.5 py-0.5 rounded-sm">
+                                              Fully Paid
+                                            </span>
+                                          ) : (() => {
+                                            const todayStr = new Date().toISOString().split('T')[0];
+                                            const isOverdue = p.expectedClosureDate && p.expectedClosureDate < todayStr;
+                                            return isOverdue ? (
+                                              <span className="inline-block text-[8px] font-bold uppercase tracking-wider text-red-600 bg-red-50 border border-red-200/50 px-1.5 py-0.5 rounded-sm animate-pulse">
+                                                Overdue
+                                              </span>
+                                            ) : (
+                                              <span className="inline-block text-[8px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 border border-amber-200/50 px-1.5 py-0.5 rounded-sm">
+                                                Partially Paid
+                                              </span>
+                                            );
+                                          })()}
+                                        </div>
                                       </td>
                                       <td className="p-3 text-xs text-ink/60 font-mono">{p.expectedClosureDate || 'N/A'}</td>
                                       <td className="p-3 text-right">
@@ -1924,6 +1945,75 @@ const AdminDashboard = () => {
                             </span>
                           </div>
                         </div>
+
+                        {/* Expense Category Breakdown Chart */}
+                        {(() => {
+                          const getExpenseCategory = (desc: string) => {
+                            const lowercaseDesc = (desc || '').toLowerCase();
+                            if (lowercaseDesc.includes('server') || lowercaseDesc.includes('hosting')) {
+                              return 'Hosting & Server';
+                            }
+                            if (lowercaseDesc.includes('domain')) {
+                              return 'Domains';
+                            }
+                            if (lowercaseDesc.includes('salary') || lowercaseDesc.includes('salaries') || lowercaseDesc.includes('payout')) {
+                              return 'Salaries & Payouts';
+                            }
+                            if (lowercaseDesc.includes('software') || lowercaseDesc.includes('saas') || lowercaseDesc.includes('tool') || lowercaseDesc.includes('subscription') || lowercaseDesc.includes('api')) {
+                              return 'Software & SaaS';
+                            }
+                            if (lowercaseDesc.includes('office') || lowercaseDesc.includes('rent') || lowercaseDesc.includes('utility') || lowercaseDesc.includes('electricity') || lowercaseDesc.includes('bill')) {
+                              return 'Office & Utilities';
+                            }
+                            return 'General Expenses';
+                          };
+
+                          const expenseCategoriesMap: { [key: string]: number } = {};
+                          let maxCategoryValue = 0;
+                          
+                          expenses.forEach(e => {
+                            const cat = getExpenseCategory(e.description);
+                            expenseCategoriesMap[cat] = (expenseCategoriesMap[cat] || 0) + e.amount;
+                            if (expenseCategoriesMap[cat] > maxCategoryValue) {
+                              maxCategoryValue = expenseCategoriesMap[cat];
+                            }
+                          });
+
+                          const sortedExpenseCategories = Object.keys(expenseCategoriesMap)
+                            .map(name => ({
+                              name,
+                              amount: expenseCategoriesMap[name],
+                              percentage: totalExpenses > 0 ? Math.round((expenseCategoriesMap[name] / totalExpenses) * 100) : 0
+                            }))
+                            .sort((a, b) => b.amount - a.amount);
+
+                          if (sortedExpenseCategories.length === 0) return null;
+
+                          return (
+                            <div className="bg-white border border-ink/5 p-6 rounded-sm shadow-sm animate-fade-in">
+                              <div className="flex items-center gap-2 mb-4 text-maroon">
+                                <BarChart2 size={16} />
+                                <h3 className="text-xs uppercase tracking-widest font-bold text-ink">Expense Categories Distribution</h3>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                                {sortedExpenseCategories.map((cat, i) => (
+                                  <div key={i} className="flex flex-col">
+                                    <div className="flex justify-between items-center text-xs font-semibold mb-1 text-ink/85">
+                                      <span>{cat.name}</span>
+                                      <span className="text-maroon">₹{cat.amount.toLocaleString('en-IN')} ({cat.percentage}%)</span>
+                                    </div>
+                                    <div className="w-full bg-cream-dark/20 h-2 rounded-full overflow-hidden">
+                                      <div 
+                                        style={{ width: `${cat.percentage}%` }} 
+                                        className="h-full bg-maroon rounded-full transition-all duration-500"
+                                      />
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })()}
 
                         {/* Expense filter toolbar */}
                         <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center bg-cream/20 p-4 rounded-sm border border-ink/5">
@@ -2326,14 +2416,48 @@ const AdminDashboard = () => {
                         <div className="w-full xl:w-3/5 flex flex-col gap-4">
                           <div className="flex justify-between items-center no-print">
                             <span className="text-[10px] uppercase tracking-widest font-bold text-ink/40">Invoice Live Preview</span>
-                            <button
-                              onClick={() => window.print()}
-                              disabled={invoiceItems.length === 0}
-                              className="bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-sm text-xs font-bold uppercase tracking-widest hover:bg-green-800 transition-colors flex items-center gap-1.5 cursor-pointer"
-                            >
-                              <Globe size={13} />
-                              <span>Print / Save PDF</span>
-                            </button>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => {
+                                  const mailSubject = encodeURIComponent(`Invoice ${invoiceNumber || 'AML-XXXX'} from Ascend Media Labs`);
+                                  const totalAmt = invoiceItems.reduce((sum, item) => sum + (item.quantity * item.rate), 0);
+                                  const remittanceStr = invoicePaymentType === 'bank' 
+                                    ? `Bank Details:\nBank Name: ${invoiceBankName}\nAccount Name: ${invoiceAccountName}\nAccount Number: ${invoiceAccountNumber}\nIFSC Code: ${invoiceIfscCode}`
+                                    : `UPI Remittance:\nUPI ID: ${invoiceUpiId}\nPayee Name: ${invoiceUpiName}`;
+
+                                  const mailBody = encodeURIComponent(
+                                    `Dear ${invoiceClientName || 'Client'},\n\n` +
+                                    `Please find details of Invoice #${invoiceNumber || 'AML-XXXX'} below for your review.\n\n` +
+                                    `Total Due Amount: INR ${totalAmt.toLocaleString('en-IN')}\n\n` +
+                                    `${remittanceStr}\n\n` +
+                                    `If you have any questions, feel free to reply directly to this email.\n\n` +
+                                    `Best regards,\n` +
+                                    `Ascend Media Labs`
+                                  );
+                                  window.open(`mailto:${invoiceClientEmail || ''}?subject=${mailSubject}&body=${mailBody}`, '_blank');
+                                }}
+                                disabled={invoiceItems.length === 0}
+                                className="bg-maroon disabled:opacity-40 disabled:cursor-not-allowed text-white px-4 py-2.5 rounded-sm text-xs font-bold uppercase tracking-widest hover:bg-maroon/90 transition-colors flex items-center gap-1.5 cursor-pointer"
+                              >
+                                <Mail size={13} />
+                                <span>Email Client</span>
+                              </button>
+
+                              <button
+                                onClick={() => {
+                                  const originalTitle = document.title;
+                                  const cleanClient = invoiceClientName ? invoiceClientName.replace(/[^a-z0-9]/gi, '_') : 'Client';
+                                  document.title = `Invoice_${invoiceNumber || 'AML-XXXX'}_${cleanClient}`;
+                                  window.print();
+                                  document.title = originalTitle;
+                                }}
+                                disabled={invoiceItems.length === 0}
+                                className="bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed text-white px-4 py-2.5 rounded-sm text-xs font-bold uppercase tracking-widest hover:bg-green-800 transition-colors flex items-center gap-1.5 cursor-pointer"
+                              >
+                                <Globe size={13} />
+                                <span>Print / Download PDF</span>
+                              </button>
+                            </div>
                           </div>
 
                           {/* Invoice Paper Document */}
@@ -2376,29 +2500,33 @@ const AdminDashboard = () => {
                               </div>
 
                               {/* Billed To / From */}
-                              <div className="grid grid-cols-2 gap-4 py-8 text-xs">
-                                <div>
-                                  <h4 className="text-[9px] uppercase tracking-widest font-bold text-ink/40 mb-2">Billed To</h4>
-                                  <p className="font-bold text-ink/90">{invoiceClientName || 'Client Name / Business Name'}</p>
-                                  {invoiceClientEmail && <p className="text-ink/50 mt-0.5">{invoiceClientEmail}</p>}
-                                  {invoiceClientAddress && <p className="text-ink/50 whitespace-pre-line mt-1.5">{invoiceClientAddress}</p>}
+                              <div className="grid grid-cols-2 gap-6 py-8 text-xs">
+                                <div className="bg-cream/10 border border-ink/5 p-4 rounded-sm">
+                                  <h4 className="text-[8px] uppercase tracking-widest font-bold text-maroon/70 mb-2.5">Billed To</h4>
+                                  <p className="font-bold text-ink/90 text-sm leading-tight">{invoiceClientName || 'Client Name / Business Name'}</p>
+                                  {invoiceClientEmail && <p className="text-ink/60 mt-1 font-mono">{invoiceClientEmail}</p>}
+                                  {invoiceClientAddress && (
+                                    <div className="text-ink/50 whitespace-pre-line mt-2 border-t border-ink/5 pt-2 leading-relaxed">
+                                      {invoiceClientAddress}
+                                    </div>
+                                  )}
                                 </div>
                                 
-                                <div>
-                                  <h4 className="text-[9px] uppercase tracking-widest font-bold text-ink/40 mb-2">Payment Remittance</h4>
-                                  <div className="text-ink/50 leading-relaxed">
+                                <div className="bg-cream/10 border border-ink/5 p-4 rounded-sm">
+                                  <h4 className="text-[8px] uppercase tracking-widest font-bold text-maroon/70 mb-2.5">Payment Remittance</h4>
+                                  <div className="text-ink/60 leading-relaxed font-sans">
                                     {invoicePaymentType === 'bank' ? (
-                                      <>
-                                        <p>Bank: {invoiceBankName}</p>
-                                        <p>A/C Name: {invoiceAccountName}</p>
-                                        <p>A/C Number: {invoiceAccountNumber}</p>
-                                        <p>IFSC Code: {invoiceIfscCode}</p>
-                                      </>
+                                      <div className="flex flex-col gap-1">
+                                        <p><strong className="text-ink/75 font-semibold">Bank:</strong> {invoiceBankName}</p>
+                                        <p><strong className="text-ink/75 font-semibold">A/C Name:</strong> {invoiceAccountName}</p>
+                                        <p><strong className="text-ink/75 font-semibold">A/C Number:</strong> <span className="font-mono">{invoiceAccountNumber}</span></p>
+                                        <p><strong className="text-ink/75 font-semibold">IFSC Code:</strong> <span className="font-mono">{invoiceIfscCode}</span></p>
+                                      </div>
                                     ) : (
-                                      <>
-                                        <p>UPI ID: {invoiceUpiId}</p>
-                                        <p>Payee Name: {invoiceUpiName}</p>
-                                      </>
+                                      <div className="flex flex-col gap-1">
+                                        <p><strong className="text-ink/75 font-semibold">UPI ID:</strong> <span className="font-mono">{invoiceUpiId}</span></p>
+                                        <p><strong className="text-ink/75 font-semibold">Payee Name:</strong> {invoiceUpiName}</p>
+                                      </div>
                                     )}
                                   </div>
                                 </div>
@@ -2407,24 +2535,24 @@ const AdminDashboard = () => {
                               {/* Billable Items Table */}
                               <table className="w-full text-left border-collapse text-xs mt-4">
                                 <thead>
-                                  <tr className="border-b-2 border-ink/80 text-[10px] uppercase font-bold text-ink/60">
-                                    <th className="py-2">Item Description</th>
-                                    <th className="py-2 text-center w-16">Qty</th>
-                                    <th className="py-2 text-right w-24">Rate (₹)</th>
-                                    <th className="py-2 text-right w-28">Amount (₹)</th>
+                                  <tr className="bg-maroon/5 border-b border-maroon/20 text-[9px] uppercase font-bold text-maroon/80">
+                                    <th className="p-3">Item Description</th>
+                                    <th className="p-3 text-center w-16">Qty</th>
+                                    <th className="p-3 text-right w-24">Rate (₹)</th>
+                                    <th className="p-3 text-right w-28">Amount (₹)</th>
                                   </tr>
                                 </thead>
                                 <tbody className="divide-y divide-ink/5">
                                   {invoiceItems.length === 0 ? (
                                     <tr>
-                                      <td colSpan={4} className="py-6 text-center text-ink/30 italic">
+                                      <td colSpan={4} className="p-6 text-center text-ink/30 italic">
                                         No items added yet. Please use the form on the left to add billing lines.
                                       </td>
                                     </tr>
                                   ) : (
                                     invoiceItems.map((item) => (
-                                      <tr key={item.id} className="group">
-                                        <td className="py-3 pr-4 font-medium text-ink/85 flex justify-between items-center">
+                                      <tr key={item.id} className="group hover:bg-cream/5 transition-colors">
+                                        <td className="p-3 pr-4 font-medium text-ink/85 flex justify-between items-center">
                                           <span>{item.description}</span>
                                           <button
                                             onClick={() => setInvoiceItems(invoiceItems.filter(it => it.id !== item.id))}
@@ -2433,9 +2561,9 @@ const AdminDashboard = () => {
                                             [Remove]
                                           </button>
                                         </td>
-                                        <td className="py-3 text-center font-mono">{item.quantity}</td>
-                                        <td className="py-3 text-right font-mono">₹{item.rate.toLocaleString('en-IN')}</td>
-                                        <td className="py-3 text-right font-mono font-semibold">₹{(item.quantity * item.rate).toLocaleString('en-IN')}</td>
+                                        <td className="p-3 text-center font-mono">{item.quantity}</td>
+                                        <td className="p-3 text-right font-mono">₹{item.rate.toLocaleString('en-IN')}</td>
+                                        <td className="p-3 text-right font-mono font-semibold">₹{(item.quantity * item.rate).toLocaleString('en-IN')}</td>
                                       </tr>
                                     ))
                                   )}
