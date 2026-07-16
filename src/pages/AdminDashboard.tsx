@@ -917,9 +917,9 @@ const AdminDashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-cream flex flex-col md:flex-row relative">
+    <div className="h-screen w-screen overflow-hidden bg-cream flex flex-col md:flex-row relative">
       {/* Sidebar Section */}
-      <aside className="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-ink/5 flex flex-col justify-between shrink-0 z-20">
+      <aside className="w-full md:w-64 h-auto md:h-full bg-white border-b md:border-b-0 md:border-r border-ink/5 flex flex-col justify-between shrink-0 z-20 overflow-y-auto">
         <div className="p-6">
           <div className="flex items-center gap-3 mb-8 select-none group">
             <div className="w-9 h-9 rounded-sm bg-maroon flex items-center justify-center text-white font-serif font-bold text-lg tracking-tighter shrink-0 transition-transform group-hover:scale-105 border border-maroon">
@@ -1001,7 +1001,7 @@ const AdminDashboard = () => {
       </aside>
 
       {/* Main Workspace */}
-      <main className="flex-grow flex flex-col min-w-0">
+      <main className="flex-grow flex flex-col min-w-0 h-full overflow-hidden">
         {/* Top Header Bar */}
         <header className="bg-white border-b border-ink/5 px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4 z-10 shrink-0">
           <div className="flex items-center gap-2">
