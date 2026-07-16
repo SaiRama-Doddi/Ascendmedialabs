@@ -2344,9 +2344,15 @@ const AdminDashboard = () => {
                                <div className="flex justify-between items-start border-b border-ink/10 pb-6">
                                 <div>
                                   <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-sm bg-maroon flex items-center justify-center text-white font-serif font-bold text-xl tracking-tight shrink-0 border border-maroon">
-                                      A
-                                    </div>
+                                    <img 
+                                      src="https://www.ascendmedialabs.com/assets/logo-main-CxjRq1zD.png" 
+                                      alt="Ascend Media Labs Logo" 
+                                      className="h-10 w-auto object-contain shrink-0"
+                                      onError={(e) => {
+                                        // Fallback if image fails to load
+                                        (e.target as HTMLElement).style.display = 'none';
+                                      }}
+                                    />
                                     <div>
                                       <h2 className="text-xl font-serif text-maroon font-bold tracking-wide leading-none uppercase">Ascend Media Labs</h2>
                                       <p className="text-[9px] uppercase tracking-widest text-ink/40 mt-1 leading-none">Creative Digital Media Agency</p>
