@@ -7,6 +7,7 @@ import { LOGO } from '../constants';
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [hoveredPath, setHoveredPath] = useState<string | null>(null);
   const location = useLocation();
 
   useEffect(() => {
@@ -20,6 +21,7 @@ const Navbar = () => {
   const navLinks = [
     { name: 'Home', path: '/' },
     { name: 'Services', path: '/services' },
+    { name: 'Edutech', path: '/edutech' },
     { name: 'Portfolio', path: '/portfolio' },
     { name: 'About', path: '/about' },
     { name: 'Contact', path: '/contact' },
@@ -41,17 +43,38 @@ const Navbar = () => {
         </Link>
 
         {/* Desktop Nav */}
-        <div className="hidden md:flex items-center gap-8">
-          {navLinks.map((link) => (
-            <Link
-              key={link.name}
-              to={link.path}
-              className={`text-xs uppercase tracking-widest font-medium transition-colors hover:text-maroon ${location.pathname === link.path ? 'text-maroon border-b border-maroon' : 'text-ink/70'}`}
-            >
-              {link.name}
-            </Link>
-          ))}
-          <Link to="/contact" className="bg-maroon text-white px-6 py-2 rounded-sm text-xs uppercase tracking-widest font-bold hover:bg-maroon/90 transition-colors">
+        <div className="hidden md:flex items-center gap-6 relative">
+          {navLinks.map((link) => {
+            const isActive = location.pathname === link.path;
+            return (
+              <Link
+                key={link.name}
+                to={link.path}
+                onMouseEnter={() => setHoveredPath(link.path)}
+                onMouseLeave={() => setHoveredPath(null)}
+                className={`relative px-3.5 py-2 text-xs uppercase tracking-widest font-medium transition-colors z-10 ${
+                  isActive ? 'text-maroon' : 'text-ink/75 hover:text-maroon'
+                }`}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="activeNavIndicator"
+                    className="absolute bottom-0 left-3.5 right-3.5 h-0.5 bg-maroon"
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                  />
+                )}
+                {hoveredPath === link.path && (
+                  <motion.div
+                    layoutId="navHoverPill"
+                    className="absolute inset-0 bg-maroon/5 rounded-full -z-10"
+                    transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+                  />
+                )}
+                {link.name}
+              </Link>
+            );
+          })}
+          <Link to="/contact" className="bg-maroon text-white px-6 py-2 rounded-sm text-xs uppercase tracking-widest font-bold hover:bg-maroon/90 transition-all shadow-sm ml-2">
             Get Started
           </Link>
         </div>

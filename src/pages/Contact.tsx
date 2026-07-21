@@ -64,7 +64,9 @@ const Contact = () => {
                 <Phone size={20} />
               </div>
               <h4 className="text-[10px] uppercase tracking-widest font-medium text-ink/40 mb-2">Direct Line</h4>
-              <p className="text-base font-serif">7675852618</p>
+              <p className="text-base font-serif font-bold text-ink">
+                <a href="tel:+917675852618" className="hover:text-maroon transition-colors">+91 76758 52618</a>
+              </p>
             </div>
 
             <div className="bg-white w-full p-8 rounded-sm border border-ink/5 shadow-sm flex flex-col items-center text-center">

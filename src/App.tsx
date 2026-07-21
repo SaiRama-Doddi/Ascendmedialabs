@@ -5,10 +5,12 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 import About from './pages/About';
 import Services from './pages/Services';
+import Edutech from './pages/Edutech';
 import Portfolio from './pages/Portfolio';
 import Contact from './pages/Contact';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
+import CustomCursor from './components/CustomCursor';
 import { motion, AnimatePresence } from 'motion/react';
 import { FaWhatsapp, FaArrowUp, FaPhone } from 'react-icons/fa';
 
@@ -65,6 +67,7 @@ function AppRoutes() {
   return (
     <>
       <ScrollToTop />
+      <CustomCursor />
       <div className="min-h-screen flex flex-col">
         {!isAdminRoute && <Navbar />}
         <main className="grow">
@@ -73,6 +76,7 @@ function AppRoutes() {
               <Route path="/" element={<PageWrapper><Home /></PageWrapper>} />
               <Route path="/about" element={<PageWrapper><About /></PageWrapper>} />
               <Route path="/services" element={<PageWrapper><Services /></PageWrapper>} />
+              <Route path="/edutech" element={<PageWrapper><Edutech /></PageWrapper>} />
               <Route path="/portfolio" element={<PageWrapper><Portfolio /></PageWrapper>} />
               <Route path="/contact" element={<PageWrapper><Contact /></PageWrapper>} />
               <Route path="/admin/login" element={<PageWrapper><AdminLogin /></PageWrapper>} />
@@ -87,7 +91,7 @@ function AppRoutes() {
               onClick={handlePhoneCall}
               className="bg-blue-600 text-white h-16 w-16 rounded-full flex items-center justify-center shadow-lg hover:bg-blue-700 transition-colors duration-300 z-40 cursor-pointer relative overflow-hidden"
               aria-label="Call us"
-              title="Call: +91 7675852618"
+              title="Call: +91 76758 52618"
               initial={{ opacity: 0, y: 20 }}
               animate={{ 
                 opacity: 1, 

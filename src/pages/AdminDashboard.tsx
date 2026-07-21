@@ -31,7 +31,8 @@ import {
   User,
   Lock,
   Eye,
-  Download
+  Download,
+  GraduationCap
 } from 'lucide-react';
 
 export interface Inquiry {
@@ -40,6 +41,19 @@ export interface Inquiry {
   email: string;
   phone: string;
   message: string;
+  status: 'new' | 'contacted';
+  createdAt: string;
+}
+
+export interface EdutechRegistration {
+  id: string;
+  studentName: string;
+  email: string;
+  phone: string;
+  selectedCourse: string;
+  qualification: string;
+  batchMode: string;
+  message?: string;
   status: 'new' | 'contacted';
   createdAt: string;
 }
@@ -59,6 +73,7 @@ const AdminDashboard = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
+  const [registrations, setRegistrations] = useState<EdutechRegistration[]>([]);
   
   // OTP state variables for confidential Account tab
   const [isOtpVerified, setIsOtpVerified] = useState(false);
@@ -142,7 +157,7 @@ const AdminDashboard = () => {
   const [expenseEndDateFilter, setExpenseEndDateFilter] = useState('');
   
   // UI states
-  const [activeTab, setActiveTab] = useState<'overview' | 'projects' | 'brands' | 'inquiries' | 'settings' | 'account'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'projects' | 'brands' | 'inquiries' | 'edutech_reg' | 'settings' | 'account'>('overview');
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState('');
@@ -206,7 +221,8 @@ const AdminDashboard = () => {
         Promise.all([
           portfolioService.getFirestoreProjectsOnly(),
           portfolioService.getFirestoreBrandsOnly(),
-          fetchInquiries()
+          fetchInquiries(),
+          fetchRegistrations()
         ]),
         15000
       );
@@ -656,6 +672,63 @@ const AdminDashboard = () => {
     setInquiries(list);
   };
 
+  const fetchRegistrations = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, 'edutech_registrations'));
+      const list: EdutechRegistration[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        list.push({
+          id: doc.id,
+          studentName: data.studentName || '',
+          email: data.email || '',
+          phone: data.phone || '',
+          selectedCourse: data.selectedCourse || '',
+          qualification: data.qualification || '',
+          batchMode: data.batchMode || '',
+          message: data.message || '',
+          status: data.status || 'new',
+          createdAt: data.createdAt || ''
+        });
+      });
+      list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      setRegistrations(list);
+    } catch (err) {
+      console.warn('Error fetching registrations:', err);
+    }
+  };
+
+  const handleMarkRegistrationContacted = async (id: string) => {
+    setActionLoading(true);
+    try {
+      await updateDoc(doc(db, 'edutech_registrations', id), {
+        status: 'contacted'
+      });
+      setRegistrations(registrations.map(r => r.id === id ? { ...r, status: 'contacted' } : r));
+      setSuccess('Student marked as Contacted successfully!');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      alert('Error updating status: ' + err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteRegistration = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this course registration?')) return;
+    setActionLoading(true);
+    try {
+      await deleteDoc(doc(db, 'edutech_registrations', id));
+      setRegistrations(registrations.filter(r => r.id !== id));
+      setSuccess('Course registration deleted successfully!');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      alert('Error deleting registration: ' + err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -884,6 +957,8 @@ const AdminDashboard = () => {
   const totalBrands = brands.length;
   const totalInquiries = inquiries.length;
   const newInquiries = inquiries.filter(i => i.status === 'new').length;
+  const totalRegistrations = registrations.length;
+  const newRegistrations = registrations.filter(r => r.status === 'new').length;
   
   // Categorize projects for chart analytics
   const categoriesMap: { [key: string]: number } = {};
@@ -916,6 +991,13 @@ const AdminDashboard = () => {
     i.message?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const filteredRegistrations = registrations.filter(r => 
+    r.studentName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    r.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    r.selectedCourse?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    r.phone?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="h-screen w-screen overflow-hidden bg-cream flex flex-col md:flex-row relative">
       {/* Sidebar Section */}
@@ -938,6 +1020,7 @@ const AdminDashboard = () => {
               { id: 'projects', name: 'Projects', icon: <Briefcase size={16} /> },
               { id: 'brands', name: 'Partner Brands', icon: <Sparkles size={16} /> },
               { id: 'inquiries', name: 'Leads / Inquiries', icon: <Mail size={16} />, badge: newInquiries > 0 ? newInquiries : undefined },
+              { id: 'edutech_reg', name: 'Course Registrations', icon: <GraduationCap size={16} />, badge: newRegistrations > 0 ? newRegistrations : undefined },
               { id: 'account', name: 'Account', icon: <User size={16} /> },
               { id: 'settings', name: 'Settings', icon: <Settings size={16} /> }
             ].map((tab) => (
@@ -1012,11 +1095,11 @@ const AdminDashboard = () => {
 
           <div className="flex items-center gap-3.5 w-full sm:w-auto justify-end">
             {/* Search Input */}
-            {(activeTab === 'projects' || activeTab === 'inquiries' || activeTab === 'brands') && (
+            {(activeTab === 'projects' || activeTab === 'inquiries' || activeTab === 'brands' || activeTab === 'edutech_reg') && (
               <div className="relative w-full sm:w-64">
                 <input
                   type="text"
-                  placeholder={`Search ${activeTab === 'brands' ? 'brands' : activeTab}...`}
+                  placeholder={`Search ${activeTab === 'brands' ? 'brands' : activeTab === 'edutech_reg' ? 'registrations' : activeTab}...`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full bg-cream/40 border border-ink/10 rounded-sm py-2 pl-9 pr-4 text-xs focus:outline-none focus:border-maroon transition-colors"
@@ -1162,12 +1245,13 @@ const AdminDashboard = () => {
                     );
                   })()}
 
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                     {[
                       { label: 'Total Portfolio Projects', value: totalProjects, sub: 'Syncing with Firestore', color: 'text-maroon', icon: <Briefcase size={16} /> },
                       { label: 'Inquiries Received', value: totalInquiries, sub: 'Customer leads captured', color: 'text-ink', icon: <MessageSquare size={16} /> },
-                      { label: 'Unread Lead Inquiries', value: newInquiries, sub: 'Awaiting administrator outreach', color: 'text-amber-600', icon: <Mail size={16} /> },
-                      { label: 'Trusted Brands Listed', value: totalBrands, sub: 'Partner brand logos configured', color: 'text-emerald-700', icon: <Sparkles size={16} /> }
+                      { label: 'Unread Lead Inquiries', value: newInquiries, sub: 'Awaiting outreach', color: 'text-amber-600', icon: <Mail size={16} /> },
+                      { label: 'Course Registrations', value: totalRegistrations, sub: 'Edutech student signups', color: 'text-maroon', icon: <GraduationCap size={16} /> },
+                      { label: 'New Registrations', value: newRegistrations, sub: 'Uncontacted students', color: 'text-emerald-700', icon: <User size={16} /> }
                     ].map((stat, idx) => (
                       <div key={idx} className="bg-white p-5 rounded-sm border border-ink/5 shadow-sm flex flex-col justify-between">
                         <div className="flex justify-between items-start text-ink/30 mb-2">
@@ -1485,6 +1569,128 @@ const AdminDashboard = () => {
                               onClick={() => handleDeleteInquiry(inq.id)}
                               className="w-full md:w-auto bg-red-500/5 hover:bg-red-600 hover:text-white border border-red-500/10 text-red-600 px-4 py-2 rounded-sm text-[10px] uppercase tracking-wider font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                               title="Delete Lead"
+                            >
+                              <Trash2 size={12} />
+                              <span>Delete</span>
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* TAB: COURSE REGISTRATIONS */}
+              {activeTab === 'edutech_reg' && (
+                <div>
+                  <div className="flex justify-between items-center mb-6">
+                    <div>
+                      <h2 className="text-xl font-serif font-bold text-ink">Edutech Student Registrations</h2>
+                      <p className="text-xs text-ink/50 mt-1">Manage and contact course applicants.</p>
+                    </div>
+                    {registrations.length > 0 && (
+                      <button
+                        onClick={() => downloadCSV(registrations, 'course_registrations.csv', {
+                          createdAt: 'Date Logged',
+                          studentName: 'Student Name',
+                          email: 'Email Address',
+                          phone: 'WhatsApp / Phone Number',
+                          selectedCourse: 'Selected Course',
+                          qualification: 'Qualification',
+                          batchMode: 'Preferred Batch Mode',
+                          message: 'Goals / Message',
+                          status: 'Outreach Status'
+                        })}
+                        className="bg-maroon hover:bg-maroon/90 text-white text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-sm shadow-sm flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Download size={13} />
+                        <span>Export CSV</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {filteredRegistrations.length === 0 ? (
+                    <div className="text-center py-20 bg-white/40 border border-dashed border-ink/10 rounded-sm p-10 flex flex-col items-center justify-center gap-4">
+                      <GraduationCap size={40} className="text-ink/20" />
+                      <h3 className="text-base font-serif">No course registrations found</h3>
+                      <p className="text-xs text-ink/50">
+                        We couldn't find any course signups matching your search criteria.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-4">
+                      {filteredRegistrations.map((reg) => (
+                        <div 
+                          key={reg.id}
+                          className={`bg-white border rounded-sm p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-colors ${
+                            reg.status === 'new' ? 'border-l-4 border-l-maroon border-ink/5' : 'border-ink/5'
+                          }`}
+                        >
+                          <div className="flex-grow min-w-0">
+                            <div className="flex flex-wrap items-center gap-3 mb-2">
+                              <h3 className="text-base font-serif font-bold text-ink leading-none">{reg.studentName}</h3>
+                              {reg.status === 'new' ? (
+                                <span className="bg-maroon/10 text-maroon text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">New Signup</span>
+                              ) : (
+                                <span className="bg-ink/5 text-ink/50 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Contacted</span>
+                              )}
+                              <span className="text-[10px] text-ink/35 flex items-center gap-1">
+                                <Calendar size={11} />
+                                {new Date(reg.createdAt).toLocaleString(undefined, { 
+                                  month: 'short', 
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3 text-xs text-ink/75 bg-cream/10 p-3 rounded border border-ink/5">
+                              <div>
+                                <span className="text-[9px] uppercase tracking-wider text-ink/40 font-bold block">Course Selected</span>
+                                <span className="font-semibold text-maroon">{reg.selectedCourse}</span>
+                              </div>
+                              <div>
+                                <span className="text-[9px] uppercase tracking-wider text-ink/40 font-bold block">Qualification</span>
+                                <span className="font-semibold text-ink/80">{reg.qualification}</span>
+                              </div>
+                              <div>
+                                <span className="text-[9px] uppercase tracking-wider text-ink/40 font-bold block">Batch Mode</span>
+                                <span className="font-semibold text-ink/80">{reg.batchMode}</span>
+                              </div>
+                            </div>
+                            
+                            {reg.message && (
+                              <p className="text-xs text-ink/80 bg-cream/20 border border-ink/5 p-2 rounded-sm leading-relaxed mb-3">
+                                "{reg.message}"
+                              </p>
+                            )}
+
+                            <div className="flex flex-wrap items-center gap-x-6 gap-y-1.5 text-xs text-ink/65 font-medium">
+                              <div>Email: <a href={`mailto:${reg.email}`} className="text-maroon hover:underline font-semibold">{reg.email}</a></div>
+                              <div>Phone / WhatsApp: <a href={`https://wa.me/${reg.phone.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:underline font-semibold flex items-center gap-1 inline-flex">
+                                {reg.phone} 
+                                <span className="bg-emerald-50 text-emerald-600 text-[8px] font-bold px-1 py-0.5 rounded">Chat ↗</span>
+                              </a></div>
+                            </div>
+                          </div>
+
+                          <div className="flex md:flex-col justify-end gap-2 shrink-0 w-full md:w-auto pt-4 md:pt-0 border-t md:border-t-0 border-ink/5">
+                            {reg.status === 'new' && (
+                              <button
+                                onClick={() => handleMarkRegistrationContacted(reg.id)}
+                                className="w-full md:w-auto bg-maroon/5 hover:bg-maroon hover:text-white border border-maroon/15 text-maroon px-4 py-2 rounded-sm text-[10px] uppercase tracking-wider font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                                title="Mark as Contacted"
+                              >
+                                <Check size={12} />
+                                <span>Contacted</span>
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleDeleteRegistration(reg.id)}
+                              className="w-full md:w-auto bg-red-500/5 hover:bg-red-600 hover:text-white border border-red-500/10 text-red-600 px-4 py-2 rounded-sm text-[10px] uppercase tracking-wider font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                              title="Delete Signup"
                             >
                               <Trash2 size={12} />
                               <span>Delete</span>
@@ -2484,7 +2690,7 @@ const AdminDashboard = () => {
                                   </div>
                                   <div className="text-[10px] text-ink/50 leading-normal mt-4">
                                     <p>reachus@ascendmedialabs.in</p>
-                                    <p>+91 7675852618</p>
+                                    <p>+91 76758 52618</p>
                                     <p>Visakhapatnam</p>
                                   </div>
                                 </div>
