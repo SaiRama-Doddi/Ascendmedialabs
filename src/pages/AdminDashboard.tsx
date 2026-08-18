@@ -213,16 +213,50 @@ const AdminDashboard = () => {
       setLoading(true);
       setError('');
 
-      // Fetch all three datasets in parallel with a generous timeout (15 seconds)
+      // Fetch all datasets in parallel with safe wrappers to avoid failing the whole load
+      const safeGetProjects = async () => {
+        try {
+          return await portfolioService.getFirestoreProjectsOnly();
+        } catch (e) {
+          console.warn('Failed to fetch projects from Firestore:', e);
+          return [];
+        }
+      };
+
+      const safeGetBrands = async () => {
+        try {
+          return await portfolioService.getFirestoreBrandsOnly();
+        } catch (e) {
+          console.warn('Failed to fetch brands from Firestore:', e);
+          return [];
+        }
+      };
+
+      const safeFetchInquiries = async () => {
+        try {
+          await fetchInquiries();
+        } catch (e) {
+          console.warn('Failed to fetch inquiries:', e);
+        }
+      };
+
+      const safeFetchRegistrations = async () => {
+        try {
+          await fetchRegistrations();
+        } catch (e) {
+          console.warn('Failed to fetch registrations:', e);
+        }
+      };
+
       let projList: Project[] = [];
       let brandList: Brand[] = [];
 
       const [projResult, brandResult] = await withTimeout(
         Promise.all([
-          portfolioService.getFirestoreProjectsOnly(),
-          portfolioService.getFirestoreBrandsOnly(),
-          fetchInquiries(),
-          fetchRegistrations()
+          safeGetProjects(),
+          safeGetBrands(),
+          safeFetchInquiries(),
+          safeFetchRegistrations()
         ]),
         15000
       );

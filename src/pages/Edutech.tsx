@@ -19,7 +19,8 @@ import {
   UserCheck, 
   MessageSquare,
   ArrowRight,
-  ChevronRight
+  ChevronRight,
+  Star
 } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa';
 import { db } from '../firebase';
@@ -379,8 +380,8 @@ const Edutech = () => {
                       {course.icon}
                     </div>
                     {course.popular && (
-                      <span className="bg-maroon/10 text-maroon text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full">
-                        ★ Popular
+                      <span className="bg-maroon/10 text-maroon text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full flex items-center gap-1">
+                        <Star size={10} className="fill-maroon" /> Popular
                       </span>
                     )}
                   </div>

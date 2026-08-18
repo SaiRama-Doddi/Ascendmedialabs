@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { ArrowRight, Target, Zap, Sparkles, Star } from 'lucide-react';
+import { ArrowRight, Target, Zap, Sparkles, Star, Rocket, Gem, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { PROJECTS, Project, WEB_IMAGE, SEO_IMAGE, BRANDING_IMAGE, TRUSTED_BRANDS, Brand } from '../constants';
 import GoogleReviews from '../components/GoogleReviews';
 import { portfolioService } from '../services/portfolioService';
+import heroBuilding from '../assets/images/hero-building.png';
+import maroonLeaves from '../assets/images/maroon-leaves.png';
 
 const Home = () => {
   const [projects, setProjects] = useState<Project[]>(PROJECTS);
@@ -37,80 +39,147 @@ const Home = () => {
           <div className="absolute top-20 right-1/4 w-80 h-80 bg-amber-400/20 rounded-full mix-blend-multiply"></div>
         </div>
 
-        <div className="max-w-7xl mx-auto relative z-10 flex flex-col items-center text-center">
-          {/* Floating Pill Badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/80 backdrop-blur-md border border-maroon/15 rounded-full shadow-sm text-xs font-bold uppercase tracking-widest text-maroon mb-6"
-          >
-            <Sparkles size={14} className="text-amber-600 animate-pulse" />
-            <span>Digital Atelier & Tech Engineering</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-maroon animate-ping"></span>
-          </motion.div>
-
-          {/* Hero Headline */}
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif leading-[1.15] mb-6 max-w-5xl text-ink tracking-tight"
-          >
-            We Architect <span className="text-maroon italic relative">Digital Experiences<span className="absolute bottom-0 left-0 w-full h-[3px] bg-maroon/20 rounded"></span></span> <br />
-            <span>That Scale Modern Brands</span>
-          </motion.h1>
-
-          {/* Hero Subtitle */}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-base sm:text-lg md:text-xl text-ink/70 max-w-2xl mb-8 leading-relaxed font-normal"
-          >
-            Bespoke web engineering, high-conversion branding, SEO growth strategy, and practical IT Edutech programs built for high-growth businesses.
-          </motion.p>
-
-          {/* Hero Call To Actions */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="flex flex-col sm:flex-row items-center gap-4 mb-10"
-          >
-            <Link
-              to="/contact"
-              className="w-full sm:w-auto bg-maroon text-white px-9 py-4 rounded-sm text-xs uppercase tracking-widest font-bold hover:bg-maroon/90 transition-all shadow-xl shadow-maroon/25 hover:shadow-2xl hover:scale-[1.02] flex items-center justify-center gap-2"
-            >
-              Start Your Project <ArrowRight size={14} />
-            </Link>
+        <div className="w-full max-w-7xl mx-auto relative z-10 flex flex-col items-center">
+          {/* Main Hero Split Grid */}
+          <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center mb-12">
             
-            <Link
-              to="/edutech"
-              className="w-full sm:w-auto bg-white/90 backdrop-blur-md border border-maroon/20 text-maroon px-9 py-4 rounded-sm text-xs uppercase tracking-widest font-bold hover:bg-maroon hover:text-white transition-all shadow-sm flex items-center justify-center gap-2"
-            >
-              Explore Edutech & Courses →
-            </Link>
-          </motion.div>
+            {/* Left Content Column */}
+            <div className="lg:col-span-7 flex flex-col items-start text-left">
+              {/* Floating Pill Badge */}
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/80 backdrop-blur-md border border-maroon/15 rounded-full shadow-sm text-xs font-bold uppercase tracking-widest text-maroon mb-6"
+              >
+                <Sparkles size={14} className="text-amber-600 animate-pulse" />
+                <span>Digital Atelier & Tech Engineering</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-maroon"></span>
+              </motion.div>
+
+              {/* Hero Headline */}
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif leading-[1.15] mb-6 text-ink tracking-tight"
+              >
+                We Architect <span className="text-maroon italic relative">Digital Experiences<span className="absolute bottom-0 left-0 w-full h-[3px] bg-maroon/20 rounded"></span></span> <br />
+                <span>That Scale Modern Brands</span>
+              </motion.h1>
+
+              {/* Hero Subtitle */}
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-sm sm:text-base text-ink/75 max-w-2xl mb-8 leading-relaxed font-normal"
+              >
+                Bespoke web engineering, high-conversion branding, SEO growth strategy, and practical IT & Edutech programs built for high-growth businesses.
+              </motion.p>
+
+              {/* Hero Call To Actions */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto mb-6 lg:mb-0"
+              >
+                <Link
+                  to="/contact"
+                  className="w-full sm:w-auto bg-maroon text-white px-9 py-4 rounded-sm text-xs uppercase tracking-widest font-bold hover:bg-maroon/90 transition-all shadow-xl shadow-maroon/25 hover:shadow-2xl hover:scale-[1.02] flex items-center justify-center gap-2"
+                >
+                  Start Your Project <ArrowRight size={14} />
+                </Link>
+                
+                <Link
+                  to="/edutech"
+                  className="w-full sm:w-auto bg-white/95 border border-maroon/20 text-maroon px-9 py-4 rounded-sm text-xs uppercase tracking-widest font-bold hover:bg-maroon hover:text-white transition-all shadow-sm flex items-center justify-center gap-2"
+                >
+                  Explore Edutech & Courses <ArrowRight size={14} />
+                </Link>
+              </motion.div>
+            </div>
+
+            {/* Right Graphic Column */}
+            <div className="lg:col-span-5 relative w-full flex justify-center lg:justify-end mt-8 lg:mt-0">
+              {/* Outer Decorative Circles and lines in background */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[110%] h-[110%] pointer-events-none z-0 opacity-80">
+                <svg className="w-full h-full" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="250" cy="250" r="220" stroke="#B45F52" strokeWidth="1" strokeOpacity="0.08" />
+                  <circle cx="250" cy="250" r="180" stroke="#B45F52" strokeWidth="1" strokeOpacity="0.05" strokeDasharray="4 4" />
+                  <path d="M50 450 C 150 350, 350 350, 450 450" stroke="#B45F52" strokeWidth="1" strokeOpacity="0.1" fill="none" />
+                </svg>
+              </div>
+
+              {/* Main Circular Mask Graphic */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.35, duration: 0.8 }}
+                className="relative w-80 h-80 sm:w-[26rem] sm:h-[26rem] rounded-full overflow-hidden border border-maroon/15 shadow-2xl z-10 bg-cream"
+              >
+                <img 
+                  src={heroBuilding} 
+                  alt="Modern Architecture Block" 
+                  className="w-full h-full object-cover object-center scale-105 hover:scale-110 transition-transform duration-[2000ms] ease-out"
+                />
+                <div className="absolute inset-0 bg-gradient-to-tr from-maroon/5 via-transparent to-amber-500/5 mix-blend-overlay pointer-events-none"></div>
+              </motion.div>
+
+              {/* Red Watercolor Leaves Overlay */}
+              <motion.div 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.6, duration: 0.8 }}
+                className="absolute bottom-[-20px] right-[-10px] sm:right-[-20px] w-48 sm:w-64 z-20 pointer-events-none mix-blend-multiply opacity-90"
+              >
+                <img 
+                  src={maroonLeaves} 
+                  alt="Maroon decorative branch" 
+                  className="w-full h-auto object-contain"
+                />
+              </motion.div>
+
+              {/* Floating Scalable Growth Card */}
+              <motion.div
+                initial={{ opacity: 0, y: 30, x: 10 }}
+                animate={{ opacity: 1, y: 0, x: 0 }}
+                transition={{ delay: 0.5, duration: 0.7, type: 'spring', stiffness: 80 }}
+                className="absolute top-12 right-0 sm:right-4 w-44 sm:w-52 p-4 bg-white/95 backdrop-blur-md rounded-2xl border border-white/90 shadow-xl z-30 text-left flex flex-col gap-2.5"
+              >
+                <div className="w-9 h-9 rounded-full bg-maroon flex items-center justify-center text-white shadow-md shadow-maroon/20">
+                  <TrendingUp className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-widest font-semibold text-ink/40 leading-none mb-1">Foundations</p>
+                  <h5 className="text-[11px] sm:text-xs font-bold text-ink leading-tight">Building Digital Foundations for <span className="text-maroon">Scalable Growth</span></h5>
+                </div>
+                <div className="w-5 h-[2px] bg-maroon/30 rounded-full mt-0.5"></div>
+              </motion.div>
+
+            </div>
+          </div>
 
           {/* Floating Trust Badges Bar */}
           <motion.div
             initial={{ opacity: 0, y: 25 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="w-full max-w-4xl grid grid-cols-2 md:grid-cols-4 gap-4 p-4 md:p-5 bg-white/70 backdrop-blur-xl rounded-2xl border border-white/80 shadow-lg"
+            className="w-full max-w-5xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-y-8 lg:gap-y-0 p-6 md:p-8 lg:p-10 bg-white/70 backdrop-blur-xl rounded-[2.5rem] border border-white/80 shadow-xl lg:divide-x divide-ink/10"
           >
             {[
-              { title: '60+ Projects', subtitle: 'Delivered Worldwide', icon: '🚀' },
-              { title: '5.0 ★ Rating', subtitle: 'Verified Google Profile', icon: '⭐' },
-              { title: '₹5K Onwards', subtitle: 'Transparent Pricing', icon: '💎' },
-              { title: '100% Speed', subtitle: 'SEO & Tech Performance', icon: '⚡' }
+              { title: '60+ Projects', subtitle: 'Delivered Worldwide', icon: <Rocket className="w-6 h-6 text-maroon" /> },
+              { title: <>5.0 <span className="text-maroon font-sans">★</span> Rating</>, subtitle: 'Verified Google Profile', icon: <Star className="w-6 h-6 text-maroon" /> },
+              { title: '₹5K Onwards', subtitle: 'Transparent Pricing', icon: <Gem className="w-6 h-6 text-maroon" /> },
+              { title: '100% Speed', subtitle: 'SEO & Tech Performance', icon: <Zap className="w-6 h-6 text-maroon" /> }
             ].map((item, idx) => (
-              <div key={idx} className="flex items-center gap-3 p-3 rounded-xl bg-white/60 border border-ink/5 text-left">
-                <span className="text-2xl">{item.icon}</span>
-                <div>
-                  <h4 className="text-sm font-serif font-bold text-ink leading-tight">{item.title}</h4>
-                  <p className="text-[10px] uppercase tracking-wider font-semibold text-maroon mt-0.5">{item.subtitle}</p>
+              <div key={idx} className="flex flex-col items-center text-center px-4 py-2">
+                <div className="w-14 h-14 rounded-full bg-maroon/5 border border-maroon/15 flex items-center justify-center mb-4 mx-auto transition-transform duration-300 hover:scale-110">
+                  {item.icon}
                 </div>
+                <h4 className="text-lg md:text-xl font-bold text-ink leading-tight mb-2">{item.title}</h4>
+                <p className="text-[10px] uppercase tracking-widest font-bold text-maroon/80 mt-0.5">{item.subtitle}</p>
+                <div className="w-7 h-[2px] bg-maroon/30 rounded-full mt-3.5 mx-auto"></div>
               </div>
             ))}
           </motion.div>

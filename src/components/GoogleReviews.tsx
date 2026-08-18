@@ -94,7 +94,7 @@ const REAL_GOOGLE_REVIEWS: GoogleReview[] = [
     name: 'joseph pullaiah',
     rating: 5,
     date: '27 days ago',
-    content: 'First time I experienced these Natural Products saffron, shilajit, Honey. Excellent 👌',
+    content: 'First time I experienced these Natural Products saffron, shilajit, Honey. Excellent!',
     photo: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=150&q=80',
     verified: true
   },
