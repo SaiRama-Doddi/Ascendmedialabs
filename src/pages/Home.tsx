@@ -258,8 +258,8 @@ const Home = () => {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-            {projects.slice(0, 4).map((project, i) => (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+            {projects.slice(0, 3).map((project, i) => (
               <motion.div
                 key={project.id || i}
                 initial={{ opacity: 0, y: 30 }}
