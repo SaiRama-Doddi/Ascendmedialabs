@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { portfolioService, ClientProjectFinancial, PaymentInstallment, Expense } from '../services/portfolioService';
-import { Project, Brand } from '../constants';
+import { Project, Brand, LOGO } from '../constants';
 import { motion, AnimatePresence } from 'motion/react';
 import { collection, getDocs, doc, deleteDoc, updateDoc } from 'firebase/firestore';
 import html2canvas from 'html2canvas';
@@ -131,9 +131,12 @@ const AdminDashboard = () => {
   const [expenseNote, setExpenseNote] = useState('');
 
   // Invoice generator state
+  const [invoiceCompanyName, setInvoiceCompanyName] = useState('');
   const [invoiceClientName, setInvoiceClientName] = useState('');
-  const [invoiceClientAddress, setInvoiceClientAddress] = useState('');
+  const [invoiceClientPhone, setInvoiceClientPhone] = useState('');
+  const [invoiceClientDomain, setInvoiceClientDomain] = useState('');
   const [invoiceClientEmail, setInvoiceClientEmail] = useState('');
+  const [invoiceClientAddress, setInvoiceClientAddress] = useState('');
   const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
   const [invoiceDueDate, setInvoiceDueDate] = useState('');
   const [invoicePaidAmount, setInvoicePaidAmount] = useState<string>('0');
@@ -2136,9 +2139,12 @@ const AdminDashboard = () => {
                                         <div className="flex gap-2 justify-end">
                                           <button
                                             onClick={() => {
-                                              setInvoiceClientName(p.clientName);
+                                              setInvoiceCompanyName(p.clientName || '');
+                                              setInvoiceClientName(p.clientName || '');
+                                              setInvoiceClientPhone(p.clientNumber || '');
+                                              setInvoiceClientDomain(p.domainName || '');
                                               setInvoiceClientEmail(p.clientEmail || '');
-                                              setInvoiceClientAddress(`Contact: ${p.clientNumber || 'N/A'}\nDomain: ${p.domainName || 'N/A'}`);
+                                              setInvoiceClientAddress('');
                                               setInvoiceDate(p.date || new Date().toISOString().split('T')[0]);
                                               setInvoiceDueDate(p.expectedClosureDate || '');
                                               setInvoiceItems([
@@ -2427,9 +2433,12 @@ const AdminDashboard = () => {
                                     if (!val) return;
                                     const proj = clientProjects.find(p => p.id === val);
                                     if (proj) {
-                                      setInvoiceClientName(proj.clientName);
+                                      setInvoiceCompanyName(proj.clientName || '');
+                                      setInvoiceClientName(proj.clientName || '');
+                                      setInvoiceClientPhone(proj.clientNumber || '');
+                                      setInvoiceClientDomain(proj.domainName || '');
                                       setInvoiceClientEmail(proj.clientEmail || '');
-                                      setInvoiceClientAddress(`Contact: ${proj.clientNumber || 'N/A'}\nDomain: ${proj.domainName || 'N/A'}`);
+                                      setInvoiceClientAddress('');
                                       setInvoiceDate(proj.date || new Date().toISOString().split('T')[0]);
                                       setInvoiceDueDate(proj.expectedClosureDate || '');
                                       // Pre-fill a main service billable item
@@ -2604,16 +2613,50 @@ const AdminDashboard = () => {
 
                           <div className="border-t border-ink/5 pt-4">
                             <h4 className="text-xs font-bold uppercase tracking-wider text-ink/75 border-b border-ink/5 pb-2 mb-4">Client Billing Details</h4>
-                            <div className="flex flex-col gap-4">
-                              <div className="flex flex-col gap-1.5">
-                                <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">Client Name / Business</label>
-                                <input
-                                  type="text"
-                                  value={invoiceClientName}
-                                  onChange={(e) => setInvoiceClientName(e.target.value)}
-                                  placeholder="E.g., Desi Originals Private Ltd"
-                                  className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none"
-                                />
+                            <div className="flex flex-col gap-3">
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="flex flex-col gap-1.5">
+                                  <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">Company / Business Name</label>
+                                  <input
+                                    type="text"
+                                    value={invoiceCompanyName}
+                                    onChange={(e) => setInvoiceCompanyName(e.target.value)}
+                                    placeholder="E.g., Matrix Digital Pvt Ltd"
+                                    className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none"
+                                  />
+                                </div>
+                                <div className="flex flex-col gap-1.5">
+                                  <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">Client / Contact Person</label>
+                                  <input
+                                    type="text"
+                                    value={invoiceClientName}
+                                    onChange={(e) => setInvoiceClientName(e.target.value)}
+                                    placeholder="E.g., Doddi Sai Rama"
+                                    className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none"
+                                  />
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="flex flex-col gap-1.5">
+                                  <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">Contact Number</label>
+                                  <input
+                                    type="text"
+                                    value={invoiceClientPhone}
+                                    onChange={(e) => setInvoiceClientPhone(e.target.value)}
+                                    placeholder="E.g., +91 63002 52529"
+                                    className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none"
+                                  />
+                                </div>
+                                <div className="flex flex-col gap-1.5">
+                                  <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">Domain / Website</label>
+                                  <input
+                                    type="text"
+                                    value={invoiceClientDomain}
+                                    onChange={(e) => setInvoiceClientDomain(e.target.value)}
+                                    placeholder="E.g., matrixdigital.in"
+                                    className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none"
+                                  />
+                                </div>
                               </div>
                               <div className="flex flex-col gap-1.5">
                                 <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">Client Email</label>
@@ -2621,16 +2664,16 @@ const AdminDashboard = () => {
                                   type="email"
                                   value={invoiceClientEmail}
                                   onChange={(e) => setInvoiceClientEmail(e.target.value)}
-                                  placeholder="E.g., finance@desioriginals.in"
+                                  placeholder="E.g., finance@matrixdigital.in"
                                   className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none"
                                 />
                               </div>
                               <div className="flex flex-col gap-1.5">
-                                <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">Client Address</label>
+                                <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">Client Address / Notes</label>
                                 <textarea
                                   value={invoiceClientAddress}
                                   onChange={(e) => setInvoiceClientAddress(e.target.value)}
-                                  placeholder="E.g., Jubilee Hills, Hyderabad"
+                                  placeholder="E.g., Jubilee Hills, Hyderabad, Telangana"
                                   rows={2}
                                   className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none resize-none"
                                 />
@@ -2808,9 +2851,10 @@ const AdminDashboard = () => {
                                     : `UPI Remittance:\nUPI ID: ${invoiceUpiId}\nPayee Name: ${invoiceUpiName}`;
 
                                   const mailSubject = encodeURIComponent(`Invoice #${invoiceNumber || 'AML-XXXX'} from Ascend Media Labs - ${statusStr}`);
+                                  const recipientGreeting = invoiceClientName || invoiceCompanyName || 'Client';
 
                                   const mailBody = encodeURIComponent(
-                                    `Dear ${invoiceClientName || 'Client'},\n\n` +
+                                    `Dear ${recipientGreeting},\n\n` +
                                     `Please find details of Invoice #${invoiceNumber || 'AML-XXXX'} (${invoiceDate}) from Ascend Media Labs below:\n\n` +
                                     `----------------------------------------\n` +
                                     `Total Billable Amount: INR ${totalAmt.toLocaleString('en-IN')}\n` +
@@ -2842,18 +2886,22 @@ const AdminDashboard = () => {
                               <button
                                 onClick={async () => {
                                   const element = document.getElementById('printable-invoice-paper');
-                                  if (!element) return;
+                                  if (!element) {
+                                    alert('Invoice paper element not found. Please refresh and try again.');
+                                    return;
+                                  }
 
                                   setPdfExporting(true);
                                   try {
                                     const canvas = await html2canvas(element, {
                                       scale: 2,
                                       useCORS: true,
-                                      logging: false,
-                                      backgroundColor: '#ffffff'
+                                      allowTaint: true,
+                                      backgroundColor: '#ffffff',
+                                      logging: false
                                     });
 
-                                    const imgData = canvas.toDataURL('image/png');
+                                    const imgData = canvas.toDataURL('image/png', 1.0);
                                     const pdf = new jsPDF({
                                       orientation: 'p',
                                       unit: 'mm',
@@ -2866,19 +2914,37 @@ const AdminDashboard = () => {
 
                                     pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
                                     
+                                    const cleanClient = (invoiceCompanyName || invoiceClientName || 'Client').replace(/[^a-z0-9]/gi, '_');
+
                                     pdf.setProperties({
-                                      title: `Invoice_${invoiceNumber || 'AML'}_${invoiceClientName || 'Client'}`,
+                                      title: `Invoice_${invoiceNumber || 'AML'}_${cleanClient}`,
                                       subject: 'Ascend Media Labs Official Read-Only Invoice',
                                       author: 'Ascend Media Labs',
                                       keywords: 'invoice, secure, read-only, ascend media labs',
                                       creator: 'Ascend Media Labs Billing Portal'
                                     });
 
-                                    const cleanClient = invoiceClientName ? invoiceClientName.replace(/[^a-z0-9]/gi, '_') : 'Client';
-                                    pdf.save(`Invoice_${invoiceNumber || 'AML-XXXX'}_${cleanClient}_Official.pdf`);
-                                  } catch (error) {
+                                    const filename = `Invoice_${invoiceNumber || 'AML-XXXX'}_${cleanClient}_Official.pdf`;
+                                    
+                                    // Robust download execution (save + blob fallback)
+                                    try {
+                                      pdf.save(filename);
+                                    } catch (e) {
+                                      const pdfBlob = pdf.output('blob');
+                                      const blobUrl = URL.createObjectURL(pdfBlob);
+                                      const downloadLink = document.createElement('a');
+                                      downloadLink.href = blobUrl;
+                                      downloadLink.download = filename;
+                                      document.body.appendChild(downloadLink);
+                                      downloadLink.click();
+                                      setTimeout(() => {
+                                        document.body.removeChild(downloadLink);
+                                        URL.revokeObjectURL(blobUrl);
+                                      }, 1500);
+                                    }
+                                  } catch (error: any) {
                                     console.error('Failed to export secure PDF:', error);
-                                    alert('Could not export PDF automatically. Falling back to print...');
+                                    alert('Direct PDF generation encountered an issue: ' + (error?.message || 'Unknown error') + '. Opening print dialog as fallback.');
                                     window.print();
                                   } finally {
                                     setPdfExporting(false);
@@ -2905,7 +2971,7 @@ const AdminDashboard = () => {
                               <button
                                 onClick={() => {
                                   const originalTitle = document.title;
-                                  const cleanClient = invoiceClientName ? invoiceClientName.replace(/[^a-z0-9]/gi, '_') : 'Client';
+                                  const cleanClient = (invoiceCompanyName || invoiceClientName || 'Client').replace(/[^a-z0-9]/gi, '_');
                                   document.title = `Invoice_${invoiceNumber || 'AML-XXXX'}_${cleanClient}`;
                                   window.print();
                                   document.title = originalTitle;
@@ -2929,7 +2995,7 @@ const AdminDashboard = () => {
                                 <div>
                                   <div className="flex items-center gap-3">
                                     <img 
-                                      src="https://www.ascendmedialabs.com/assets/logo-main-CxjRq1zD.png" 
+                                      src={LOGO} 
                                       alt="Ascend Media Labs Logo" 
                                       className="h-10 w-auto object-contain shrink-0"
                                       onError={(e) => {
@@ -2998,10 +3064,27 @@ const AdminDashboard = () => {
                               <div className="grid grid-cols-2 gap-6 py-8 text-xs">
                                 <div className="bg-cream/10 border border-ink/5 p-4 rounded-sm">
                                   <h4 className="text-[8px] uppercase tracking-widest font-bold text-maroon/70 mb-2.5">Billed To</h4>
-                                  <p className="font-bold text-ink/90 text-sm leading-tight">{invoiceClientName || 'Client Name / Business Name'}</p>
-                                  {invoiceClientEmail && <p className="text-ink/60 mt-1 font-mono">{invoiceClientEmail}</p>}
+                                  {invoiceCompanyName ? (
+                                    <div>
+                                      <p className="font-bold text-ink/90 text-sm leading-tight">{invoiceCompanyName}</p>
+                                      {invoiceClientName && (
+                                        <p className="text-[11px] text-ink/80 font-semibold mt-1">
+                                          <span className="text-[8.5px] uppercase tracking-wider text-ink/45 font-bold">Attn / Client:</span> {invoiceClientName}
+                                        </p>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <p className="font-bold text-ink/90 text-sm leading-tight">{invoiceClientName || 'Client / Business Name'}</p>
+                                  )}
+                                  {invoiceClientEmail && <p className="text-ink/60 mt-1.5 font-mono text-[11px]">{invoiceClientEmail}</p>}
+                                  {(invoiceClientPhone || invoiceClientDomain) && (
+                                    <div className="text-ink/60 text-[10.5px] mt-1.5 flex flex-col gap-0.5 font-sans">
+                                      {invoiceClientPhone && <p><span className="text-ink/40 font-medium">Contact:</span> {invoiceClientPhone}</p>}
+                                      {invoiceClientDomain && <p><span className="text-ink/40 font-medium">Domain:</span> {invoiceClientDomain}</p>}
+                                    </div>
+                                  )}
                                   {invoiceClientAddress && (
-                                    <div className="text-ink/50 whitespace-pre-line mt-2 border-t border-ink/5 pt-2 leading-relaxed">
+                                    <div className="text-ink/50 whitespace-pre-line mt-2 border-t border-ink/5 pt-2 leading-relaxed text-[10.5px]">
                                       {invoiceClientAddress}
                                     </div>
                                   )}
