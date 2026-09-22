@@ -27,6 +27,7 @@ export interface ClientProjectFinancial {
   date: string;
   clientName: string;
   clientNumber: string;
+  clientEmail?: string;
   businessCategory: string;
   requirement: string;
   agreedAmount: number;

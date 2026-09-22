@@ -6,6 +6,8 @@ import { portfolioService, ClientProjectFinancial, PaymentInstallment, Expense }
 import { Project, Brand } from '../constants';
 import { motion, AnimatePresence } from 'motion/react';
 import { collection, getDocs, doc, deleteDoc, updateDoc } from 'firebase/firestore';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 import { 
   LayoutDashboard, 
   Briefcase, 
@@ -32,7 +34,8 @@ import {
   Lock,
   Eye,
   Download,
-  GraduationCap
+  GraduationCap,
+  FileText
 } from 'lucide-react';
 
 export interface Inquiry {
@@ -133,17 +136,20 @@ const AdminDashboard = () => {
   const [invoiceClientEmail, setInvoiceClientEmail] = useState('');
   const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
   const [invoiceDueDate, setInvoiceDueDate] = useState('');
+  const [invoicePaidAmount, setInvoicePaidAmount] = useState<string>('0');
+  const [pdfExporting, setPdfExporting] = useState(false);
   const [invoiceNumber, setInvoiceNumber] = useState(`AML-${Math.floor(1000 + Math.random() * 9000)}`);
   const [invoiceItems, setInvoiceItems] = useState<{ id: string; description: string; quantity: number; rate: number }[]>([]);
 
   // Invoice payment remittance states
   const [invoicePaymentType, setInvoicePaymentType] = useState<'bank' | 'upi'>('bank');
-  const [invoiceBankName, setInvoiceBankName] = useState('HDFC Bank Limited');
-  const [invoiceAccountName, setInvoiceAccountName] = useState('Ascend Media Labs');
-  const [invoiceAccountNumber, setInvoiceAccountNumber] = useState('50200067981245');
-  const [invoiceIfscCode, setInvoiceIfscCode] = useState('HDFC0000456');
-  const [invoiceUpiId, setInvoiceUpiId] = useState('reachus@ascendmedialabs.in');
-  const [invoiceUpiName, setInvoiceUpiName] = useState('Ascend Media Labs');
+  const [invoiceBankName, setInvoiceBankName] = useState('SBI');
+  const [invoiceAccountName, setInvoiceAccountName] = useState('Doddi Sai Rama');
+  const [invoiceAccountNumber, setInvoiceAccountNumber] = useState('62473815913');
+  const [invoiceIfscCode, setInvoiceIfscCode] = useState('SBIN0020631');
+  const [invoiceBranch, setInvoiceBranch] = useState('Old Gajuwaka');
+  const [invoiceUpiId, setInvoiceUpiId] = useState('8500734632@axl');
+  const [invoiceUpiName, setInvoiceUpiName] = useState('Doddi Sai Rama');
   
   // New line item form
   const [itemDescription, setItemDescription] = useState('');
@@ -1842,6 +1848,11 @@ const AdminDashboard = () => {
 
                 // Invoice calculations
                 const invoiceSubtotal = invoiceItems.reduce((sum, item) => sum + (item.quantity * item.rate), 0);
+                const invoicePaid = Math.max(0, Number(invoicePaidAmount) || 0);
+                const invoiceBalanceDue = Math.max(0, invoiceSubtotal - invoicePaid);
+                const isInvoiceFullyPaid = invoiceSubtotal > 0 && invoiceBalanceDue === 0;
+                const isInvoicePartiallyPaid = invoiceSubtotal > 0 && invoicePaid > 0 && invoiceBalanceDue > 0;
+                const isInvoiceUnpaid = invoiceSubtotal > 0 && invoicePaid === 0;
 
                 return (
                   <div className="w-full flex flex-col gap-6 print-container">
@@ -2125,6 +2136,30 @@ const AdminDashboard = () => {
                                         <div className="flex gap-2 justify-end">
                                           <button
                                             onClick={() => {
+                                              setInvoiceClientName(p.clientName);
+                                              setInvoiceClientEmail(p.clientEmail || '');
+                                              setInvoiceClientAddress(`Contact: ${p.clientNumber || 'N/A'}\nDomain: ${p.domainName || 'N/A'}`);
+                                              setInvoiceDate(p.date || new Date().toISOString().split('T')[0]);
+                                              setInvoiceDueDate(p.expectedClosureDate || '');
+                                              setInvoiceItems([
+                                                {
+                                                  id: Math.random().toString(36).substring(2, 9),
+                                                  description: `${p.requirement || 'Website Development'}`,
+                                                  quantity: 1,
+                                                  rate: p.agreedAmount
+                                                }
+                                              ]);
+                                              const totalPaid = (p.advanceReceived || 0) + (p.balancePaymentReceived || 0);
+                                              setInvoicePaidAmount(String(totalPaid));
+                                              setAccountSubTab('invoice');
+                                            }}
+                                            className="border border-green-600/20 hover:border-green-600/50 text-green-700 p-1.5 rounded-sm hover:bg-green-600/5 transition-all cursor-pointer"
+                                            title="Generate & View Invoice"
+                                          >
+                                            <FileText size={12} />
+                                          </button>
+                                          <button
+                                            onClick={() => {
                                               setViewingLedger(p);
                                               setShowViewLedgerModal(true);
                                             }}
@@ -2393,7 +2428,10 @@ const AdminDashboard = () => {
                                     const proj = clientProjects.find(p => p.id === val);
                                     if (proj) {
                                       setInvoiceClientName(proj.clientName);
+                                      setInvoiceClientEmail(proj.clientEmail || '');
                                       setInvoiceClientAddress(`Contact: ${proj.clientNumber || 'N/A'}\nDomain: ${proj.domainName || 'N/A'}`);
+                                      setInvoiceDate(proj.date || new Date().toISOString().split('T')[0]);
+                                      setInvoiceDueDate(proj.expectedClosureDate || '');
                                       // Pre-fill a main service billable item
                                       setInvoiceItems([
                                         {
@@ -2403,6 +2441,8 @@ const AdminDashboard = () => {
                                           rate: proj.agreedAmount
                                         }
                                       ]);
+                                      const totalPaid = (proj.advanceReceived || 0) + (proj.balancePaymentReceived || 0);
+                                      setInvoicePaidAmount(String(totalPaid));
                                     }
                                     e.target.value = ''; // Reset select value
                                   }}
@@ -2490,7 +2530,7 @@ const AdminDashboard = () => {
                                       type="text"
                                       value={invoiceBankName}
                                       onChange={(e) => setInvoiceBankName(e.target.value)}
-                                      placeholder="HDFC Bank"
+                                      placeholder="SBI"
                                       className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none"
                                     />
                                   </div>
@@ -2500,7 +2540,7 @@ const AdminDashboard = () => {
                                       type="text"
                                       value={invoiceAccountName}
                                       onChange={(e) => setInvoiceAccountName(e.target.value)}
-                                      placeholder="Account Name"
+                                      placeholder="Doddi Sai Rama"
                                       className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none"
                                     />
                                   </div>
@@ -2510,7 +2550,7 @@ const AdminDashboard = () => {
                                       type="text"
                                       value={invoiceAccountNumber}
                                       onChange={(e) => setInvoiceAccountNumber(e.target.value)}
-                                      placeholder="Account Number"
+                                      placeholder="62473815913"
                                       className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none"
                                     />
                                   </div>
@@ -2520,7 +2560,17 @@ const AdminDashboard = () => {
                                       type="text"
                                       value={invoiceIfscCode}
                                       onChange={(e) => setInvoiceIfscCode(e.target.value)}
-                                      placeholder="IFSC Code"
+                                      placeholder="SBIN0020631"
+                                      className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none"
+                                    />
+                                  </div>
+                                  <div className="flex flex-col gap-1.5 col-span-2">
+                                    <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">Branch</label>
+                                    <input
+                                      type="text"
+                                      value={invoiceBranch}
+                                      onChange={(e) => setInvoiceBranch(e.target.value)}
+                                      placeholder="Old Gajuwaka"
                                       className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none"
                                     />
                                   </div>
@@ -2533,7 +2583,7 @@ const AdminDashboard = () => {
                                       type="text"
                                       value={invoiceUpiId}
                                       onChange={(e) => setInvoiceUpiId(e.target.value)}
-                                      placeholder="reachus@vpa"
+                                      placeholder="8500734632@axl"
                                       className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none"
                                     />
                                   </div>
@@ -2543,7 +2593,7 @@ const AdminDashboard = () => {
                                       type="text"
                                       value={invoiceUpiName}
                                       onChange={(e) => setInvoiceUpiName(e.target.value)}
-                                      placeholder="Payee Name"
+                                      placeholder="Doddi Sai Rama"
                                       className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none"
                                     />
                                   </div>
@@ -2584,6 +2634,85 @@ const AdminDashboard = () => {
                                   rows={2}
                                   className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none resize-none"
                                 />
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="border-t border-ink/5 pt-4">
+                            <div className="flex justify-between items-center border-b border-ink/5 pb-2 mb-3">
+                              <h4 className="text-xs font-bold uppercase tracking-wider text-ink/75">Payment & Dues Settlement</h4>
+                              {invoiceSubtotal > 0 && (
+                                <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm ${
+                                  isInvoiceFullyPaid 
+                                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' 
+                                    : isInvoicePartiallyPaid 
+                                      ? 'bg-amber-100 text-amber-800 border border-amber-300' 
+                                      : 'bg-red-100 text-red-800 border border-red-300'
+                                }`}>
+                                  {isInvoiceFullyPaid ? '✓ PAID IN FULL (Zero Dues)' : isInvoicePartiallyPaid ? 'Partially Paid' : 'Payment Due'}
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="flex flex-col gap-3 bg-cream/15 p-3.5 rounded-sm border border-ink/5">
+                              <div className="flex flex-col gap-1.5">
+                                <div className="flex justify-between items-center">
+                                  <label className="text-[9px] uppercase tracking-widest font-bold text-ink/60">Amount Paid / Advance Received (₹)</label>
+                                  <span className="text-[9px] font-mono text-ink/40">Total: ₹{invoiceSubtotal.toLocaleString('en-IN')}</span>
+                                </div>
+                                <input
+                                  type="number"
+                                  value={invoicePaidAmount}
+                                  onChange={(e) => setInvoicePaidAmount(e.target.value)}
+                                  placeholder="0"
+                                  className="bg-white border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/90 focus:outline-none focus:border-maroon font-mono font-bold"
+                                />
+                              </div>
+
+                              {/* Quick Actions to mark payment */}
+                              <div className="flex flex-wrap gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => setInvoicePaidAmount(String(invoiceSubtotal))}
+                                  disabled={invoiceSubtotal === 0}
+                                  className="bg-emerald-50 hover:bg-emerald-100 disabled:opacity-40 text-emerald-800 border border-emerald-300 text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-sm transition-colors cursor-pointer flex items-center gap-1"
+                                >
+                                  <Check size={10} />
+                                  <span>100% Settle (No Dues)</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setInvoicePaidAmount(String(Math.round(invoiceSubtotal / 2)))}
+                                  disabled={invoiceSubtotal === 0}
+                                  className="bg-blue-50 hover:bg-blue-100 disabled:opacity-40 text-blue-800 border border-blue-300 text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-sm transition-colors cursor-pointer"
+                                >
+                                  50% Advance
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setInvoicePaidAmount('0')}
+                                  className="bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-300 text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-sm transition-colors cursor-pointer"
+                                >
+                                  Reset (0 Paid)
+                                </button>
+                              </div>
+
+                              {/* Breakdown pill */}
+                              <div className="bg-white border border-ink/10 rounded-sm p-2.5 flex flex-col gap-1 text-xs">
+                                <div className="flex justify-between text-ink/60 text-[11px]">
+                                  <span>Total Billable:</span>
+                                  <span className="font-mono font-semibold">₹{invoiceSubtotal.toLocaleString('en-IN')}</span>
+                                </div>
+                                <div className="flex justify-between text-emerald-700 text-[11px]">
+                                  <span>Paid / Advance:</span>
+                                  <span className="font-mono font-semibold">- ₹{(Number(invoicePaidAmount) || 0).toLocaleString('en-IN')}</span>
+                                </div>
+                                <div className="border-t border-ink/10 pt-1 flex justify-between font-bold">
+                                  <span className="text-[9px] uppercase tracking-wider text-ink/60">Net Balance Due:</span>
+                                  <span className={`font-mono text-xs ${invoiceBalanceDue === 0 && invoiceSubtotal > 0 ? 'text-emerald-700' : 'text-maroon'}`}>
+                                    {invoiceBalanceDue === 0 && invoiceSubtotal > 0 ? '₹0.00 (Settled)' : `₹${invoiceBalanceDue.toLocaleString('en-IN')}`}
+                                  </span>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -2654,33 +2783,123 @@ const AdminDashboard = () => {
 
                         {/* Interactive Realtime Invoice Preview (Right Side) */}
                         <div className="w-full xl:w-3/5 flex flex-col gap-4">
-                          <div className="flex justify-between items-center no-print">
-                            <span className="text-[10px] uppercase tracking-widest font-bold text-ink/40">Invoice Live Preview</span>
-                            <div className="flex gap-2">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 no-print">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] uppercase tracking-widest font-bold text-ink/40">Invoice Live Preview</span>
+                              <span className="text-[9px] text-emerald-800 bg-emerald-50 border border-emerald-200/60 font-semibold px-1.5 py-0.5 rounded-sm flex items-center gap-1">
+                                <Lock size={10} />
+                                <span>Read-Only Protected</span>
+                              </span>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
                               <button
                                 onClick={() => {
-                                  const mailSubject = encodeURIComponent(`Invoice ${invoiceNumber || 'AML-XXXX'} from Ascend Media Labs`);
                                   const totalAmt = invoiceItems.reduce((sum, item) => sum + (item.quantity * item.rate), 0);
+                                  const paidAmt = Number(invoicePaidAmount) || 0;
+                                  const balDue = Math.max(0, totalAmt - paidAmt);
+                                  const statusStr = balDue === 0 && totalAmt > 0 
+                                    ? 'PAID IN FULL (ZERO DUES)' 
+                                    : paidAmt > 0 
+                                      ? `PARTIALLY PAID (BALANCE DUE: INR ${balDue.toLocaleString('en-IN')})` 
+                                      : `PAYMENT DUE: INR ${balDue.toLocaleString('en-IN')}`;
+
                                   const remittanceStr = invoicePaymentType === 'bank' 
-                                    ? `Bank Details:\nBank Name: ${invoiceBankName}\nAccount Name: ${invoiceAccountName}\nAccount Number: ${invoiceAccountNumber}\nIFSC Code: ${invoiceIfscCode}`
+                                    ? `Bank Details:\nBank Name: ${invoiceBankName}\nAccount Name: ${invoiceAccountName}\nAccount Number: ${invoiceAccountNumber}\nIFSC Code: ${invoiceIfscCode}${invoiceBranch ? `\nBranch: ${invoiceBranch}` : ''}`
                                     : `UPI Remittance:\nUPI ID: ${invoiceUpiId}\nPayee Name: ${invoiceUpiName}`;
+
+                                  const mailSubject = encodeURIComponent(`Invoice #${invoiceNumber || 'AML-XXXX'} from Ascend Media Labs - ${statusStr}`);
 
                                   const mailBody = encodeURIComponent(
                                     `Dear ${invoiceClientName || 'Client'},\n\n` +
-                                    `Please find details of Invoice #${invoiceNumber || 'AML-XXXX'} below for your review.\n\n` +
-                                    `Total Due Amount: INR ${totalAmt.toLocaleString('en-IN')}\n\n` +
-                                    `${remittanceStr}\n\n` +
-                                    `If you have any questions, feel free to reply directly to this email.\n\n` +
+                                    `Please find details of Invoice #${invoiceNumber || 'AML-XXXX'} (${invoiceDate}) from Ascend Media Labs below:\n\n` +
+                                    `----------------------------------------\n` +
+                                    `Total Billable Amount: INR ${totalAmt.toLocaleString('en-IN')}\n` +
+                                    `Amount Paid / Advance:  INR ${paidAmt.toLocaleString('en-IN')}\n` +
+                                    `Outstanding Balance:    INR ${balDue.toLocaleString('en-IN')}\n` +
+                                    `Payment Status:         ${statusStr}\n` +
+                                    (invoiceDueDate ? `Due Date:               ${invoiceDueDate}\n` : '') +
+                                    `----------------------------------------\n\n` +
+                                    (balDue > 0 
+                                      ? `Steps to Pay Dues:\n` +
+                                        `Please transfer the balance amount of INR ${balDue.toLocaleString('en-IN')} using the payment remittance details below:\n\n` +
+                                        `${remittanceStr}\n\n` +
+                                        `After making the payment, kindly share the payment reference/UTR for reconciliation.\n\n`
+                                      : `Thank you for your payment! This invoice has been marked as 100% settled with zero balance due.\n\n`
+                                    ) +
                                     `Best regards,\n` +
-                                    `Ascend Media Labs`
+                                    `Ascend Media Labs\n` +
+                                    `reachus@ascendmedialabs.in | +91 76758 52618`
                                   );
                                   window.open(`mailto:${invoiceClientEmail || ''}?subject=${mailSubject}&body=${mailBody}`, '_blank');
                                 }}
                                 disabled={invoiceItems.length === 0}
-                                className="bg-maroon disabled:opacity-40 disabled:cursor-not-allowed text-white px-4 py-2.5 rounded-sm text-xs font-bold uppercase tracking-widest hover:bg-maroon/90 transition-colors flex items-center gap-1.5 cursor-pointer"
+                                className="bg-maroon disabled:opacity-40 disabled:cursor-not-allowed text-white px-3.5 py-2 rounded-sm text-xs font-bold uppercase tracking-widest hover:bg-maroon/90 transition-colors flex items-center gap-1.5 cursor-pointer"
                               >
                                 <Mail size={13} />
                                 <span>Email Client</span>
+                              </button>
+
+                              <button
+                                onClick={async () => {
+                                  const element = document.getElementById('printable-invoice-paper');
+                                  if (!element) return;
+
+                                  setPdfExporting(true);
+                                  try {
+                                    const canvas = await html2canvas(element, {
+                                      scale: 2,
+                                      useCORS: true,
+                                      logging: false,
+                                      backgroundColor: '#ffffff'
+                                    });
+
+                                    const imgData = canvas.toDataURL('image/png');
+                                    const pdf = new jsPDF({
+                                      orientation: 'p',
+                                      unit: 'mm',
+                                      format: 'a4',
+                                      compress: true
+                                    });
+
+                                    const pdfWidth = pdf.internal.pageSize.getWidth();
+                                    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+                                    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
+                                    
+                                    pdf.setProperties({
+                                      title: `Invoice_${invoiceNumber || 'AML'}_${invoiceClientName || 'Client'}`,
+                                      subject: 'Ascend Media Labs Official Read-Only Invoice',
+                                      author: 'Ascend Media Labs',
+                                      keywords: 'invoice, secure, read-only, ascend media labs',
+                                      creator: 'Ascend Media Labs Billing Portal'
+                                    });
+
+                                    const cleanClient = invoiceClientName ? invoiceClientName.replace(/[^a-z0-9]/gi, '_') : 'Client';
+                                    pdf.save(`Invoice_${invoiceNumber || 'AML-XXXX'}_${cleanClient}_Official.pdf`);
+                                  } catch (error) {
+                                    console.error('Failed to export secure PDF:', error);
+                                    alert('Could not export PDF automatically. Falling back to print...');
+                                    window.print();
+                                  } finally {
+                                    setPdfExporting(false);
+                                  }
+                                }}
+                                disabled={invoiceItems.length === 0 || pdfExporting}
+                                className="bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white px-3.5 py-2 rounded-sm text-xs font-bold uppercase tracking-widest hover:bg-emerald-800 transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+                                title="Download as secure, flattened Read-Only PDF that cannot be converted to Word or modified"
+                              >
+                                {pdfExporting ? (
+                                  <>
+                                    <RefreshCw size={13} className="animate-spin" />
+                                    <span>Securing PDF...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Lock size={13} />
+                                    <Download size={13} />
+                                    <span>Download Read-Only PDF</span>
+                                  </>
+                                )}
                               </button>
 
                               <button
@@ -2692,10 +2911,11 @@ const AdminDashboard = () => {
                                   document.title = originalTitle;
                                 }}
                                 disabled={invoiceItems.length === 0}
-                                className="bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed text-white px-4 py-2.5 rounded-sm text-xs font-bold uppercase tracking-widest hover:bg-green-800 transition-colors flex items-center gap-1.5 cursor-pointer"
+                                className="bg-ink/75 disabled:opacity-40 disabled:cursor-not-allowed text-white px-3 py-2 rounded-sm text-xs font-bold uppercase tracking-widest hover:bg-ink transition-colors flex items-center gap-1.5 cursor-pointer"
+                                title="Print or Save via Browser"
                               >
                                 <Globe size={13} />
-                                <span>Print / Download PDF</span>
+                                <span>Print</span>
                               </button>
                             </div>
                           </div>
@@ -2729,13 +2949,48 @@ const AdminDashboard = () => {
                                   </div>
                                 </div>
 
-                                <div className="text-right">
+                                <div className="text-right flex flex-col items-end">
                                   <h1 className="text-2xl font-serif font-semibold tracking-wider text-ink/70">INVOICE</h1>
-                                  <div className="text-[10px] font-mono leading-normal mt-4">
+                                  <div className="text-[10px] font-mono leading-normal mt-2">
                                     <p><strong className="text-ink/60 font-sans uppercase text-[8px] tracking-wider">Invoice #:</strong> {invoiceNumber || 'AML-XXXX'}</p>
                                     <p><strong className="text-ink/60 font-sans uppercase text-[8px] tracking-wider">Date:</strong> {invoiceDate}</p>
                                     {invoiceDueDate && <p><strong className="text-ink/60 font-sans uppercase text-[8px] tracking-wider text-maroon">Due Date:</strong> {invoiceDueDate}</p>}
                                   </div>
+
+                                  {/* Official Status Stamp */}
+                                  {invoiceSubtotal > 0 && (
+                                    <div className="mt-3">
+                                      {isInvoiceFullyPaid ? (
+                                        <div className="border-2 border-emerald-600/80 bg-emerald-50 text-emerald-800 rounded-sm px-3 py-1 text-right rotate-[-1.5deg] shadow-xs">
+                                          <div className="flex items-center justify-end gap-1 text-[11px] font-bold uppercase tracking-wider text-emerald-800 leading-tight">
+                                            <CheckCircle size={12} className="shrink-0 text-emerald-700" />
+                                            <span>PAID IN FULL</span>
+                                          </div>
+                                          <div className="text-[7.5px] font-semibold text-emerald-700 uppercase tracking-widest mt-0.5">
+                                            Settled • Zero Balance
+                                          </div>
+                                        </div>
+                                      ) : isInvoicePartiallyPaid ? (
+                                        <div className="border-2 border-amber-600/80 bg-amber-50 text-amber-900 rounded-sm px-3 py-1 text-right rotate-[-1.5deg] shadow-xs">
+                                          <div className="text-[10px] font-bold uppercase tracking-wider text-amber-800 leading-tight">
+                                            PARTIALLY PAID
+                                          </div>
+                                          <div className="text-[8px] font-mono font-bold text-amber-900 mt-0.5">
+                                            Due: ₹{invoiceBalanceDue.toLocaleString('en-IN')}
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <div className="border border-maroon/40 bg-maroon/5 text-maroon rounded-sm px-2.5 py-1 text-right rotate-[-1.5deg]">
+                                          <div className="text-[10px] font-bold uppercase tracking-wider text-maroon leading-tight">
+                                            PAYMENT DUE
+                                          </div>
+                                          <div className="text-[8px] font-mono font-bold text-maroon/80 mt-0.5">
+                                            Total: ₹{invoiceSubtotal.toLocaleString('en-IN')}
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
                                 </div>
                               </div>
 
@@ -2761,6 +3016,7 @@ const AdminDashboard = () => {
                                         <p><strong className="text-ink/75 font-semibold">A/C Name:</strong> {invoiceAccountName}</p>
                                         <p><strong className="text-ink/75 font-semibold">A/C Number:</strong> <span className="font-mono">{invoiceAccountNumber}</span></p>
                                         <p><strong className="text-ink/75 font-semibold">IFSC Code:</strong> <span className="font-mono">{invoiceIfscCode}</span></p>
+                                        {invoiceBranch && <p><strong className="text-ink/75 font-semibold">Branch:</strong> {invoiceBranch}</p>}
                                       </div>
                                     ) : (
                                       <div className="flex flex-col gap-1">
@@ -2812,36 +3068,77 @@ const AdminDashboard = () => {
                             </div>
 
                             {/* Total and Sign-off */}
-                            <div className="border-t border-ink/10 pt-6 mt-8 flex justify-between items-start">
+                            <div className="border-t border-ink/10 pt-6 mt-8 flex justify-between items-start gap-6">
                               <div className="w-1/2">
-                                <h4 className="text-[8px] uppercase tracking-widest font-bold text-ink/40 mb-1">Notes & Terms</h4>
-                                <p className="text-[9px] text-ink/45 leading-relaxed">
-                                  1. Please pay within the specified due date.<br />
-                                  2. Payments can be sent via Bank IMPS/UPI.<br />
-                                  3. For queries, contact reachus@ascendmedialabs.in
-                                </p>
+                                <h4 className="text-[8px] uppercase tracking-widest font-bold text-ink/50 mb-2">
+                                  {isInvoiceFullyPaid ? 'Payment Confirmation & Receipt Notes' : 'Payment Steps & Dues Settlement'}
+                                </h4>
+                                {isInvoiceFullyPaid ? (
+                                  <div className="bg-emerald-50/70 border border-emerald-200/70 p-3.5 rounded-sm text-[9px] text-emerald-900 leading-relaxed flex flex-col gap-1">
+                                    <p className="font-bold flex items-center gap-1.5 text-emerald-800 text-[10px]">
+                                      <CheckCircle size={12} />
+                                      <span>Official Receipt: 100% Settled</span>
+                                    </p>
+                                    <p>1. Total receipt of <strong>₹{(Number(invoicePaidAmount) || 0).toLocaleString('en-IN')}</strong> is credited and reconciled in full.</p>
+                                    <p>2. No outstanding balance or payment due on this invoice.</p>
+                                    <p>3. Thank you for partnering with Ascend Media Labs!</p>
+                                  </div>
+                                ) : (
+                                  <div className="bg-cream/25 border border-ink/10 p-3.5 rounded-sm text-[9px] text-ink/70 leading-relaxed flex flex-col gap-1.5">
+                                    <p className="font-bold text-maroon flex items-center gap-1.5 text-[10px]">
+                                      <AlertCircle size={12} />
+                                      <span>Outstanding Balance: ₹{invoiceBalanceDue.toLocaleString('en-IN')}</span>
+                                    </p>
+                                    <p>1. <strong>Steps to Pay:</strong> Please remit the outstanding balance of <strong>₹{invoiceBalanceDue.toLocaleString('en-IN')}</strong> {invoiceDueDate ? `on or before ${invoiceDueDate}` : 'to close all dues'}.</p>
+                                    <p>2. <strong>Remittance Mode:</strong> Transfer via {invoicePaymentType === 'bank' ? 'SBI Bank Transfer (IMPS/NEFT)' : 'UPI Pay (8500734632@axl)'} as listed in the payment box above.</p>
+                                    <p>3. <strong>Receipt Acknowledgment:</strong> Share your transaction UTR / receipt screenshot to <span className="font-mono text-ink/90 font-semibold">reachus@ascendmedialabs.in</span> or WhatsApp +91 76758 52618 to receive final settlement confirmation.</p>
+                                  </div>
+                                )}
                               </div>
 
-                              <div className="w-1/3 flex flex-col gap-2.5 text-xs text-right">
-                                <div className="flex justify-between items-center text-ink/50">
+                              <div className="w-1/2 max-w-xs flex flex-col gap-2 text-xs text-right">
+                                <div className="flex justify-between items-center text-ink/50 text-[11px]">
                                   <span>Subtotal:</span>
-                                  <span className="font-mono">₹{invoiceSubtotal.toLocaleString('en-IN')}</span>
+                                  <span className="font-mono font-medium">₹{invoiceSubtotal.toLocaleString('en-IN')}</span>
                                 </div>
-                                <div className="flex justify-between items-center text-ink/50 border-b border-ink/5 pb-2">
+                                <div className="flex justify-between items-center text-ink/50 text-[11px]">
                                   <span>Tax / GST (0%):</span>
                                   <span className="font-mono">₹0.00</span>
                                 </div>
-                                <div className="flex justify-between items-center text-sm font-bold text-ink/90 font-mono">
-                                  <span className="font-sans uppercase text-[10px] tracking-wider text-ink/50">Grand Total:</span>
-                                  <span className="text-maroon">₹{invoiceSubtotal.toLocaleString('en-IN')}</span>
+                                <div className="flex justify-between items-center text-xs font-semibold text-ink/80 border-t border-ink/5 pt-1">
+                                  <span className="uppercase text-[9px] tracking-wider text-ink/50">Total Billable:</span>
+                                  <span className="font-mono">₹{invoiceSubtotal.toLocaleString('en-IN')}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-xs font-semibold text-emerald-700 bg-emerald-50/70 py-1 px-2 rounded-xs">
+                                  <span className="uppercase text-[8.5px] tracking-wider text-emerald-800">Amount Paid / Advance:</span>
+                                  <span className="font-mono font-bold">- ₹{(Number(invoicePaidAmount) || 0).toLocaleString('en-IN')}</span>
+                                </div>
+                                <div className={`flex justify-between items-center text-sm font-bold border-t-2 ${invoiceBalanceDue === 0 && invoiceSubtotal > 0 ? 'border-emerald-600 bg-emerald-50/60' : 'border-maroon bg-maroon/5'} p-2.5 rounded-xs`}>
+                                  <span className="font-sans uppercase text-[10px] tracking-wider text-ink/70">
+                                    {invoiceBalanceDue === 0 && invoiceSubtotal > 0 ? 'Final Status:' : 'Balance Due:'}
+                                  </span>
+                                  <span className={`font-mono text-base ${invoiceBalanceDue === 0 && invoiceSubtotal > 0 ? 'text-emerald-700' : 'text-maroon'}`}>
+                                    {invoiceBalanceDue === 0 && invoiceSubtotal > 0 ? '₹0.00 (PAID)' : `₹${invoiceBalanceDue.toLocaleString('en-IN')}`}
+                                  </span>
                                 </div>
 
-                                <div className="flex flex-col items-end mt-8">
-                                  <div className="h-10 w-24 border-b border-ink/20 relative">
-                                    <span className="absolute bottom-1 right-2 text-[9px] font-serif italic text-ink/30">Ascend Labs</span>
+                                <div className="flex flex-col items-end mt-6">
+                                  <div className="h-10 w-28 border-b border-ink/20 relative flex items-end justify-center">
+                                    <span className="text-[9px] font-serif italic text-ink/30 pb-0.5">Ascend Media Labs</span>
                                   </div>
                                   <span className="text-[8px] uppercase tracking-widest text-ink/40 font-bold mt-1.5">Authorized Signatory</span>
                                 </div>
+                              </div>
+                            </div>
+
+                            {/* Official Security & Authenticity Footnote */}
+                            <div className="border-t border-ink/10 pt-3 mt-6 flex justify-between items-center text-[8px] uppercase tracking-wider text-ink/40 font-mono">
+                              <div className="flex items-center gap-1.5 text-ink/60 font-sans font-semibold">
+                                <Lock size={10} className="text-maroon/70 shrink-0" />
+                                <span>Official Authenticated Invoice • Read-Only Security Protected Copy</span>
+                              </div>
+                              <div>
+                                AML-SECURE-{invoiceNumber || 'AML'}-{new Date().getFullYear()}
                               </div>
                             </div>
 
