@@ -112,7 +112,7 @@ const Services = () => {
           <h2 className="text-4xl md:text-6xl font-serif mb-8">Ready to elevate your digital presence?</h2>
           <p className="text-lg text-white/80 mb-12 max-w-2xl mx-auto">Join the ranks of high-growth brands that trust Ascend Media Labs for their architectural digital strategy.</p>
           <Link to="/contact" className="bg-white text-maroon px-10 py-4 rounded-sm text-xs uppercase tracking-widest font-bold hover:bg-cream transition-all inline-block">
-            Start Your Project
+            Enquiry Now
           </Link>
         </div>
       </section>

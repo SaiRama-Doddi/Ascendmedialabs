@@ -11,6 +11,16 @@ import maroonLeaves from '../assets/images/maroon-leaves.png';
 const Home = () => {
   const [projects, setProjects] = useState<Project[]>(PROJECTS);
   const [brands, setBrands] = useState<Brand[]>(TRUSTED_BRANDS);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -61,10 +71,10 @@ const Home = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif leading-[1.15] mb-6 text-ink tracking-tight"
+                className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl xl:text-[3.5rem] font-serif leading-[1.18] mb-6 text-ink tracking-tight"
               >
-                We Architect <span className="text-maroon italic relative">Digital Experiences<span className="absolute bottom-0 left-0 w-full h-[3px] bg-maroon/20 rounded"></span></span> <br />
-                <span>That Scale Modern Brands</span>
+                We Architect <span className="text-maroon italic relative">Digital Experiences<span className="absolute bottom-0 left-0 w-full h-[3px] bg-maroon/20 rounded"></span></span> <br className="hidden sm:inline" />
+                <span className="inline-block whitespace-nowrap">That Scale Modern Brands</span>
               </motion.h1>
 
               {/* Hero Subtitle */}
@@ -88,7 +98,7 @@ const Home = () => {
                   to="/contact"
                   className="w-full sm:w-auto bg-maroon text-white px-9 py-4 rounded-sm text-xs uppercase tracking-widest font-bold hover:bg-maroon/90 transition-all shadow-xl shadow-maroon/25 hover:shadow-2xl hover:scale-[1.02] flex items-center justify-center gap-2"
                 >
-                  Start Your Project <ArrowRight size={14} />
+                  Enquiry Now <ArrowRight size={14} />
                 </Link>
                 
                 <Link
@@ -326,7 +336,7 @@ const Home = () => {
           <p className="text-base text-white/80 mb-8 max-w-xl mx-auto relative z-10">Let's discuss how we can build something extraordinary together.</p>
           <div className="flex flex-col sm:flex-row justify-center gap-4 relative z-10">
             <Link to="/contact" className="bg-white text-maroon px-8 py-3.5 rounded-sm text-xs uppercase tracking-widest font-bold hover:bg-cream transition-all">
-              Start Your Project
+              Enquiry Now
             </Link>
             <Link to="/contact" className="border border-white/30 text-white px-8 py-3.5 rounded-sm text-xs uppercase tracking-widest font-bold hover:bg-white/10 transition-all">
               Book a Call
@@ -336,40 +346,41 @@ const Home = () => {
       </section>
 
       {/* Trusted Brands Section */}
-      <section className="section-padding bg-cream">
+      <section className="section-padding bg-cream overflow-hidden">
         <div className="text-center mb-10">
           <h4 className="text-[10px] uppercase tracking-widest font-medium text-maroon mb-2">Trusted By</h4>
           <h2 className="text-3xl md:text-4xl font-serif">Our Trusted Brands</h2>
         </div>
         
-        <div className="relative w-full overflow-hidden">
+        <div className="relative w-full overflow-hidden py-2">
+          {/* Subtle edge fade overlays for smooth aesthetics */}
+          <div className="absolute left-0 top-0 bottom-0 w-10 sm:w-20 md:w-28 bg-gradient-to-r from-cream to-transparent z-10 pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-10 sm:w-20 md:w-28 bg-gradient-to-l from-cream to-transparent z-10 pointer-events-none" />
+
           <motion.div
-            className="flex gap-8 md:gap-12 py-4"
-            animate={{ x: ['0%', '-100%'] }}
-            transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+            key={isMobile ? 'mobile-brands' : 'desktop-brands'}
+            className="flex gap-6 sm:gap-8 md:gap-12 py-2 w-max"
+            animate={{ x: ['0%', '-50%'] }}
+            transition={{ 
+              duration: isMobile ? 12 : 25, 
+              repeat: Infinity, 
+              ease: 'linear' 
+            }}
           >
-            {brands.map((brand, index) => (
-              <div key={index} className="flex-shrink-0 flex flex-col items-center justify-center gap-3 min-w-[180px] md:min-w-[220px]">
-                <div className="h-16 md:h-20 flex items-center justify-center">
+            {[...brands, ...brands].map((brand, index) => (
+              <div 
+                key={`${brand.id || brand.name}-${index}`} 
+                className="flex-shrink-0 flex flex-col items-center justify-center gap-2 sm:gap-3 min-w-[130px] sm:min-w-[170px] md:min-w-[220px]"
+              >
+                <div className="h-12 sm:h-16 md:h-20 flex items-center justify-center">
                   <img 
                     src={brand.logo} 
                     alt={brand.name} 
                     className="max-h-full max-w-full object-contain transition-all duration-300"
+                    loading="lazy"
                   />
                 </div>
-                <p className="text-sm md:text-base font-medium text-ink/70 text-center">{brand.name}</p>
-              </div>
-            ))}
-            {brands.map((brand, index) => (
-              <div key={`duplicate-${index}`} className="flex-shrink-0 flex flex-col items-center justify-center gap-3 min-w-[180px] md:min-w-[220px]">
-                <div className="h-16 md:h-20 flex items-center justify-center">
-                  <img 
-                    src={brand.logo} 
-                    alt={brand.name} 
-                    className="max-h-full max-w-full object-contain transition-all duration-300"
-                  />
-                </div>
-                <p className="text-sm md:text-base font-medium text-ink/70 text-center">{brand.name}</p>
+                <p className="text-xs sm:text-sm md:text-base font-medium text-ink/70 text-center whitespace-nowrap">{brand.name}</p>
               </div>
             ))}
           </motion.div>

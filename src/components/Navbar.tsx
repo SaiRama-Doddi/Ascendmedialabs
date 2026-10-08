@@ -75,7 +75,7 @@ const Navbar = () => {
             );
           })}
           <Link to="/contact" className="bg-maroon text-white px-6 py-2 rounded-sm text-xs uppercase tracking-widest font-bold hover:bg-maroon/90 transition-all shadow-sm ml-2">
-            Get Started
+            Enquiry Now
           </Link>
         </div>
 
@@ -110,7 +110,7 @@ const Navbar = () => {
                 onClick={() => setIsOpen(false)}
                 className="bg-maroon text-white px-6 py-3 rounded-sm text-xs uppercase tracking-widest font-bold text-center"
               >
-                Get Started
+                Enquiry Now
               </Link>
             </div>
           </motion.div>

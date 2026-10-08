@@ -93,7 +93,7 @@ const Portfolio = () => {
           <h2 className="text-4xl md:text-5xl font-serif mb-8">Have a vision in mind?</h2>
           <p className="text-lg text-white mb-12 max-w-xl mx-auto">Let's translate your ideas into a world-class digital experience.</p>
           <Link to="/contact" className="bg-white text-maroon px-10 py-4 rounded-sm text-xs uppercase tracking-widest font-bold hover:text-maroon/80 hover:bg-white/90 transition-all inline-block">
-            Start Your Project
+            Enquiry Now
           </Link>
         </div>
       </section>
