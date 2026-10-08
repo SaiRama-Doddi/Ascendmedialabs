@@ -362,7 +362,7 @@ const Home = () => {
             className="flex gap-6 sm:gap-8 md:gap-12 py-2 w-max"
             animate={{ x: ['0%', '-50%'] }}
             transition={{ 
-              duration: isMobile ? 12 : 25, 
+              duration: isMobile ? 24 : 36, 
               repeat: Infinity, 
               ease: 'linear' 
             }}
