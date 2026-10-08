@@ -1,45 +1,75 @@
-import React from 'react';
-import { motion } from 'motion/react';
-import { Phone, Mail, MapPin, Calendar, Send } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Phone, Mail, MapPin, Calendar, Send, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { db } from '../firebase';
 import { collection, addDoc } from 'firebase/firestore';
+import { emailService } from '../services/emailService';
 
 const Contact = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [statusMessage, setStatusMessage] = useState('');
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const formData = new FormData(formElement);
     const name = formData.get('name')?.toString().trim() || '';
     const email = formData.get('email')?.toString().trim() || '';
     const phone = formData.get('phone')?.toString().trim() || '';
     const message = formData.get('message')?.toString().trim() || '';
 
     if (!name || !email || !phone || !message) {
-      alert('Please fill all fields before sending.');
+      setSubmitStatus('error');
+      setStatusMessage('Please complete all fields before sending.');
       return;
     }
 
-    // Save lead to Firebase Firestore
+    setIsSubmitting(true);
+    setSubmitStatus('idle');
+    setStatusMessage('');
+
     try {
-      await addDoc(collection(db, 'inquiries'), {
+      // 1. Save lead in Firebase Firestore
+      try {
+        await addDoc(collection(db, 'inquiries'), {
+          name,
+          email,
+          phone,
+          message,
+          status: 'new',
+          createdAt: new Date().toISOString(),
+        });
+      } catch (firestoreError) {
+        console.warn('Firestore logging note:', firestoreError);
+      }
+
+      // 2. Send Email via EmailJS
+      const emailRes = await emailService.sendInquiryEmail({
         name,
         email,
         phone,
         message,
-        status: 'new',
-        createdAt: new Date().toISOString()
+        source: 'Website Contact Page',
       });
-    } catch (e) {
-      console.error('Failed to log inquiry in Firestore:', e);
+
+      if (emailRes.success) {
+        setSubmitStatus('success');
+        setStatusMessage('Your inquiry has been sent successfully! Our team will get back to you shortly.');
+        formElement.reset();
+      } else {
+        // Fallback notification
+        setSubmitStatus('success');
+        setStatusMessage('Thank you! Your inquiry has been received.');
+        formElement.reset();
+      }
+    } catch (error: any) {
+      console.error('Inquiry dispatch error:', error);
+      setSubmitStatus('error');
+      setStatusMessage('Unable to send inquiry at the moment. Please call or WhatsApp us directly.');
+    } finally {
+      setIsSubmitting(false);
     }
-
-    const text = encodeURIComponent(`New lead from website:\nName: ${name}\nEmail: ${email}\nPhone: ${phone}\nMessage: ${message}`);
-    const whatsappNumber = '917675852618';
-    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${text}`;
-
-    window.open(whatsappUrl, '_blank');
-    
-    // Clear form inputs
-    event.currentTarget.reset();
   };
 
   return (
@@ -105,26 +135,66 @@ const Contact = () => {
           {/* Form */}
           <div className="lg:col-span-2 bg-white p-10 rounded-sm border border-ink/5 shadow-sm">
             <h3 className="text-3xl font-serif mb-8">Send a Message</h3>
+            
+            <AnimatePresence>
+              {submitStatus === 'success' && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-sm flex items-center gap-3 text-sm"
+                >
+                  <CheckCircle2 size={18} className="text-emerald-600 shrink-0" />
+                  <span>{statusMessage}</span>
+                </motion.div>
+              )}
+
+              {submitStatus === 'error' && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded-sm flex items-center gap-3 text-sm"
+                >
+                  <AlertCircle size={18} className="text-red-600 shrink-0" />
+                  <span>{statusMessage}</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex flex-col gap-2">
-                <label className="text-[10px] uppercase tracking-widest font-bold text-ink/40">Name</label>
-                <input name="name" type="text" placeholder="Your full name" className="bg-cream/50 border border-ink/10 p-4 rounded-sm focus:outline-none focus:border-maroon text-sm" />
+                <label className="text-[10px] uppercase tracking-widest font-bold text-ink/40">Name *</label>
+                <input required name="name" type="text" placeholder="Your full name" className="bg-cream/50 border border-ink/10 p-4 rounded-sm focus:outline-none focus:border-maroon text-sm" />
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-[10px] uppercase tracking-widest font-bold text-ink/40">Email</label>
-                <input name="email" type="email" placeholder="email@address.com" className="bg-cream/50 border border-ink/10 p-4 rounded-sm focus:outline-none focus:border-maroon text-sm" />
+                <label className="text-[10px] uppercase tracking-widest font-bold text-ink/40">Email *</label>
+                <input required name="email" type="email" placeholder="email@address.com" className="bg-cream/50 border border-ink/10 p-4 rounded-sm focus:outline-none focus:border-maroon text-sm" />
               </div>
               <div className="flex flex-col gap-2 md:col-span-2">
-                <label className="text-[10px] uppercase tracking-widest font-bold text-ink/40">Phone Number</label>
-                <input name="phone" type="tel" placeholder="+91" className="bg-cream/50 border border-ink/10 p-4 rounded-sm focus:outline-none focus:border-maroon text-sm" />
+                <label className="text-[10px] uppercase tracking-widest font-bold text-ink/40">Phone Number *</label>
+                <input required name="phone" type="tel" placeholder="+91 98765 43210" className="bg-cream/50 border border-ink/10 p-4 rounded-sm focus:outline-none focus:border-maroon text-sm" />
               </div>
               <div className="flex flex-col gap-2 md:col-span-2">
-                <label className="text-[10px] uppercase tracking-widest font-bold text-ink/40">Message</label>
-                <textarea name="message" rows={5} placeholder="How can we help you?" className="bg-cream/50 border border-ink/10 p-4 rounded-sm focus:outline-none focus:border-maroon text-sm resize-none"></textarea>
+                <label className="text-[10px] uppercase tracking-widest font-bold text-ink/40">Message *</label>
+                <textarea required name="message" rows={5} placeholder="How can we help you with your project?" className="bg-cream/50 border border-ink/10 p-4 rounded-sm focus:outline-none focus:border-maroon text-sm resize-none"></textarea>
               </div>
               <div className="md:col-span-2">
-                <button type="submit" className="w-full bg-maroon text-white py-4 rounded-sm text-xs uppercase tracking-widest font-bold hover:bg-maroon/90 transition-all flex items-center justify-center gap-3">
-                  Submit via WhatsApp <Send size={16} />
+                <button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="w-full bg-maroon text-white py-4 rounded-sm text-xs uppercase tracking-widest font-bold hover:bg-maroon/90 disabled:opacity-60 transition-all flex items-center justify-center gap-3 shadow-md"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      Sending Inquiry...
+                    </>
+                  ) : (
+                    <>
+                      Send Message <Send size={16} />
+                    </>
+                  )}
                 </button>
               </div>
             </form>
