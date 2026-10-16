@@ -12,13 +12,15 @@ const Services = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="inline-block px-4 py-1 bg-maroon/5 border border-maroon/10 rounded-full text-[10px] uppercase tracking-[0.2em] font-bold text-maroon mb-8"
+          className="inline-block px-4 py-1.5 bg-maroon/5 border border-maroon/10 rounded-full text-xs uppercase tracking-widest font-bold text-maroon mb-6"
         >
-          Expertise
+          Web Development Agency & Digital Marketing Services
         </motion.div>
-        <h1 className="text-4xl md:text-5xl font-serif mb-8">Our Specialized Digital <span className="text-maroon italic">Expertise</span></h1>
-        <p className="text-lg text-ink/60 max-w-2xl mx-auto leading-relaxed mb-4">
-          We bridge the gap between architectural precision and digital innovation, delivering bespoke solutions that define market leaders.
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif mb-6 leading-tight max-w-4xl mx-auto">
+          Web Development, SEO & Full Digital <span className="text-maroon italic">Marketing Services</span>
+        </h1>
+        <p className="text-base sm:text-lg text-ink/70 max-w-3xl mx-auto leading-relaxed mb-4">
+          Get a complete digital marketing service with custom website development. We drive results through high-speed website development, mobile-responsive web design, UI/UX branding, targeted lead generation, SEO marketing, Meta Ads, Google Ads, image editing, and video editing.
         </p>
         <p className="text-sm md:text-base text-maroon font-semibold">
           Pricing example: Starts from ₹5000 + domain (domain optional) + ₹1000 yearly service fee. Final cost varies with website requirements.

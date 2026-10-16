@@ -62,7 +62,7 @@ const Home = () => {
                 className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/80 backdrop-blur-md border border-maroon/15 rounded-full shadow-sm text-xs font-bold uppercase tracking-widest text-maroon mb-6"
               >
                 <Sparkles size={14} className="text-amber-600 animate-pulse" />
-                <span>Digital Atelier & Tech Engineering</span>
+                <span>Web Development Agency & Digital Marketing Services</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-maroon"></span>
               </motion.div>
 
@@ -84,7 +84,7 @@ const Home = () => {
                 transition={{ delay: 0.2 }}
                 className="text-sm sm:text-base text-ink/75 max-w-2xl mb-8 leading-relaxed font-normal"
               >
-                Bespoke web engineering, high-conversion branding, SEO growth strategy, and practical IT & Edutech programs built for high-growth businesses.
+                Ascend Media Labs is a premier <strong className="font-semibold text-ink">Web Development Agency</strong> providing full-suite <strong className="font-semibold text-ink">Digital Marketing Services</strong>. We deliver high-speed website development, mobile-responsive web design, UI/UX branding, targeted lead generation, SEO marketing, Meta Ads, Google Ads, image editing, and video editing to maximize your advertising ROI.
               </motion.p>
 
               {/* Hero Call To Actions */}
@@ -130,7 +130,7 @@ const Home = () => {
               >
                 <img 
                   src={heroBuilding} 
-                  alt="Modern Architecture Block" 
+                  alt="Ascend Media Labs - Web Development Agency and Digital Marketing Services" 
                   className="w-full h-full object-cover object-center scale-105 hover:scale-110 transition-transform duration-[2000ms] ease-out"
                 />
                 <div className="absolute inset-0 bg-gradient-to-tr from-maroon/5 via-transparent to-amber-500/5 mix-blend-overlay pointer-events-none"></div>
@@ -145,7 +145,7 @@ const Home = () => {
               >
                 <img 
                   src={maroonLeaves} 
-                  alt="Maroon decorative branch" 
+                  alt="Ascend Media Labs - High-speed website development and brand engineering" 
                   className="w-full h-auto object-contain"
                 />
               </motion.div>
@@ -193,6 +193,40 @@ const Home = () => {
               </div>
             ))}
           </motion.div>
+
+          {/* Secondary & Intent-Based Keyword Highlights */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="w-full max-w-5xl mt-6 flex flex-wrap justify-center items-center gap-2 px-2"
+          >
+            {[
+              'High-speed website development',
+              'Mobile-responsive web design',
+              'UI/UX branding',
+              'Targeted lead generation',
+              'Maximize advertising ROI',
+              'Drive organic traffic',
+              'Increase Google rankings',
+              'SEO Marketing',
+              'Social Media Marketing',
+              'Google Ads',
+              'Image Editing',
+              'Video Editing',
+              'Content Marketing',
+              'Meta Ads',
+              'Linkedin Marketing',
+              'Quick Commerce'
+            ].map((keyword, idx) => (
+              <span
+                key={idx}
+                className="text-[11px] font-medium tracking-wide text-ink/75 bg-white/70 hover:bg-maroon hover:text-white px-3 py-1 rounded-full border border-maroon/10 shadow-xs transition-colors duration-200"
+              >
+                {keyword}
+              </span>
+            ))}
+          </motion.div>
         </div>
       </section>
 
@@ -211,22 +245,25 @@ const Home = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
             {
-              title: 'Web Development',
-              desc: 'High-performance, custom-coded websites that prioritize speed, security, and scalability for your brand.',
+              title: 'Web Development Agency',
+              desc: 'High-speed website development and mobile-responsive web design that prioritize speed, security, and scalability for your brand.',
               icon: <Zap className="transition-colors duration-300" />,
-              image: WEB_IMAGE
+              image: WEB_IMAGE,
+              altText: 'Ascend Media Labs - Web Development Agency High-Speed Website Development'
             },
             {
-              title: 'SEO Optimization',
-              desc: 'Dominating search results with data-driven strategies that increase organic traffic and customer conversion.',
+              title: 'Digital Marketing & SEO',
+              desc: 'Drive organic traffic, increase Google rankings, and maximize advertising ROI through targeted lead generation, Meta Ads, and Google Ads.',
               icon: <Target className="transition-colors duration-300" />,
-              image: SEO_IMAGE
+              image: SEO_IMAGE,
+              altText: 'Ascend Media Labs - Digital Marketing Services, SEO Marketing and Google Ads'
             },
             {
-              title: 'Branding & Design',
-              desc: 'Crafting iconic logos, premium UI/UX interfaces, and comprehensive brand kits that resonate with your audience.',
+              title: 'UI/UX Branding & Media',
+              desc: 'Crafting iconic logos, premium UI/UX branding, and creative media including professional image editing and video editing.',
               icon: <Palette className="transition-colors duration-300" />,
-              image: BRANDING_IMAGE
+              image: BRANDING_IMAGE,
+              altText: 'Ascend Media Labs - UI/UX Branding, Image Editing and Video Editing'
             }
           ].map((item, i) => (
             <motion.div
@@ -245,7 +282,7 @@ const Home = () => {
               <div className="aspect-4/3 overflow-hidden rounded-xl mb-2 bg-cream-dark/10 p-2">
                 <img 
                   src={item.image} 
-                  alt={item.title} 
+                  alt={item.altText} 
                   className="w-full h-full object-contain object-center transition-transform duration-700 group-hover:scale-105" 
                   referrerPolicy="no-referrer" 
                 />
@@ -294,7 +331,7 @@ const Home = () => {
                   <div className="w-full rounded-b-xl overflow-hidden relative bg-slate-900">
                     <img
                       src={project.image}
-                      alt={project.title}
+                      alt={`${project.title} - Web Development Agency project by Ascend Media Labs`}
                       className="w-full h-auto block object-contain transition-transform duration-700 group-hover:scale-[1.02]"
                       referrerPolicy="no-referrer"
                     />
@@ -375,7 +412,7 @@ const Home = () => {
                 <div className="h-12 sm:h-16 md:h-20 flex items-center justify-center">
                   <img 
                     src={brand.logo} 
-                    alt={brand.name} 
+                    alt={`${brand.name} - Ascend Media Labs Web Development & Digital Marketing Client`} 
                     className="max-h-full max-w-full object-contain transition-all duration-300"
                     loading="lazy"
                   />

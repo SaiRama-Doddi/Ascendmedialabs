@@ -33,7 +33,7 @@ const Navbar = () => {
         <Link to="/" className="flex items-center gap-2.5 md:gap-3 group">
           <img 
             src={LOGO} 
-            alt="Ascend Media Labs" 
+            alt="Ascend Media Labs - Web Development Agency & Digital Marketing Services" 
             className={`w-auto object-contain transition-all duration-300 ${scrolled ? 'h-12 md:h-16' : 'h-14 md:h-20'}`}
           />
           <div className="flex flex-col gap-0.5 transition-all duration-300">

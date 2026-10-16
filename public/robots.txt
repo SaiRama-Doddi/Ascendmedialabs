@@ -1,0 +1,13 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Disallow private and administrative routes
+Disallow: /admin
+Disallow: /admin/
+Disallow: /admin/login
+Disallow: /api/
+
+# Host and Sitemap
+Host: https://ascendmedialabs.com
+Sitemap: https://ascendmedialabs.com/sitemap.xml

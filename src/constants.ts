@@ -39,45 +39,45 @@ export const BRANDING_IMAGE = brandingImage;
 export const SERVICES: Service[] = [
   {
     id: 'web-dev',
-    title: 'Web Development',
-    description: 'Bespoke websites built with clean code, performance-first architecture, and high-end aesthetic appeal.',
+    title: 'Web Development Agency',
+    description: 'Custom website development, high-speed website development, and mobile-responsive web design engineered for maximum performance and speed.',
     icon: 'Code2',
-    features: ['React & Next.js Ecosystems', 'E-commerce Architecture', 'CMS Integration']
-  },
-  {
-    id: 'seo',
-    title: 'SEO Optimization',
-    description: 'Strategic search engine optimization to place your brand at the forefront of digital discovery.',
-    icon: 'Search',
-    features: ['Technical Site Audits', 'Keyword Intelligence', 'Content Strategy']
-  },
-  {
-    id: 'branding',
-    title: 'Branding & Design',
-    description: 'Crafting iconic logos, premium UI/UX interfaces, and comprehensive brand kits that resonate with your audience.',
-    icon: 'Palette',
-    features: ['Visual Identity Design', 'Typography Systems', 'UI/UX Interface Design']
+    features: ['High-speed website development', 'Mobile-responsive web design', 'React & Next.js Ecosystems', 'Quick Commerce & E-commerce']
   },
   {
     id: 'digital-marketing',
     title: 'Digital Marketing Services',
-    description: 'Growth-driven campaigns for social media, ads, and lead generation to expand your brand audience.',
+    description: 'Comprehensive digital marketing services driving targeted lead generation and maximizing advertising ROI across Meta Ads, Google Ads, and social channels.',
     icon: 'Megaphone',
-    features: ['Instagram Marketing', 'Facebook Ads', 'Branding', 'Lead Generation', 'SEO']
+    features: ['Targeted lead generation', 'Maximize advertising ROI', 'Meta Ads & Google Ads', 'Linkedin Marketing', 'Content Marketing']
+  },
+  {
+    id: 'seo',
+    title: 'SEO Marketing',
+    description: 'Data-driven SEO marketing designed to drive organic traffic, increase Google rankings, and place your business at the top of search results.',
+    icon: 'Search',
+    features: ['Increase Google rankings', 'Drive organic traffic', 'Technical Site Audits', 'Keyword Intelligence']
+  },
+  {
+    id: 'branding',
+    title: 'UI/UX Branding & Design',
+    description: 'Strategic UI/UX branding, iconic logos, and cohesive design systems crafted to elevate customer loyalty and brand authority.',
+    icon: 'Palette',
+    features: ['UI/UX branding', 'Visual Identity Design', 'Typography Systems', 'UI/UX Interface Design']
+  },
+  {
+    id: 'creative-design',
+    title: 'Image Editing & Video Editing',
+    description: 'High-end Image Editing and Video Editing services paired with bespoke poster and advertising creatives for high-conversion campaigns.',
+    icon: 'Image',
+    features: ['Image Editing', 'Video Editing', 'Poster Design', 'Packaging & Pouch Design']
   },
   {
     id: 'education-career',
     title: 'Education / Career Services',
-    description: 'Structured career programs, internships, and training solutions for students and professionals.',
+    description: 'Structured career programs, internships, and technical training solutions for ambitious students and professionals.',
     icon: 'BookOpen',
     features: ['Career & Learning Programs', 'Internship Programs', 'Career Guidance Workshops', 'Training Programs']
-  },
-  {
-    id: 'creative-design',
-    title: 'Creative Design Services',
-    description: 'Eye-catching visual design for print, packaging, and brand communication materials.',
-    icon: 'Image',
-    features: ['Poster Design', 'Packaging & Pouch Design']
   }
 ];
 

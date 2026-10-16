@@ -11,7 +11,7 @@ const Footer = () => {
           <Link to="/" className="flex items-center gap-2.5 group mb-4">
             <img 
               src={LOGO} 
-              alt="Ascend Media Labs" 
+              alt="Ascend Media Labs - Web Development Agency & Digital Marketing Services" 
               className="h-12 w-auto object-contain"
             />
             <div className="flex flex-col gap-0.5 leading-none">
@@ -20,7 +20,7 @@ const Footer = () => {
             </div>
           </Link>
           <p className="text-sm text-ink/60 leading-relaxed mb-4">
-            Architecting the future of digital presence through refined design and strategic engineering.
+            Premier Web Development Agency delivering complete digital marketing services, high-speed website development, and growth-driven SEO marketing.
           </p>
           <div className="flex gap-3">
             <a href="https://www.instagram.com/ascend_media_labs?igsh=aTk0cmU4NzV5N21l" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-ink/5 flex items-center justify-center hover:bg-maroon hover:text-white transition-all">
@@ -38,10 +38,11 @@ const Footer = () => {
         <div>
           <h4 className="text-xs uppercase tracking-widest font-bold mb-3 text-maroon">Our Expertise</h4>
           <ul className="flex flex-col gap-2">
-            <li><Link to="/services" className="text-sm text-ink/70 hover:text-maroon transition-colors">Web Development</Link></li>
-            <li><Link to="/services" className="text-sm text-ink/70 hover:text-maroon transition-colors">Brand Identity</Link></li>
-            <li><Link to="/services" className="text-sm text-ink/70 hover:text-maroon transition-colors">SEO Strategy</Link></li>
-            <li><Link to="/services" className="text-sm text-ink/70 hover:text-maroon transition-colors">Maintenance</Link></li>
+            <li><Link to="/services" className="text-sm text-ink/70 hover:text-maroon transition-colors">Web Development Agency</Link></li>
+            <li><Link to="/services" className="text-sm text-ink/70 hover:text-maroon transition-colors">Digital Marketing Services</Link></li>
+            <li><Link to="/services" className="text-sm text-ink/70 hover:text-maroon transition-colors">SEO Marketing</Link></li>
+            <li><Link to="/services" className="text-sm text-ink/70 hover:text-maroon transition-colors">Image & Video Editing</Link></li>
+            <li><Link to="/services" className="text-sm text-ink/70 hover:text-maroon transition-colors">UI/UX Branding</Link></li>
           </ul>
         </div>
 

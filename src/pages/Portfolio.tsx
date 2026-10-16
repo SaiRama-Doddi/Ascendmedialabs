@@ -61,7 +61,7 @@ const Portfolio = () => {
                 <div className="w-full rounded-b-xl overflow-hidden relative mb-4 bg-slate-950">
                   <img
                     src={project.image}
-                    alt={project.title}
+                    alt={`${project.title} - Web Development Agency project by Ascend Media Labs`}
                     className="w-full h-auto block object-contain transition-transform duration-700 group-hover:scale-[1.02]"
                     referrerPolicy="no-referrer"
                   />

@@ -24,7 +24,7 @@ const About = () => {
               About <span className="text-maroon italic">Ascend</span>
             </h1>
             <p className="text-base md:text-lg text-ink/75 leading-relaxed mb-8 text-justify">
-              We are a digital atelier dedicated to the craft of high-performance digital products and software engineering. Founded on friendship and sustained by our commitment to engineering excellence, our team combines custom creative strategy, editorial-grade design, and modern frontend architecture to deliver websites that look breathtaking and load instantly.
+              We are a premier <strong className="font-semibold text-ink">Web Development Agency</strong> and <strong className="font-semibold text-ink">Digital Marketing Services</strong> atelier dedicated to the craft of high-performance digital products and software engineering. Founded on friendship and sustained by our commitment to engineering excellence, our team combines custom creative strategy, editorial-grade design, and modern frontend architecture to deliver websites that look breathtaking and load instantly.
             </p>
             <p className="text-base md:text-lg text-ink/75 leading-relaxed mb-8 text-justify">
               Every system we engineer is built to adapt and scale, ensuring your business stays ahead of modern web standards. We value boutique craftsmanship, absolute transparency, and measurable business outcomes above all else.
@@ -46,7 +46,7 @@ const About = () => {
             <div className="aspect-[4/5] bg-slate-900 rounded-2xl overflow-hidden relative shadow-2xl border border-white/40">
               <img 
                 src={ABOUT_IMAGE} 
-                alt="Team" 
+                alt="Ascend Media Labs - Web Development Agency and Digital Marketing Services Team" 
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
                 referrerPolicy="no-referrer" 
               />
@@ -64,7 +64,7 @@ const About = () => {
             <div className="aspect-[4/3] bg-slate-900 rounded-2xl overflow-hidden relative shadow-2xl border border-white/40">
               <img 
                 src={BRANDING_IMAGE} 
-                alt="Collaboration" 
+                alt="Ascend Media Labs - UI/UX Branding, Image Editing and Digital Marketing Services" 
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
                 referrerPolicy="no-referrer" 
               />
