@@ -2893,17 +2893,20 @@ const AdminDashboard = () => {
 
                                     pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
                                     
-                                    const cleanClient = (invoiceClientName || invoiceProjectName || 'Client').replace(/[^a-z0-9]/gi, '_');
+                                    const safeProjectName = (invoiceProjectName || invoiceClientName || 'Ascend_Media_Labs_Invoice')
+                                      .trim()
+                                      .replace(/[\\/:*?"<>|]+/g, ' ')
+                                      .trim() || 'Ascend_Media_Labs_Invoice';
 
                                     pdf.setProperties({
-                                      title: `Invoice_${invoiceNumber || 'AML'}_${cleanClient}`,
+                                      title: safeProjectName,
                                       subject: 'Ascend Media Labs Official Read-Only Invoice',
                                       author: 'Ascend Media Labs',
                                       keywords: 'invoice, secure, read-only, ascend media labs',
                                       creator: 'Ascend Media Labs Billing Portal'
                                     });
 
-                                    const filename = `Invoice_${invoiceNumber || 'AML-XXXX'}_${cleanClient}_Official.pdf`;
+                                    const filename = `${safeProjectName}.pdf`;
                                     
                                     try {
                                       pdf.save(filename);
@@ -2949,8 +2952,11 @@ const AdminDashboard = () => {
                               <button
                                 onClick={() => {
                                   const originalTitle = document.title;
-                                  const cleanClient = (invoiceClientName || invoiceProjectName || 'Client').replace(/[^a-z0-9]/gi, '_');
-                                  document.title = `Invoice_${invoiceNumber || 'AML-XXXX'}_${cleanClient}`;
+                                  const safeProjectName = (invoiceProjectName || invoiceClientName || 'Ascend_Media_Labs_Invoice')
+                                    .trim()
+                                    .replace(/[\\/:*?"<>|]+/g, ' ')
+                                    .trim() || 'Ascend_Media_Labs_Invoice';
+                                  document.title = safeProjectName;
                                   window.print();
                                   document.title = originalTitle;
                                 }}
