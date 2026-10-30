@@ -133,16 +133,17 @@ const AdminDashboard = () => {
   // Invoice generator state
   const [invoiceCompanyName, setInvoiceCompanyName] = useState('');
   const [invoiceClientName, setInvoiceClientName] = useState('');
+  const [invoiceProjectName, setInvoiceProjectName] = useState('');
   const [invoiceClientPhone, setInvoiceClientPhone] = useState('');
   const [invoiceClientDomain, setInvoiceClientDomain] = useState('');
   const [invoiceClientEmail, setInvoiceClientEmail] = useState('');
   const [invoiceClientAddress, setInvoiceClientAddress] = useState('');
   const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
-  const [invoiceDueDate, setInvoiceDueDate] = useState('');
   const [invoicePaidAmount, setInvoicePaidAmount] = useState<string>('0');
+  const [invoiceTotalAmount, setInvoiceTotalAmount] = useState<string>('');
   const [pdfExporting, setPdfExporting] = useState(false);
-  const [invoiceNumber, setInvoiceNumber] = useState(`AML-${Math.floor(1000 + Math.random() * 9000)}`);
-  const [invoiceItems, setInvoiceItems] = useState<{ id: string; description: string; quantity: number; rate: number }[]>([]);
+  const [invoiceNumber, setInvoiceNumber] = useState('');
+  const [invoiceItems, setInvoiceItems] = useState<{ id: string; description: string; amount: number }[]>([]);
 
   // Invoice payment remittance states
   const [invoicePaymentType, setInvoicePaymentType] = useState<'bank' | 'upi'>('bank');
@@ -154,10 +155,9 @@ const AdminDashboard = () => {
   const [invoiceUpiId, setInvoiceUpiId] = useState('8500734632@axl');
   const [invoiceUpiName, setInvoiceUpiName] = useState('Doddi Sai Rama');
   
-  // New line item form
-  const [itemDescription, setItemDescription] = useState('');
-  const [itemQuantity, setItemQuantity] = useState('1');
-  const [itemRate, setItemRate] = useState('');
+  // Extra line item form
+  const [extraItemDescription, setExtraItemDescription] = useState('');
+  const [extraItemAmount, setExtraItemAmount] = useState('');
 
   // Bookkeeping Filters
   const [ledgerStartDateFilter, setLedgerStartDateFilter] = useState('');
@@ -1850,7 +1850,9 @@ const AdminDashboard = () => {
                 });
 
                 // Invoice calculations
-                const invoiceSubtotal = invoiceItems.reduce((sum, item) => sum + (item.quantity * item.rate), 0);
+                const primaryAmt = Number(invoiceTotalAmount) || 0;
+                const extraAmt = invoiceItems.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+                const invoiceSubtotal = (invoiceProjectName || primaryAmt > 0) ? (primaryAmt + extraAmt) : extraAmt;
                 const invoicePaid = Math.max(0, Number(invoicePaidAmount) || 0);
                 const invoiceBalanceDue = Math.max(0, invoiceSubtotal - invoicePaid);
                 const isInvoiceFullyPaid = invoiceSubtotal > 0 && invoiceBalanceDue === 0;
@@ -2433,25 +2435,18 @@ const AdminDashboard = () => {
                                     if (!val) return;
                                     const proj = clientProjects.find(p => p.id === val);
                                     if (proj) {
-                                      setInvoiceCompanyName(proj.clientName || '');
                                       setInvoiceClientName(proj.clientName || '');
+                                      const projTitle = proj.requirement || proj.businessCategory || 'Website Development';
+                                      setInvoiceProjectName(projTitle);
+                                      setInvoiceTotalAmount(String(proj.agreedAmount || 0));
                                       setInvoiceClientPhone(proj.clientNumber || '');
                                       setInvoiceClientDomain(proj.domainName || '');
                                       setInvoiceClientEmail(proj.clientEmail || '');
                                       setInvoiceClientAddress('');
                                       setInvoiceDate(proj.date || new Date().toISOString().split('T')[0]);
-                                      setInvoiceDueDate(proj.expectedClosureDate || '');
-                                      // Pre-fill a main service billable item
-                                      setInvoiceItems([
-                                        {
-                                          id: Math.random().toString(36).substring(2, 9),
-                                          description: `${proj.requirement || 'Website Development'}`,
-                                          quantity: 1,
-                                          rate: proj.agreedAmount
-                                        }
-                                      ]);
                                       const totalPaid = (proj.advanceReceived || 0) + (proj.balancePaymentReceived || 0);
                                       setInvoicePaidAmount(String(totalPaid));
+                                      setInvoiceItems([]);
                                     }
                                     e.target.value = ''; // Reset select value
                                   }}
@@ -2464,19 +2459,19 @@ const AdminDashboard = () => {
                                     </option>
                                   ))}
                                 </select>
-                                <span className="text-[8px] text-ink/40">Auto-populates client name, contact, domain info, and creates a project billable line item automatically.</span>
+                                <span className="text-[8px] text-ink/40">Auto-populates client name, project name, contact, domain info, and financial details.</span>
                               </div>
                             )}
 
                             <div className="grid grid-cols-2 gap-3">
                               <div className="flex flex-col gap-1.5">
-                                <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">Invoice Number</label>
+                                <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">Invoice Serial Number</label>
                                 <input
                                   type="text"
                                   value={invoiceNumber}
                                   onChange={(e) => setInvoiceNumber(e.target.value)}
-                                  placeholder="E.g., AML-204"
-                                  className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none"
+                                  placeholder="E.g., 01 or AML-01"
+                                  className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none focus:border-maroon"
                                 />
                               </div>
                               <div className="flex flex-col gap-1.5">
@@ -2485,18 +2480,7 @@ const AdminDashboard = () => {
                                   type="date"
                                   value={invoiceDate}
                                   onChange={(e) => setInvoiceDate(e.target.value)}
-                                  className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none"
-                                />
-                              </div>
-                            </div>
-                            <div className="grid grid-cols-1 mt-3">
-                              <div className="flex flex-col gap-1.5">
-                                <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">Payment Due Date</label>
-                                <input
-                                  type="date"
-                                  value={invoiceDueDate}
-                                  onChange={(e) => setInvoiceDueDate(e.target.value)}
-                                  className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none"
+                                  className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none focus:border-maroon"
                                 />
                               </div>
                             </div>
@@ -2612,27 +2596,27 @@ const AdminDashboard = () => {
                           </div>
 
                           <div className="border-t border-ink/5 pt-4">
-                            <h4 className="text-xs font-bold uppercase tracking-wider text-ink/75 border-b border-ink/5 pb-2 mb-4">Client Billing Details</h4>
+                            <h4 className="text-xs font-bold uppercase tracking-wider text-ink/75 border-b border-ink/5 pb-2 mb-4">Client Billing Details (Billed To)</h4>
                             <div className="flex flex-col gap-3">
                               <div className="grid grid-cols-2 gap-3">
-                                <div className="flex flex-col gap-1.5">
-                                  <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">Company / Business Name</label>
-                                  <input
-                                    type="text"
-                                    value={invoiceCompanyName}
-                                    onChange={(e) => setInvoiceCompanyName(e.target.value)}
-                                    placeholder="E.g., Matrix Digital Pvt Ltd"
-                                    className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none"
-                                  />
-                                </div>
                                 <div className="flex flex-col gap-1.5">
                                   <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">Client / Contact Person</label>
                                   <input
                                     type="text"
                                     value={invoiceClientName}
                                     onChange={(e) => setInvoiceClientName(e.target.value)}
-                                    placeholder="E.g., Doddi Sai Rama"
-                                    className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none"
+                                    placeholder="E.g., Eswar Rao"
+                                    className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none focus:border-maroon"
+                                  />
+                                </div>
+                                <div className="flex flex-col gap-1.5">
+                                  <label className="text-[9px] uppercase tracking-widest font-bold text-maroon">Project Name (Dynamic & Editable)</label>
+                                  <input
+                                    type="text"
+                                    value={invoiceProjectName}
+                                    onChange={(e) => setInvoiceProjectName(e.target.value)}
+                                    placeholder="E.g., Solar Amaravathi Website"
+                                    className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none focus:border-maroon font-semibold"
                                   />
                                 </div>
                               </div>
@@ -2643,8 +2627,8 @@ const AdminDashboard = () => {
                                     type="text"
                                     value={invoiceClientPhone}
                                     onChange={(e) => setInvoiceClientPhone(e.target.value)}
-                                    placeholder="E.g., +91 63002 52529"
-                                    className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none"
+                                    placeholder="E.g., 79896 41899"
+                                    className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none focus:border-maroon"
                                   />
                                 </div>
                                 <div className="flex flex-col gap-1.5">
@@ -2653,27 +2637,27 @@ const AdminDashboard = () => {
                                     type="text"
                                     value={invoiceClientDomain}
                                     onChange={(e) => setInvoiceClientDomain(e.target.value)}
-                                    placeholder="E.g., matrixdigital.in"
+                                    placeholder="E.g., solaramaravathi.com"
                                     className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none"
                                   />
                                 </div>
                               </div>
                               <div className="flex flex-col gap-1.5">
-                                <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">Client Email</label>
+                                <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">Client Email (Optional)</label>
                                 <input
                                   type="email"
                                   value={invoiceClientEmail}
                                   onChange={(e) => setInvoiceClientEmail(e.target.value)}
-                                  placeholder="E.g., finance@matrixdigital.in"
+                                  placeholder="E.g., client@example.com"
                                   className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none"
                                 />
                               </div>
                               <div className="flex flex-col gap-1.5">
-                                <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">Client Address / Notes</label>
+                                <label className="text-[9px] uppercase tracking-widest font-bold text-ink/50">Client Address / Notes (Optional)</label>
                                 <textarea
                                   value={invoiceClientAddress}
                                   onChange={(e) => setInvoiceClientAddress(e.target.value)}
-                                  placeholder="E.g., Jubilee Hills, Hyderabad, Telangana"
+                                  placeholder="E.g., Visakhapatnam, Andhra Pradesh"
                                   rows={2}
                                   className="bg-cream/20 border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/80 focus:outline-none resize-none"
                                 />
@@ -2683,7 +2667,7 @@ const AdminDashboard = () => {
 
                           <div className="border-t border-ink/5 pt-4">
                             <div className="flex justify-between items-center border-b border-ink/5 pb-2 mb-3">
-                              <h4 className="text-xs font-bold uppercase tracking-wider text-ink/75">Payment & Dues Settlement</h4>
+                              <h4 className="text-xs font-bold uppercase tracking-wider text-ink/75">Project Financials & Settlement</h4>
                               {invoiceSubtotal > 0 && (
                                 <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm ${
                                   isInvoiceFullyPaid 
@@ -2698,18 +2682,27 @@ const AdminDashboard = () => {
                             </div>
 
                             <div className="flex flex-col gap-3 bg-cream/15 p-3.5 rounded-sm border border-ink/5">
-                              <div className="flex flex-col gap-1.5">
-                                <div className="flex justify-between items-center">
-                                  <label className="text-[9px] uppercase tracking-widest font-bold text-ink/60">Amount Paid / Advance Received (₹)</label>
-                                  <span className="text-[9px] font-mono text-ink/40">Total: ₹{invoiceSubtotal.toLocaleString('en-IN')}</span>
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="flex flex-col gap-1.5">
+                                  <label className="text-[9px] uppercase tracking-widest font-bold text-ink/60">Total Project Amount (₹)</label>
+                                  <input
+                                    type="number"
+                                    value={invoiceTotalAmount}
+                                    onChange={(e) => setInvoiceTotalAmount(e.target.value)}
+                                    placeholder="70000"
+                                    className="bg-white border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/90 focus:outline-none focus:border-maroon font-mono font-bold"
+                                  />
                                 </div>
-                                <input
-                                  type="number"
-                                  value={invoicePaidAmount}
-                                  onChange={(e) => setInvoicePaidAmount(e.target.value)}
-                                  placeholder="0"
-                                  className="bg-white border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/90 focus:outline-none focus:border-maroon font-mono font-bold"
-                                />
+                                <div className="flex flex-col gap-1.5">
+                                  <label className="text-[9px] uppercase tracking-widest font-bold text-ink/60">Amount Paid / Advance (₹)</label>
+                                  <input
+                                    type="number"
+                                    value={invoicePaidAmount}
+                                    onChange={(e) => setInvoicePaidAmount(e.target.value)}
+                                    placeholder="0"
+                                    className="bg-white border border-ink/10 rounded-sm py-2 px-3 text-xs text-ink/90 focus:outline-none focus:border-maroon font-mono font-bold"
+                                  />
+                                </div>
                               </div>
 
                               {/* Quick Actions to mark payment */}
@@ -2761,56 +2754,42 @@ const AdminDashboard = () => {
                           </div>
 
                           <div>
-                            <h4 className="text-xs font-bold uppercase tracking-wider text-ink/75 border-b border-ink/5 pb-2 mb-3">Add Billable Item</h4>
+                            <h4 className="text-xs font-bold uppercase tracking-wider text-ink/75 border-b border-ink/5 pb-2 mb-3">Add Additional Line Item (Optional)</h4>
                             <form
                               onSubmit={(e) => {
                                 e.preventDefault();
-                                if (!itemDescription || !itemRate) return;
+                                if (!extraItemDescription || !extraItemAmount) return;
                                 const item = {
                                   id: Math.random().toString(36).substr(2, 9),
-                                  description: itemDescription,
-                                  quantity: Number(itemQuantity) || 1,
-                                  rate: Number(itemRate)
+                                  description: extraItemDescription,
+                                  amount: Number(extraItemAmount)
                                 };
                                 setInvoiceItems([...invoiceItems, item]);
-                                setItemDescription('');
-                                setItemQuantity('1');
-                                setItemRate('');
+                                setExtraItemDescription('');
+                                setExtraItemAmount('');
                               }}
                               className="flex flex-col gap-3 bg-cream/10 p-3.5 rounded-sm border border-ink/5"
                             >
                               <div className="flex flex-col gap-1.5">
-                                <label className="text-[8px] uppercase tracking-widest font-bold text-ink/50">Item Description</label>
+                                <label className="text-[8px] uppercase tracking-widest font-bold text-ink/50">Item / Service Description</label>
                                 <input
                                   type="text"
-                                  value={itemDescription}
-                                  onChange={(e) => setItemDescription(e.target.value)}
-                                  placeholder="E.g., Website Development (Phase 1)"
+                                  value={extraItemDescription}
+                                  onChange={(e) => setExtraItemDescription(e.target.value)}
+                                  placeholder="E.g., Domain Registration / Extra Addon"
                                   className="bg-white border border-ink/10 rounded-sm py-1.5 px-2.5 text-xs text-ink/80 focus:outline-none"
                                 />
                               </div>
 
-                              <div className="grid grid-cols-2 gap-2">
-                                <div className="flex flex-col gap-1.5">
-                                  <label className="text-[8px] uppercase tracking-widest font-bold text-ink/50">Quantity</label>
-                                  <input
-                                    type="number"
-                                    value={itemQuantity}
-                                    onChange={(e) => setItemQuantity(e.target.value)}
-                                    placeholder="1"
-                                    className="bg-white border border-ink/10 rounded-sm py-1.5 px-2.5 text-xs text-ink/80 focus:outline-none"
-                                  />
-                                </div>
-                                <div className="flex flex-col gap-1.5">
-                                  <label className="text-[8px] uppercase tracking-widest font-bold text-ink/50">Unit Rate (₹)</label>
-                                  <input
-                                    type="number"
-                                    value={itemRate}
-                                    onChange={(e) => setItemRate(e.target.value)}
-                                    placeholder="Rate"
-                                    className="bg-white border border-ink/10 rounded-sm py-1.5 px-2.5 text-xs text-ink/80 focus:outline-none"
-                                  />
-                                </div>
+                              <div className="flex flex-col gap-1.5">
+                                <label className="text-[8px] uppercase tracking-widest font-bold text-ink/50">Amount (₹)</label>
+                                <input
+                                  type="number"
+                                  value={extraItemAmount}
+                                  onChange={(e) => setExtraItemAmount(e.target.value)}
+                                  placeholder="E.g., 2000"
+                                  className="bg-white border border-ink/10 rounded-sm py-1.5 px-2.5 text-xs text-ink/80 focus:outline-none"
+                                />
                               </div>
 
                               <button
@@ -2818,7 +2797,7 @@ const AdminDashboard = () => {
                                 className="bg-maroon text-white py-1.5 px-3 rounded-sm text-[10px] uppercase font-bold tracking-wider hover:bg-maroon/90 transition-colors flex items-center justify-center gap-1 cursor-pointer"
                               >
                                 <Plus size={12} />
-                                <span>Add Item</span>
+                                <span>Add Extra Line</span>
                               </button>
                             </form>
                           </div>
@@ -2837,9 +2816,9 @@ const AdminDashboard = () => {
                             <div className="flex flex-wrap gap-2">
                               <button
                                 onClick={() => {
-                                  const totalAmt = invoiceItems.reduce((sum, item) => sum + (item.quantity * item.rate), 0);
+                                  const totalAmt = invoiceSubtotal;
                                   const paidAmt = Number(invoicePaidAmount) || 0;
-                                  const balDue = Math.max(0, totalAmt - paidAmt);
+                                  const balDue = invoiceBalanceDue;
                                   const statusStr = balDue === 0 && totalAmt > 0 
                                     ? 'PAID IN FULL (ZERO DUES)' 
                                     : paidAmt > 0 
@@ -2851,17 +2830,17 @@ const AdminDashboard = () => {
                                     : `UPI Remittance:\nUPI ID: ${invoiceUpiId}\nPayee Name: ${invoiceUpiName}`;
 
                                   const mailSubject = encodeURIComponent(`Invoice #${invoiceNumber || 'AML-XXXX'} from Ascend Media Labs - ${statusStr}`);
-                                  const recipientGreeting = invoiceClientName || invoiceCompanyName || 'Client';
+                                  const recipientGreeting = invoiceClientName || 'Client';
 
                                   const mailBody = encodeURIComponent(
                                     `Dear ${recipientGreeting},\n\n` +
                                     `Please find details of Invoice #${invoiceNumber || 'AML-XXXX'} (${invoiceDate}) from Ascend Media Labs below:\n\n` +
                                     `----------------------------------------\n` +
-                                    `Total Billable Amount: INR ${totalAmt.toLocaleString('en-IN')}\n` +
+                                    `Project:                ${invoiceProjectName || 'Project Development'}\n` +
+                                    `Total Billable Amount:  INR ${totalAmt.toLocaleString('en-IN')}\n` +
                                     `Amount Paid / Advance:  INR ${paidAmt.toLocaleString('en-IN')}\n` +
                                     `Outstanding Balance:    INR ${balDue.toLocaleString('en-IN')}\n` +
                                     `Payment Status:         ${statusStr}\n` +
-                                    (invoiceDueDate ? `Due Date:               ${invoiceDueDate}\n` : '') +
                                     `----------------------------------------\n\n` +
                                     (balDue > 0 
                                       ? `Steps to Pay Dues:\n` +
@@ -2876,7 +2855,7 @@ const AdminDashboard = () => {
                                   );
                                   window.open(`mailto:${invoiceClientEmail || ''}?subject=${mailSubject}&body=${mailBody}`, '_blank');
                                 }}
-                                disabled={invoiceItems.length === 0}
+                                disabled={invoiceSubtotal === 0 && !invoiceProjectName}
                                 className="bg-maroon disabled:opacity-40 disabled:cursor-not-allowed text-white px-3.5 py-2 rounded-sm text-xs font-bold uppercase tracking-widest hover:bg-maroon/90 transition-colors flex items-center gap-1.5 cursor-pointer"
                               >
                                 <Mail size={13} />
@@ -2914,7 +2893,7 @@ const AdminDashboard = () => {
 
                                     pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
                                     
-                                    const cleanClient = (invoiceCompanyName || invoiceClientName || 'Client').replace(/[^a-z0-9]/gi, '_');
+                                    const cleanClient = (invoiceClientName || invoiceProjectName || 'Client').replace(/[^a-z0-9]/gi, '_');
 
                                     pdf.setProperties({
                                       title: `Invoice_${invoiceNumber || 'AML'}_${cleanClient}`,
@@ -2926,7 +2905,6 @@ const AdminDashboard = () => {
 
                                     const filename = `Invoice_${invoiceNumber || 'AML-XXXX'}_${cleanClient}_Official.pdf`;
                                     
-                                    // Robust download execution (save + blob fallback)
                                     try {
                                       pdf.save(filename);
                                     } catch (e) {
@@ -2950,7 +2928,7 @@ const AdminDashboard = () => {
                                     setPdfExporting(false);
                                   }
                                 }}
-                                disabled={invoiceItems.length === 0 || pdfExporting}
+                                disabled={(invoiceSubtotal === 0 && !invoiceProjectName) || pdfExporting}
                                 className="bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white px-3.5 py-2 rounded-sm text-xs font-bold uppercase tracking-widest hover:bg-emerald-800 transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
                                 title="Download as secure, flattened Read-Only PDF that cannot be converted to Word or modified"
                               >
@@ -2971,12 +2949,12 @@ const AdminDashboard = () => {
                               <button
                                 onClick={() => {
                                   const originalTitle = document.title;
-                                  const cleanClient = (invoiceCompanyName || invoiceClientName || 'Client').replace(/[^a-z0-9]/gi, '_');
+                                  const cleanClient = (invoiceClientName || invoiceProjectName || 'Client').replace(/[^a-z0-9]/gi, '_');
                                   document.title = `Invoice_${invoiceNumber || 'AML-XXXX'}_${cleanClient}`;
                                   window.print();
                                   document.title = originalTitle;
                                 }}
-                                disabled={invoiceItems.length === 0}
+                                disabled={invoiceSubtotal === 0 && !invoiceProjectName}
                                 className="bg-ink/75 disabled:opacity-40 disabled:cursor-not-allowed text-white px-3 py-2 rounded-sm text-xs font-bold uppercase tracking-widest hover:bg-ink transition-colors flex items-center gap-1.5 cursor-pointer"
                                 title="Print or Save via Browser"
                               >
@@ -2991,7 +2969,7 @@ const AdminDashboard = () => {
                             
                             <div>
                               {/* Header */}
-                               <div className="flex justify-between items-start border-b border-ink/10 pb-6">
+                              <div className="flex justify-between items-start border-b border-ink/10 pb-6">
                                 <div>
                                   <div className="flex items-center gap-3">
                                     <img 
@@ -2999,7 +2977,6 @@ const AdminDashboard = () => {
                                       alt="Ascend Media Labs Logo" 
                                       className="h-10 w-auto object-contain shrink-0"
                                       onError={(e) => {
-                                        // Fallback if image fails to load
                                         (e.target as HTMLElement).style.display = 'none';
                                       }}
                                     />
@@ -3020,7 +2997,6 @@ const AdminDashboard = () => {
                                   <div className="text-[10px] font-mono leading-normal mt-2">
                                     <p><strong className="text-ink/60 font-sans uppercase text-[8px] tracking-wider">Invoice #:</strong> {invoiceNumber || 'AML-XXXX'}</p>
                                     <p><strong className="text-ink/60 font-sans uppercase text-[8px] tracking-wider">Date:</strong> {invoiceDate}</p>
-                                    {invoiceDueDate && <p><strong className="text-ink/60 font-sans uppercase text-[8px] tracking-wider text-maroon">Due Date:</strong> {invoiceDueDate}</p>}
                                   </div>
 
                                   {/* Official Status Stamp */}
@@ -3060,38 +3036,47 @@ const AdminDashboard = () => {
                                 </div>
                               </div>
 
-                              {/* Billed To / From */}
+                              {/* Billed To / Payment Remittance */}
                               <div className="grid grid-cols-2 gap-6 py-8 text-xs">
                                 <div className="bg-cream/10 border border-ink/5 p-4 rounded-sm">
                                   <h4 className="text-[8px] uppercase tracking-widest font-bold text-maroon/70 mb-2.5">Billed To</h4>
-                                  {invoiceCompanyName ? (
-                                    <div>
-                                      <p className="font-bold text-ink/90 text-sm leading-tight">{invoiceCompanyName}</p>
-                                      {invoiceClientName && (
-                                        <p className="text-[11px] text-ink/80 font-semibold mt-1">
-                                          <span className="text-[8.5px] uppercase tracking-wider text-ink/45 font-bold">Attn / Client:</span> {invoiceClientName}
-                                        </p>
-                                      )}
-                                    </div>
-                                  ) : (
-                                    <p className="font-bold text-ink/90 text-sm leading-tight">{invoiceClientName || 'Client / Business Name'}</p>
-                                  )}
-                                  {invoiceClientEmail && <p className="text-ink/60 mt-1.5 font-mono text-[11px]">{invoiceClientEmail}</p>}
-                                  {(invoiceClientPhone || invoiceClientDomain) && (
-                                    <div className="text-ink/60 text-[10.5px] mt-1.5 flex flex-col gap-0.5 font-sans">
-                                      {invoiceClientPhone && <p><span className="text-ink/40 font-medium">Contact:</span> {invoiceClientPhone}</p>}
-                                      {invoiceClientDomain && <p><span className="text-ink/40 font-medium">Domain:</span> {invoiceClientDomain}</p>}
-                                    </div>
-                                  )}
-                                  {invoiceClientAddress && (
-                                    <div className="text-ink/50 whitespace-pre-line mt-2 border-t border-ink/5 pt-2 leading-relaxed text-[10.5px]">
-                                      {invoiceClientAddress}
-                                    </div>
-                                  )}
+                                  <div className="flex flex-col gap-1.5 font-sans">
+                                    {invoiceClientName ? (
+                                      <p className="font-bold text-ink/90 text-sm leading-tight">{invoiceClientName}</p>
+                                    ) : (
+                                      <p className="font-bold text-ink/40 text-sm italic">Client Name</p>
+                                    )}
+                                    {invoiceProjectName && (
+                                      <p className="text-[11px] text-ink/80 font-medium">
+                                        <span className="text-[8.5px] uppercase tracking-wider text-ink/45 font-bold">Project:</span> {invoiceProjectName}
+                                      </p>
+                                    )}
+                                    {invoiceClientPhone && (
+                                      <p className="text-[11px] text-ink/70">
+                                        <span className="text-[8.5px] uppercase tracking-wider text-ink/45 font-bold">Contact:</span> {invoiceClientPhone}
+                                      </p>
+                                    )}
+                                    {invoiceClientDomain && (
+                                      <p className="text-[11px] text-ink/70">
+                                        <span className="text-[8.5px] uppercase tracking-wider text-ink/45 font-bold">Domain:</span> {invoiceClientDomain}
+                                      </p>
+                                    )}
+                                    {invoiceClientEmail && (
+                                      <p className="text-[11px] text-ink/60 font-mono">
+                                        {invoiceClientEmail}
+                                      </p>
+                                    )}
+                                    {invoiceClientAddress && (
+                                      <div className="text-ink/50 whitespace-pre-line mt-1.5 border-t border-ink/5 pt-1.5 leading-relaxed text-[10.5px]">
+                                        {invoiceClientAddress}
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                                 
                                 <div className="bg-cream/10 border border-ink/5 p-4 rounded-sm">
-                                  <h4 className="text-[8px] uppercase tracking-widest font-bold text-maroon/70 mb-2.5">Payment Remittance</h4>
+                                  <h4 className="text-[8px] uppercase tracking-widest font-bold text-maroon/70 mb-1">Payment Remittance</h4>
+                                  <p className="text-xs font-bold text-maroon uppercase tracking-wide mb-2.5">Ascend Media Labs</p>
                                   <div className="text-ink/60 leading-relaxed font-sans">
                                     {invoicePaymentType === 'bank' ? (
                                       <div className="flex flex-col gap-1">
@@ -3111,40 +3096,61 @@ const AdminDashboard = () => {
                                 </div>
                               </div>
 
-                              {/* Billable Items Table */}
+                              {/* Billable Items Table (Format 2: Project Name | Total Amount | Balance) */}
                               <table className="w-full text-left border-collapse text-xs mt-4">
                                 <thead>
                                   <tr className="bg-maroon/5 border-b border-maroon/20 text-[9px] uppercase font-bold text-maroon/80">
-                                    <th className="p-3">Item Description</th>
-                                    <th className="p-3 text-center w-16">Qty</th>
-                                    <th className="p-3 text-right w-24">Rate (₹)</th>
-                                    <th className="p-3 text-right w-28">Amount (₹)</th>
+                                    <th className="p-3">Project Name</th>
+                                    <th className="p-3 text-right w-36">Total Amount (₹)</th>
+                                    <th className="p-3 text-right w-36">Balance (₹)</th>
                                   </tr>
                                 </thead>
                                 <tbody className="divide-y divide-ink/5">
-                                  {invoiceItems.length === 0 ? (
+                                  {invoiceSubtotal === 0 && !invoiceProjectName ? (
                                     <tr>
-                                      <td colSpan={4} className="p-6 text-center text-ink/30 italic">
-                                        No items added yet. Please use the form on the left to add billing lines.
+                                      <td colSpan={3} className="p-6 text-center text-ink/30 italic">
+                                        No project added yet. Please choose from ledger or enter project details on the left.
                                       </td>
                                     </tr>
                                   ) : (
-                                    invoiceItems.map((item) => (
-                                      <tr key={item.id} className="group hover:bg-cream/5 transition-colors">
-                                        <td className="p-3 pr-4 font-medium text-ink/85 flex justify-between items-center">
-                                          <span>{item.description}</span>
-                                          <button
-                                            onClick={() => setInvoiceItems(invoiceItems.filter(it => it.id !== item.id))}
-                                            className="text-red-500 hover:underline text-[9px] font-bold uppercase tracking-wide opacity-0 group-hover:opacity-100 transition-opacity no-print cursor-pointer"
-                                          >
-                                            [Remove]
-                                          </button>
-                                        </td>
-                                        <td className="p-3 text-center font-mono">{item.quantity}</td>
-                                        <td className="p-3 text-right font-mono">₹{item.rate.toLocaleString('en-IN')}</td>
-                                        <td className="p-3 text-right font-mono font-semibold">₹{(item.quantity * item.rate).toLocaleString('en-IN')}</td>
-                                      </tr>
-                                    ))
+                                    <>
+                                      {invoiceProjectName && (
+                                        <tr className="group hover:bg-cream/5 transition-colors">
+                                          <td className="p-3 pr-4 font-semibold text-ink/85">
+                                            {invoiceProjectName}
+                                          </td>
+                                          <td className="p-3 text-right font-mono font-medium">
+                                            ₹{(Number(invoiceTotalAmount) || 0).toLocaleString('en-IN')}
+                                          </td>
+                                          <td className="p-3 text-right font-mono font-bold text-maroon">
+                                            {invoiceBalanceDue === 0 && invoiceSubtotal > 0 ? (
+                                              <span className="text-emerald-700">₹0.00 (Settled)</span>
+                                            ) : (
+                                              `₹${(Math.max(0, (Number(invoiceTotalAmount) || 0) - (Number(invoicePaidAmount) || 0))).toLocaleString('en-IN')}`
+                                            )}
+                                          </td>
+                                        </tr>
+                                      )}
+                                      {invoiceItems.map((item) => (
+                                        <tr key={item.id} className="group hover:bg-cream/5 transition-colors">
+                                          <td className="p-3 pr-4 font-medium text-ink/85 flex justify-between items-center">
+                                            <span>{item.description}</span>
+                                            <button
+                                              onClick={() => setInvoiceItems(invoiceItems.filter(it => it.id !== item.id))}
+                                              className="text-red-500 hover:underline text-[9px] font-bold uppercase tracking-wide opacity-0 group-hover:opacity-100 transition-opacity no-print cursor-pointer"
+                                            >
+                                              [Remove]
+                                            </button>
+                                          </td>
+                                          <td className="p-3 text-right font-mono">
+                                            ₹{item.amount.toLocaleString('en-IN')}
+                                          </td>
+                                          <td className="p-3 text-right font-mono font-bold text-maroon">
+                                            ₹{item.amount.toLocaleString('en-IN')}
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </>
                                   )}
                                 </tbody>
                               </table>
@@ -3152,47 +3158,41 @@ const AdminDashboard = () => {
 
                             {/* Total and Sign-off */}
                             <div className="border-t border-ink/10 pt-6 mt-8 flex justify-between items-start gap-6">
+                              {/* Left Box: Contact & Support Information */}
                               <div className="w-1/2">
-                                <h4 className="text-[8px] uppercase tracking-widest font-bold text-ink/50 mb-2">
-                                  {isInvoiceFullyPaid ? 'Payment Confirmation & Receipt Notes' : 'Payment Steps & Dues Settlement'}
+                                <h4 className="text-[8px] uppercase tracking-widest font-bold text-maroon/70 mb-2">
+                                  Contact & Support Details
                                 </h4>
-                                {isInvoiceFullyPaid ? (
-                                  <div className="bg-emerald-50/70 border border-emerald-200/70 p-3.5 rounded-sm text-[9px] text-emerald-900 leading-relaxed flex flex-col gap-1">
-                                    <p className="font-bold flex items-center gap-1.5 text-emerald-800 text-[10px]">
-                                      <CheckCircle size={12} />
-                                      <span>Official Receipt: 100% Settled</span>
-                                    </p>
-                                    <p>1. Total receipt of <strong>₹{(Number(invoicePaidAmount) || 0).toLocaleString('en-IN')}</strong> is credited and reconciled in full.</p>
-                                    <p>2. No outstanding balance or payment due on this invoice.</p>
-                                    <p>3. Thank you for partnering with Ascend Media Labs!</p>
+                                <div className="bg-cream/15 border border-ink/10 p-3.5 rounded-sm text-[10.5px] text-ink/75 leading-relaxed flex flex-col gap-1.5 font-sans">
+                                  <div className="flex items-center gap-1.5 text-maroon font-bold text-xs uppercase tracking-wider mb-0.5">
+                                    <span>Ascend Media Labs</span>
                                   </div>
-                                ) : (
-                                  <div className="bg-cream/25 border border-ink/10 p-3.5 rounded-sm text-[9px] text-ink/70 leading-relaxed flex flex-col gap-1.5">
-                                    <p className="font-bold text-maroon flex items-center gap-1.5 text-[10px]">
-                                      <AlertCircle size={12} />
-                                      <span>Outstanding Balance: ₹{invoiceBalanceDue.toLocaleString('en-IN')}</span>
-                                    </p>
-                                    <p>1. <strong>Steps to Pay:</strong> Please remit the outstanding balance of <strong>₹{invoiceBalanceDue.toLocaleString('en-IN')}</strong> {invoiceDueDate ? `on or before ${invoiceDueDate}` : 'to close all dues'}.</p>
-                                    <p>2. <strong>Remittance Mode:</strong> Transfer via {invoicePaymentType === 'bank' ? 'SBI Bank Transfer (IMPS/NEFT)' : 'UPI Pay (8500734632@axl)'} as listed in the payment box above.</p>
-                                    <p>3. <strong>Receipt Acknowledgment:</strong> Share your transaction UTR / receipt screenshot to <span className="font-mono text-ink/90 font-semibold">reachus@ascendmedialabs.in</span> or WhatsApp +91 76758 52618 to receive final settlement confirmation.</p>
-                                  </div>
-                                )}
+                                  <p className="flex items-center gap-1.5">
+                                    <strong className="text-ink/85 font-semibold text-[10px] uppercase tracking-wider w-14">Email:</strong>
+                                    <span className="font-mono text-ink/90">reachus@ascendmedialabs.in</span>
+                                  </p>
+                                  <p className="flex items-center gap-1.5">
+                                    <strong className="text-ink/85 font-semibold text-[10px] uppercase tracking-wider w-14">Phone:</strong>
+                                    <span className="font-mono text-ink/90">+91 76758 52618</span>
+                                  </p>
+                                  <p className="flex items-center gap-1.5">
+                                    <strong className="text-ink/85 font-semibold text-[10px] uppercase tracking-wider w-14">Location:</strong>
+                                    <span>Visakhapatnam, Andhra Pradesh</span>
+                                  </p>
+                                  <p className="flex items-center gap-1.5">
+                                    <strong className="text-ink/85 font-semibold text-[10px] uppercase tracking-wider w-14">Website:</strong>
+                                    <span className="font-mono text-ink/90">www.ascendmedialabs.in</span>
+                                  </p>
+                                </div>
                               </div>
 
+                              {/* Right Box: Totals & Signature */}
                               <div className="w-1/2 max-w-xs flex flex-col gap-2 text-xs text-right">
-                                <div className="flex justify-between items-center text-ink/50 text-[11px]">
-                                  <span>Subtotal:</span>
-                                  <span className="font-mono font-medium">₹{invoiceSubtotal.toLocaleString('en-IN')}</span>
-                                </div>
-                                <div className="flex justify-between items-center text-ink/50 text-[11px]">
-                                  <span>Tax / GST (0%):</span>
-                                  <span className="font-mono">₹0.00</span>
-                                </div>
                                 <div className="flex justify-between items-center text-xs font-semibold text-ink/80 border-t border-ink/5 pt-1">
                                   <span className="uppercase text-[9px] tracking-wider text-ink/50">Total Billable:</span>
-                                  <span className="font-mono">₹{invoiceSubtotal.toLocaleString('en-IN')}</span>
+                                  <span className="font-mono font-bold text-sm">₹{invoiceSubtotal.toLocaleString('en-IN')}</span>
                                 </div>
-                                <div className="flex justify-between items-center text-xs font-semibold text-emerald-700 bg-emerald-50/70 py-1 px-2 rounded-xs">
+                                <div className="flex justify-between items-center text-xs font-semibold text-emerald-700 bg-emerald-50/70 py-1.5 px-2.5 rounded-xs">
                                   <span className="uppercase text-[8.5px] tracking-wider text-emerald-800">Amount Paid / Advance:</span>
                                   <span className="font-mono font-bold">- ₹{(Number(invoicePaidAmount) || 0).toLocaleString('en-IN')}</span>
                                 </div>
